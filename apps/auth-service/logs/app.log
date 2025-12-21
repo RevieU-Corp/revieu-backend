@@ -1,0 +1,70 @@
+2025-10-27 00:32:00.474 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 00:32:00.872 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 00:42:44.761 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 00:42:45.154 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 00:49:24.148 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 00:49:24.539 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 00:55:09.570 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 00:55:40.805 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 00:55:41.199 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 00:56:05.799 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 00:57:07.599 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 00:57:31.258 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 00:57:45.813 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 00:58:23.251 | INFO     | app.auth.routes:register:32 - 注册失败，用户 weijunli@example.com 已存在
+2025-10-27 00:58:58.835 | SUCCESS  | app.auth.routes:register:45 - ✅ 新用户注册成功: weijunli@example.com
+2025-10-27 01:00:15.935 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 01:05:59.970 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 01:06:10.501 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 01:07:04.246 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 01:09:03.298 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 01:09:22.886 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 01:10:52.714 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 01:10:53.098 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 01:11:29.770 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 01:11:45.325 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 01:12:33.032 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 01:12:41.562 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 01:13:21.221 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 01:13:57.897 | INFO     | app:create_app:17 - ✅ Flask 应用启动成功
+2025-10-27 01:14:17.481 | INFO     | app:create_app:18 - ✅ Flask 应用启动成功
+2025-10-27 01:14:42.072 | INFO     | app:create_app:18 - ✅ Flask 应用启动成功
+2025-10-27 01:15:19.733 | INFO     | app:create_app:18 - ✅ Flask 应用启动成功
+2025-10-27 01:15:33.296 | INFO     | app:create_app:18 - ✅ Flask 应用启动成功
+2025-10-27 01:15:45.838 | INFO     | app:create_app:18 - ✅ Flask 应用启动成功
+2025-10-27 01:16:07.479 | INFO     | app:create_app:18 - ✅ Flask 应用启动成功
+2025-10-27 01:17:39.406 | INFO     | app:create_app:18 - ✅ Flask 应用启动成功
+2025-10-27 01:20:42.712 | INFO     | app:create_app:18 - ✅ Flask 应用启动成功
+2025-10-27 01:27:05.945 | INFO     | app:create_app:18 - ✅ Flask 应用启动成功
+2025-10-27 01:27:15.507 | INFO     | app:create_app:18 - ✅ Flask 应用启动成功
+2025-10-27 01:27:21.022 | INFO     | app:create_app:18 - ✅ Flask 应用启动成功
+2025-10-27 01:29:05.332 | INFO     | app.auth.routes:register:51 - Verification link for weijunli@example.com: http://127.0.0.1:8081/api/v1/auth/verify/IndlaWp1bmxpQGV4YW1wbGUuY29tIg.aP8tUQ.YPHlZ_k3Aj5mC_mhZUr0X3LkFDs
+2025-10-27 01:30:59.474 | INFO     | app:create_app:18 - ✅ Flask 应用启动成功
+2025-10-27 02:06:40.370 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:06:40.780 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:08:09.535 | INFO     | app.auth.routes:register:55 - Verification link for weijunli@example.com: http://127.0.0.1:8081/api/v1/auth/verify/IndlaWp1bmxpQGV4YW1wbGUuY29tIg.aP82eQ.BJc9Z0oajl7yR-pzwfsgIAKYq_I
+2025-10-27 02:10:05.694 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:10:06.095 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:10:23.021 | INFO     | app.auth.routes:register:55 - Verification link for weijunli@example.com: http://127.0.0.1:8081/api/v1/auth/verify/IndlaWp1bmxpQGV4YW1wbGUuY29tIg.aP82_w.TQU3ZST1glwKgdkbc20Mf5sSVdw
+2025-10-27 02:11:45.848 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:11:46.283 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:11:53.258 | INFO     | app.auth.routes:register:55 - Verification link for weijunli@example.com: http://127.0.0.1:8081/api/v1/auth/verify/IndlaWp1bmxpQGV4YW1wbGUuY29tIg.aP83WQ.qlrUXc_iFZp5QtW9PtlI9uKe89s
+2025-10-27 02:13:34.856 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:13:35.284 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:13:41.260 | INFO     | app.auth.routes:register:55 - Verification link for weijunli@example.com: http://127.0.0.1:8081/api/v1/auth/verify/IndlaWp1bmxpQGV4YW1wbGUuY29tIg.aP83xQ.X_HtPN5fUJj7ST1uB6AiZL62HFY
+2025-10-27 02:14:57.159 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:15:05.596 | INFO     | app.auth.routes:register:55 - Verification link for weijunli@example.com: http://127.0.0.1:8081/api/v1/auth/verify/IndlaWp1bmxpQGV4YW1wbGUuY29tIg.aP84GQ.9hHmCTOPLtzXp-39O0c1bT4Ak0o
+2025-10-27 02:16:20.067 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:16:25.966 | INFO     | app.auth.routes:register:55 - Verification link for autumn.dawn.hope@gmail.com: http://127.0.0.1:8081/api/v1/auth/verify/ImF1dHVtbi5kYXduLmhvcGVAZ21haWwuY29tIg.aP84aQ.ABu2r6WUIKjMPEx8uOf2yjznoDQ
+2025-10-27 02:20:10.131 | INFO     | app.auth.routes:register:55 - Verification link for ethanlee@proton.me: http://127.0.0.1:8081/api/v1/auth/verify/ImV0aGFubGVlQHByb3Rvbi5tZSI.aP85Sg.6c558yMbQux494X4I0cRbfhJysY
+2025-10-27 02:22:07.115 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:22:15.654 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:26:10.244 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:38:38.122 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:38:38.540 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:38:55.648 | INFO     | app.auth.routes:register:55 - Verification link for ethanlee0302@proton.me: http://127.0.0.1:8081/api/v1/auth/verify/ImV0aGFubGVlMDMwMkBwcm90b24ubWUi.aP89rw.Fya1YeKena0IFDMRFT-qzivVZkM
+2025-10-27 02:40:35.669 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:40:36.070 | INFO     | app:create_app:21 - ✅ Flask 应用启动成功
+2025-10-27 02:41:05.827 | INFO     | app.auth.routes:register:55 - Verification link for ethanlee0302@proton.me: http://127.0.0.1:8081/api/v1/auth/verify/ImV0aGFubGVlMDMwMkBwcm90b24ubWUi.aP8-MQ.0XsRvCuMXu6YQ7d1OJAOVSAE8jk
+2025-10-27 03:15:25.830 | INFO     | app:create_app:25 - ✅ Flask app starting in development mode
+2025-10-27 03:15:26.224 | INFO     | app:create_app:25 - ✅ Flask app starting in development mode

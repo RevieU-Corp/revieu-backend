@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: uscre-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./sample.sql:/docker-entrypoint-initdb.d/sample.sql:ro
+
+  uscre-login:
+    build: .
+    container_name: uscre-login
+    environment:
+      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://root:${MYSQL_ROOT_PASSWORD}@db:3306/${MYSQL_DATABASE}?charset=utf8mb4
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - db
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./logs:/tmp/uscre_logs
+
+volumes:
+  db_data:
