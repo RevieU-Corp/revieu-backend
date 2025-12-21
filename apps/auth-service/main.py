@@ -6,14 +6,14 @@ import uvicorn
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 
 from app import create_app
-from app.config import settings
+from app.config import Config
 
 app = create_app()
 
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
-        host=settings.ADDRESS,
-        port=settings.PORT,
+        host=Config.ADDRESS,
+        port=Config.PORT,
         reload=True if os.getenv("ENV") == "development" else False,
     )
