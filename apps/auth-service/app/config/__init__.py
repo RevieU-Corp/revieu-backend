@@ -2,7 +2,10 @@ import os
 
 
 class Config:
-    # Flask 基本配置
+    # listen
+    ADDRESS = os.getenv("ADDRESS", "0.0.0.0")
+    PORT = int(os.getenv("PORT", 8082))
+    # 基本配置
     SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.getenv("JWT_SECRET_KEY")
