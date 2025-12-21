@@ -1,32 +1,34 @@
-import os
-from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
+from typing import Optional
 
-load_dotenv()
 
-class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY") or "you-will-never-guess"
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL") or "sqlite:///app.db"
-    # Mail server settings from .env
-    MAIL_SERVER = os.environ.get('MAIL_SERVER')
-    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 25)
-    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+class Settings(BaseSettings):
+    SECRET_KEY: str = "you-will-never-guess"
+    DATABASE_URL: str = "sqlite:///app.db"
 
-class DevelopmentConfig(Config):
-    DEBUG = True
+    # Mail server settings
+    MAIL_SERVER: Optional[str] = None
+    MAIL_PORT: int = 25
+    MAIL_USE_TLS: bool = False
+    MAIL_USERNAME: Optional[str] = None
+    MAIL_PASSWORD: Optional[str] = None
 
-class ProductionConfig(Config):
-    DEBUG = False
+    # OAuth
+    GITHUB_CLIENT_ID: Optional[str] = None
+    GITHUB_CLIENT_SECRET: Optional[str] = None
+    GITHUB_REDIRECT_URI: Optional[str] = None
 
-class TestingConfig(Config):
-    TESTING = True
-    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:" # Use in-memory DB for tests
+    GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_CLIENT_SECRET: Optional[str] = None
+    GOOGLE_REDIRECT_URI: Optional[str] = None
 
-config = {
-    'development': DevelopmentConfig,
-    'production': ProductionConfig,
-    'testing': TestingConfig,
-    'default': DevelopmentConfig
-}
+    FRONTEND_URL: str = "http://localhost:5173"
+
+    PORT: int = 5000
+    ADDRESS: str = "0.0.0.0"
+
+    class Config:
+        env_file = ".env"
+
+
+settings = Settings()

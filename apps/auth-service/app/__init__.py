@@ -1,31 +1,27 @@
-from flask import Flask
-from .extensions import db, migrate
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.auth.routes import auth_router
 from app.logger import log
-from flask_mail import Mail
-from app.config import Config
-from flask_cors import CORS
-import os
-
-mail = Mail()
+from app.config import settings
 
 
-def create_app():
-    app = Flask(__name__)
-    config_name = os.getenv("FLASK_ENV", "default")
-    app.config.from_object(Config)
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title="Auth Service", description="Auth Service for RevieU", version="0.1.0"
+    )
 
-    db.init_app(app)
-    migrate.init_app(app, db)
-    mail.init_app(app)
+    # CORS setup
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[settings.FRONTEND_URL],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
-    # 延迟导入蓝图
-    from .auth.routes import auth_bp
+    # Include routers
+    app.include_router(auth_router)
 
-    app.register_blueprint(auth_bp, url_prefix="/api/v1/auth")
-
-    CORS(app)
-
-    log.info(f"✅ Flask app starting in {config_name} mode")
-    log.debug("Debug logs are enabled")
+    log.info(f"✅ FastAPI app starting on {settings.ADDRESS}:{settings.PORT}")
 
     return app
