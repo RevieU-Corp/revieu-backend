@@ -68,3 +68,13 @@
 2025-10-27 02:41:05.827 | INFO     | app.auth.routes:register:55 - Verification link for ethanlee0302@proton.me: http://127.0.0.1:8081/api/v1/auth/verify/ImV0aGFubGVlMDMwMkBwcm90b24ubWUi.aP8-MQ.0XsRvCuMXu6YQ7d1OJAOVSAE8jk
 2025-10-27 03:15:25.830 | INFO     | app:create_app:25 - ✅ Flask app starting in development mode
 2025-10-27 03:15:26.224 | INFO     | app:create_app:25 - ✅ Flask app starting in development mode
+2025-12-20 21:04:53.420 | INFO     | app.main:create_app:30 - ✅ FastAPI app starting on 0.0.0.0:8082
+2025-12-20 21:04:53.420 | INFO     | app.main:create_app:30 - ✅ FastAPI app starting on 0.0.0.0:8082
+2025-12-20 21:04:53.420 | INFO     | app.main:create_app:30 - ✅ FastAPI app starting on 0.0.0.0:8082
+2025-12-20 21:06:16.578 | INFO     | app.main:create_app:30 - ✅ FastAPI app starting on 0.0.0.0:8082
+2025-12-20 21:11:40.930 | INFO     | app.main:create_app:30 - ✅ FastAPI app starting on 0.0.0.0:8082
+2025-12-20 21:11:40.930 | INFO     | app.main:create_app:30 - ✅ FastAPI app starting on 0.0.0.0:8082
+2025-12-20 21:11:40.931 | INFO     | app.main:create_app:30 - ✅ FastAPI app starting on 0.0.0.0:8082
+2025-12-20 21:12:48.870 | INFO     | app.main:create_app:30 - ✅ FastAPI app starting on 0.0.0.0:8082
+2025-12-20 21:12:48.874 | INFO     | app.main:create_app:30 - ✅ FastAPI app starting on 0.0.0.0:8082
+2025-12-20 21:12:48.895 | INFO     | app.main:create_app:30 - ✅ FastAPI app starting on 0.0.0.0:8082
