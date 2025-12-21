@@ -1,11 +1,9 @@
 # models/user.py
 from datetime import datetime, timezone
 from sqlalchemy import Column, String, DateTime, Boolean
-from app.extensions import Base
-from passlib.context import CryptContext
+from app.db.base import Base
+from app.core.security import get_password_hash, verify_password
 import uuid
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class User(Base):
@@ -34,11 +32,11 @@ class User(Base):
     # 密码操作方法
     def set_password(self, password: str):
         """生成密码哈希"""
-        self.password_hash = pwd_context.hash(password)
+        self.password_hash = get_password_hash(password)
 
     def check_password(self, password: str) -> bool:
         """验证密码"""
-        return pwd_context.verify(password, self.password_hash)
+        return verify_password(password, self.password_hash)
 
     def __repr__(self):
         return f"<User uuid={self.id} username={self.username} email={self.email}>"
