@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import api_router
 from app.core.config import settings
-from app.db.base import Base # Import base to ensure it exists
-from app.core.logger import log # Import to initialize logging config
-from loguru import logger
+from app.db.base import Base  # Import base to ensure it exists
+from app.core.logger import log as logger  # Import to initialize logging config
+
 
 def create_app() -> FastAPI:
     app = FastAPI(

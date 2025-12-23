@@ -1,6 +1,10 @@
 from app.core.config import settings
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
-from loguru import logger
+import structlog
+
+
+logger = structlog.get_logger()
+
 
 class EmailService:
     @staticmethod
