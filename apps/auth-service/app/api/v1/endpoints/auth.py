@@ -4,14 +4,17 @@ from sqlalchemy.orm import Session
 from app.services.auth_service import AuthService
 from app.api.deps import get_db, get_current_user
 from app.core.config import settings
-from app.schemas.user import UserCreate, UserLogin, UserResponse
+from app.schemas.user import UserCreate, UserLogin, UserResponse, UserProfileUpdate
 from app.schemas.common import MessageResponse
 from app.models.user import User
 import requests
 from urllib.parse import urlencode
-from loguru import logger
+import structlog
+
+logger = structlog.get_logger()
 
 router = APIRouter()
+
 
 # Step 1: 跳转到 GitHub 登录授权页
 @router.get("/github/login")
@@ -81,7 +84,9 @@ def github_callback(code: str, db: Session = Depends(get_db)):
     name = user_info_resp.get("name") or user_info_resp.get("login")
 
     # 登录或注册
-    user, token = AuthService.login_or_register_oauth_user(db, email, name, provider="github")
+    user, token = AuthService.login_or_register_oauth_user(
+        db, email, name, provider="github", avatar=user_info_resp.get("avatar_url")
+    )
 
     frontend_callback_url = f"{settings.FRONTEND_URL}/oauth-callback?token={token}"
     return RedirectResponse(frontend_callback_url)
@@ -138,9 +143,11 @@ def google_callback(code: str, db: Session = Depends(get_db)):
     name = user_info_resp.get("name")
 
     if not email:
-         return {"code": 1, "message": "No email found in Google account"}
+        return {"code": 1, "message": "No email found in Google account"}
 
-    user, token = AuthService.login_or_register_oauth_user(db, email, name, provider="google")
+    user, token = AuthService.login_or_register_oauth_user(
+        db, email, name, provider="google", avatar=user_info_resp.get("picture")
+    )
 
     frontend_callback_url = f"{settings.FRONTEND_URL}/oauth-callback?token={token}"
     return RedirectResponse(frontend_callback_url)
@@ -173,8 +180,8 @@ async def register(user_in: UserCreate, db: Session = Depends(get_db)):
 
 
 # 注册验证
-@router.get("/verify/{token}")
-def verify_email(token: str, db: Session = Depends(get_db)):
+@router.get("/verify")
+def verify_email(token: str = Query(...), db: Session = Depends(get_db)):
     user, message = AuthService.verify_email(db, token)
 
     if not user:
@@ -190,8 +197,11 @@ def verify_email(token: str, db: Session = Depends(get_db)):
 
 # 登录
 @router.post("/login")
-def login(login_in: UserLogin, db: Session = Depends(get_db)):
-    token, message = AuthService.login_user(db, login_in.email, login_in.password)
+def login(login_in: UserLogin, request: Request, db: Session = Depends(get_db)):
+    ip_address = request.client.host if request.client else None
+    token, message = AuthService.login_user(
+        db, login_in.email, login_in.password, ip_address=ip_address
+    )
 
     if not token:
         raise HTTPException(
@@ -201,22 +211,48 @@ def login(login_in: UserLogin, db: Session = Depends(get_db)):
 
     frontend_callback_url = f"{settings.FRONTEND_URL}/oauth-callback?token={token}"
     # Original behavior returned RedirectResponse for POST login?
-    # Usually login API returns JSON with token. 
-    # But original code returned RedirectResponse. 
+    # Usually login API returns JSON with token.
+    # But original code returned RedirectResponse.
     # That is weird for a JSON API used by frontend, but maybe they want to redirect immediately?
     # I will keep original behavior for compatibility.
     return RedirectResponse(frontend_callback_url)
 
 
 # 获取用户信息（受保护接口）
+# 获取用户信息（受保护接口）
 @router.get("/profile", response_model=MessageResponse)
 def profile(current_user: User = Depends(get_current_user)):
     return {
         "code": 0,
         "message": "User profile fetched successfully",
-        "data": {
-            "username": current_user.username,
-            "email": current_user.email,
-            "created_at": current_user.created_at.isoformat(),
-        },
+        "data": UserResponse.model_validate(current_user).model_dump(),
+    }
+
+
+# 更新用户信息（受保护接口）
+@router.put("/profile", response_model=MessageResponse)
+def update_profile(
+    profile_in: UserProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not current_user.profile:
+        from app.models.user import UserProfile
+
+        current_user.profile = UserProfile(user_id=current_user.id)
+
+    if profile_in.nickname is not None:
+        current_user.profile.nickname = profile_in.nickname
+    if profile_in.avatar is not None:
+        current_user.profile.avatar = profile_in.avatar
+    if profile_in.bio is not None:
+        current_user.profile.bio = profile_in.bio
+
+    db.commit()
+    db.refresh(current_user)
+
+    return {
+        "code": 0,
+        "message": "User profile updated successfully",
+        "data": UserResponse.model_validate(current_user).model_dump(),
     }

@@ -1,42 +1,69 @@
-# app/logger.py
+import logging
+import sys
 import os
-from loguru import logger
+import structlog
+from structlog.types import Processor
 
 # 日志文件路径
 LOG_DIR = os.getenv("LOG_DIR", "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
-
 LOG_FILE_PATH = os.path.join(LOG_DIR, "app.log")
 
-# 日志格式
-LOG_FORMAT = (
-    "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
-    "<level>{level: <8}</level> | "
-    "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
-    "<level>{message}</level>"
-)
 
-# 移除默认的 handler（loguru 默认只输出到 stdout）
-logger.remove()
+def setup_logging():
+    shared_processors: list[Processor] = [
+        structlog.contextvars.merge_contextvars,
+        structlog.processors.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+    ]
 
-# 输出到终端
-logger.add(
-    sink=lambda msg: print(msg, end=""),  # 直接输出到控制台
-    format=LOG_FORMAT,
-    colorize=True,
-    level="INFO",
-)
+    # Configure Structlog
+    structlog.configure(
+        processors=shared_processors
+        + [
+            # Prepare event dict for stdlib logging (do not render to JSON here)
+            structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+        ],
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
 
-# 输出到文件（每天新文件，保留7天）
-logger.add(
-    LOG_FILE_PATH,
-    rotation="00:00",  # 每天凌晨新文件
-    retention="7 days",  # 保留7天
-    encoding="utf-8",
-    enqueue=True,  # 多线程安全
-    level="INFO",
-    format=LOG_FORMAT,
-)
+    # Configure Standard Logging (to capture Uvicorn/FastAPI logs)
+    formatter = structlog.stdlib.ProcessorFormatter(
+        # These run ONLY on `logging` entries that do NOT come from structlog
+        foreign_pre_chain=shared_processors,
+        # These run on ALL entries
+        processors=[
+            structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+            structlog.processors.JSONRenderer(),
+        ],
+    )
 
-# 导出 logger 实例
-log = logger
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(formatter)
+
+    # File Handler
+    file_handler = logging.FileHandler(LOG_FILE_PATH, encoding="utf-8")
+    file_handler.setFormatter(formatter)
+
+    root_logger = logging.getLogger()
+    root_logger.addHandler(handler)
+    root_logger.addHandler(file_handler)
+    root_logger.setLevel(logging.INFO)
+
+    # Intercept Uvicorn logs
+    for _log in ["uvicorn", "uvicorn.error", "uvicorn.access"]:
+        # Clear existing handlers
+        logging.getLogger(_log).handlers = []
+        logging.getLogger(_log).propagate = True
+
+    # Get a logger instance to export
+    return structlog.get_logger()
+
+
+# Export a default logger (though best practice is get_logger() in each file)
+log = setup_logging()

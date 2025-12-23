@@ -1,11 +1,18 @@
 from sqlalchemy.orm import Session
-from app.models.user import User
-from app.core.security import create_access_token, generate_email_verification_token, verify_email_token
+from app.models.user import User, UserProfile
+from app.core.security import (
+    create_access_token,
+    generate_email_verification_token,
+    verify_email_token,
+)
 from app.services.email_service import EmailService
 from app.core.config import settings
-from loguru import logger
+import structlog
+
+logger = structlog.get_logger()
 import secrets
 from datetime import datetime, timezone
+
 
 class AuthService:
     @staticmethod
@@ -21,6 +28,11 @@ class AuthService:
         db.add(user)
         db.commit()
         db.refresh(user)
+
+        # Create default profile
+        profile = UserProfile(user_id=user.id, nickname=username)
+        db.add(profile)
+        db.commit()
 
         token = generate_email_verification_token(email)
         verify_url = f"{settings.FRONTEND_URL}/verify?token={token}"
@@ -55,16 +67,23 @@ class AuthService:
         return user, "email verified successfully"
 
     @staticmethod
-    def login_user(db: Session, email: str, password: str):
+    def login_user(db: Session, email: str, password: str, ip_address: str = None):
         user = db.query(User).filter(User.email == email).first()
         if not user or not user.check_password(password):
             return None, "Invalid credentials, incorrect email or password"
+
+        user.last_login_at = datetime.now(timezone.utc)
+        if ip_address:
+            user.last_login_ip = ip_address
+        db.commit()
 
         token = create_access_token(user.id, user.email, user.username)
         return token, "login successful"
 
     @staticmethod
-    def login_or_register_oauth_user(db: Session, email: str, name: str, provider: str = "oauth"):
+    def login_or_register_oauth_user(
+        db: Session, email: str, name: str, provider: str = "oauth", avatar: str = None
+    ):
         """OAuth login: login if exists, else register"""
         user = db.query(User).filter(User.email == email).first()
 
@@ -73,26 +92,37 @@ class AuthService:
                 username=name,
                 email=email,
                 # Random password for oauth users
-                password_hash=secrets.token_hex(16), 
+                password_hash=secrets.token_hex(16),
                 is_verified=True,
                 created_at=datetime.now(timezone.utc),
             )
-            # Since we don't have set_password call here, we should perhaps hash the random password 
-            # or handle it differently. The original code set password_hash to the hex, 
+            # Since we don't have set_password call here, we should perhaps hash the random password
+            # or handle it differently. The original code set password_hash to the hex,
             # which means they can't login with password unless they reset it.
             # But wait, original code did: password_hash=secrets.token_hex(16)
-            # This is storing 'plain' random hex in password_hash column? 
+            # This is storing 'plain' random hex in password_hash column?
             # If User.check_password uses verify_password, it will try to verify(plain, hash).
             # If hash is not a hash, passlib might complain or fail.
             # Ideally we should hash it.
             # But following original behavior for now or improved?
             # Let's improve and hash it so internal consistency is kept.
-            
+
             user.set_password(secrets.token_hex(16))
-            
+
             db.add(user)
             db.commit()
             db.refresh(user)
+
+            # Create default profile for oauth user
+            profile = UserProfile(user_id=user.id, nickname=name, avatar=avatar)
+            db.add(profile)
+            db.commit()
+
+        # Update login info for oauth user too
+        user.last_login_at = datetime.now(timezone.utc)
+        # oauth login usually happens via redirect so obtaining IP might be tricky in this method directly
+        # or we update it if we have request context. For now just time.
+        db.commit()
 
         token = create_access_token(user.id, user.email, user.username)
         return user, token
