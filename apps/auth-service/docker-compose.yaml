@@ -2,20 +2,23 @@ version: "3.9"
 
 services:
   db:
-    image: mysql:8.0
-    container_name: uscre-mysql
+    image: postgres:15
+    container_name: uscre-postgres
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data
       - ./sample.sql:/docker-entrypoint-initdb.d/sample.sql:ro
+    ports:
+      - "5432:5432"
 
   uscre-login:
     build: .
     container_name: uscre-login
     environment:
-      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://root:${MYSQL_ROOT_PASSWORD}@db:3306/${MYSQL_DATABASE}?charset=utf8mb4
+      - SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       - PYTHONUNBUFFERED=1
     depends_on:
       - db
