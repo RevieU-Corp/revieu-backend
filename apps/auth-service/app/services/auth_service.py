@@ -35,7 +35,9 @@ class AuthService:
         db.commit()
 
         token = generate_email_verification_token(email)
-        verify_url = f"{settings.FRONTEND_URL}/verify?token={token}"
+        # verify_url = f"{settings.FRONTEND_URL}/verify?token={token}"
+        # Use backend domain for verification link
+        verify_url = f"{settings.DOMAIN}/api/v1/auth/verify?token={token}"
         logger.info(f"Verification link for {email}: {verify_url}")
 
         # Send email (async fire and forget or await)
