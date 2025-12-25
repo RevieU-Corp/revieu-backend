@@ -13,7 +13,7 @@ from app.extensions import db
 app = Flask(__name__)
 
 # 配置 MySQL 数据库 URI
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:123456@172.17.245.161:3306/USCRE?charset=utf8mb4"
+app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:123456@172.17.245.161:3306/RevieU?charset=utf8mb4"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # 初始化 SQLAlchemy
