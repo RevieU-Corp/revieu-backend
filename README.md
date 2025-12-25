@@ -50,8 +50,8 @@ Create a `.env` file based on your configuration. Key variables include:
 # Database
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=yourpassword
-POSTGRES_DB=USCRE
-SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://postgres:yourpassword@localhost:5432/USCRE
+POSTGRES_DB=RevieU
+SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://postgres:yourpassword@localhost:5432/RevieU
 
 # Application
 PORT=8082
@@ -72,10 +72,10 @@ Ensure PostgreSQL is running and create the database:
 
 ```bash
 # Create database
-psql -h localhost -U postgres -c 'CREATE DATABASE "USCRE";'
+psql -h localhost -U postgres -c 'CREATE DATABASE "RevieU";'
 
 # Initialize schema
-psql -h localhost -U postgres -d USCRE -f sample.sql
+psql -h localhost -U postgres -d RevieU -f sample.sql
 ```
 
 #### 3. Install Dependencies & Run
