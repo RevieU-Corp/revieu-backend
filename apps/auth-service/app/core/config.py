@@ -1,5 +1,5 @@
-from typing import Optional
-from pydantic import Field
+from typing import Optional, Any
+from pydantic import Field, PostgresDsn, field_validator, ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,7 +14,28 @@ class Settings(BaseSettings):
     ENV: str = "development"
 
     # Database
-    SQLALCHEMY_DATABASE_URI: str
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PASSWORD: str = "123456"
+    POSTGRES_DB: str = "revieu"
+    POSTGRES_HOST: str = "localhost"
+    POSTGRES_PORT: int = 5432
+    SQLALCHEMY_DATABASE_URI: Optional[str] = None
+
+    @field_validator("SQLALCHEMY_DATABASE_URI", mode="before")
+    @classmethod
+    def assemble_db_connection(cls, v: Optional[str], info: ValidationInfo) -> Any:
+        if isinstance(v, str):
+            return v
+        return str(
+            PostgresDsn.build(
+                scheme="postgresql+psycopg2",
+                username=info.data.get("POSTGRES_USER"),
+                password=info.data.get("POSTGRES_PASSWORD"),
+                host=info.data.get("POSTGRES_HOST"),
+                port=info.data.get("POSTGRES_PORT"),
+                path=f"{info.data.get('POSTGRES_DB') or ''}",
+            )
+        )
 
     # Security
     SECRET_KEY: str = Field(validation_alias="JWT_SECRET_KEY")
@@ -26,7 +47,7 @@ class Settings(BaseSettings):
     MAIL_USE_SSL: bool = True
     MAIL_USERNAME: Optional[str] = None
     MAIL_PASSWORD: Optional[str] = None
-    MAIL_SENDER_NAME: Optional[str] = "USCRE"
+    MAIL_SENDER_NAME: Optional[str] = "RevieU"
     MAIL_SENDER_EMAIL: Optional[str] = None
 
     # OAuth - GitHub

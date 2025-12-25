@@ -315,7 +315,7 @@
 - `MAIL_USE_SSL`: 是否使用 SSL（默认：True）
 - `MAIL_USERNAME`: SMTP 用户名
 - `MAIL_PASSWORD`: SMTP 密码
-- `MAIL_SENDER_NAME`: 发件人名称（默认：USCRE）
+- `MAIL_SENDER_NAME`: 发件人名称（默认：RevieU）
 - `MAIL_SENDER_EMAIL`: 发件人邮箱（默认：与 MAIL_USERNAME 相同）
 
 - `GOOGLE_CLIENT_ID`: Google 客户端 ID

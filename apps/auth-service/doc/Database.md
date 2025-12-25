@@ -1,8 +1,8 @@
-# USCRE 数据库设计文档
+# RevieU 数据库设计文档
 
 ## 1. 数据库概述
 
-**数据库名称**：`USCRE`
+**数据库名称**：`RevieU`
 **用途**：用户注册、登录、密码找回、账号安全管理等核心功能。
 **字符集**：`utf8mb4`，支持多语言字符
 **Collation**：`utf8mb4_unicode_ci`
@@ -36,9 +36,9 @@
 
 ```sql
 -- schema.sql
-CREATE DATABASE IF NOT EXISTS USCRE;
+CREATE DATABASE IF NOT EXISTS RevieU;
 
-USE USCRE;
+USE RevieU;
 
 CREATE TABLE IF NOT EXISTS tb_users (
     id CHAR(36) PRIMARY KEY,

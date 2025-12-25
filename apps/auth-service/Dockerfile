@@ -1,19 +1,26 @@
-FROM python:3.12-slim
+FROM python:3.13-slim
 
-# 安装 curl 并安装 uv
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    PATH="/root/.local/bin:$PATH"
+
+# Install curl and uv
 RUN apt-get update && apt-get install -y curl \
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && rm -rf /var/lib/apt/lists/*
 
-# 把 uv 的路径加到全局 PATH
-ENV PATH="/root/.local/bin:${PATH}"
-
 WORKDIR /app
+
+# Install dependencies first (layer caching)
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project
+
+# Copy the rest of the application
 COPY . .
 
-# 构建阶段同步 uv 环境
-RUN uv sync
-RUN uv add gunicorn
+# Sync the project itself
+RUN uv sync --frozen
 
-# 容器启动时运行你的应用
-CMD [".venv/bin/gunicorn", "-w", "5", "-b", "0.0.0.0:8082", "main:app"]
+# Run the application
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8082"]
