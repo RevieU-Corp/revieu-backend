@@ -1,4 +1,3 @@
-
 from typing import Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -11,11 +10,12 @@ class Settings(BaseSettings):
     ADDRESS: str = "0.0.0.0"
     PORT: int = 8082
     FRONTEND_URL: str = "http://localhost:3000"
+    DOMAIN: str = "http://localhost:8082"
     ENV: str = "development"
 
     # Database
     SQLALCHEMY_DATABASE_URI: str
-    
+
     # Security
     SECRET_KEY: str = Field(validation_alias="JWT_SECRET_KEY")
 
@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_ID: Optional[str] = None
     GITHUB_CLIENT_SECRET: Optional[str] = None
     GITHUB_REDIRECT_URI: Optional[str] = None
-    
+
     # OAuth - Google
     GOOGLE_CLIENT_ID: Optional[str] = None
     GOOGLE_CLIENT_SECRET: Optional[str] = None
