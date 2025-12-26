@@ -118,8 +118,8 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
-            # [MANUAL CONFIG] Change this to the actual directory on your server
-            cd /path/to/project
+            # 使用配置的 DEPLOY_PATH
+            cd ${{ secrets.DEPLOY_PATH }}
 
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
