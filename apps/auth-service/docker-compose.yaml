@@ -2,6 +2,8 @@ version: "3.9"
 
 services:
   revieu-login:
+    # [MANUAL CONFIG] Replace with your GitHub username if not using environment variables
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-RevieU-Corp}/revieu-auth-service:latest
     build: .
     container_name: revieu-login
     env_file:
@@ -9,6 +11,6 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "${PORT:-8082}:8082"
+      - "${PORT:-8080}:8080"
     volumes:
       - ./logs:/tmp/revieu_logs
