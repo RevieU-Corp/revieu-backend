@@ -1,17 +1,7 @@
-from sqlalchemy.orm import Session
-from app.models.user import User
-from app.core.security import (
-    create_access_token,
-    generate_email_verification_token,
-    verify_email_token,
-)
-from app.services.email_service import EmailService
-from app.core.config import settings
-import structlog
-
-logger = structlog.get_logger()
-import secrets
 from datetime import datetime, timezone
+import secrets
+import structlog
+from sqlalchemy.orm import Session
 
 
 class AuthService:
