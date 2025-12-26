@@ -1,6 +1,6 @@
 # models/user.py
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, Boolean
 from app.db.base import Base
 from app.core.security import get_password_hash, verify_password
 import uuid

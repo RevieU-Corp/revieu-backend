@@ -1,10 +1,10 @@
 # test/db_test.py
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 import uuid
 import sys
 import os
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from app.models import User
 from app.extensions import db
@@ -13,8 +13,10 @@ from app.extensions import db
 app = Flask(__name__)
 
 # 配置 MySQL 数据库 URI
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:123456@172.17.245.161:3306/RevieU?charset=utf8mb4"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    "mysql+pymysql://root:123456@172.17.245.161:3306/RevieU?charset=utf8mb4"
+)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # 初始化 SQLAlchemy
 db.init_app(app)
@@ -31,7 +33,7 @@ if __name__ == "__main__":
                 id=str(uuid.uuid4()),
                 username="test_user",
                 email="test_user111@example.com",
-                password_hash = "pass_test"
+                password_hash="pass_test",
             )
             db.session.add(new_user)
             db.session.commit()

@@ -1,5 +1,3 @@
-from dotenv import load_dotenv
-import os
 import uvicorn
 from app.main import create_app
 from app.core.config import settings

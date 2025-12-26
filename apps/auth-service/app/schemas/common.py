@@ -1,7 +1,8 @@
 from pydantic import BaseModel
-from typing import Optional, Generic, TypeVar, Any
+from typing import Optional, TypeVar, Any
 
 T = TypeVar("T")
+
 
 class MessageResponse(BaseModel):
     code: int
