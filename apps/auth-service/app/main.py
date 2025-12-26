@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import api_router
 from app.core.config import settings
-from app.db.base import Base as Base  # Import base to ensure it exists
-from app.core.logger import log as logger  # Import to initialize logging config
+from app.db.base import Base as Base  # noqa: F401
+from app.core.logger import log as logger  # noqa: F401
 
 
 def create_app() -> FastAPI:
