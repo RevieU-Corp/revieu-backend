@@ -19,7 +19,6 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/revieu-auth-service
 
 jobs:
   validate:
@@ -51,6 +50,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Image Name (lowercase)
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+          # 这里 ${GITHUB_REPOSITORY,,} 是 bash 语法，将变量转为全小写
+
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
         with:
@@ -81,7 +85,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: apps/auth-service
-          # 只有在代码真正进入 dev 或 main 分支（push 事件）时才推送到仓库
           push: ${{ github.event_name == 'push' }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest,enable=${{ github.ref == 'refs/heads/main' }}
