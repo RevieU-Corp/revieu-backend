@@ -27,6 +27,4 @@ def create_app() -> FastAPI:
     # Include routers
     app.include_router(api_router, prefix="/api/v1")
 
-    logger.info(f"✅ FastAPI app starting on {settings.ADDRESS}:{settings.PORT}")
-
     return app

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models.user import User, UserProfile
+from app.models.user import User
 from app.core.security import (
     create_access_token,
     generate_email_verification_token,
@@ -20,7 +20,7 @@ class AuthService:
         if db.query(User).filter(User.email == email).first():
             return None, "user already exists"
 
-        user = User(username=username, email=email)
+        user = User(username=username, email=email, nickname=username)
         user.set_password(password)
         user.is_active = False
         user.is_verified = False
@@ -28,11 +28,6 @@ class AuthService:
         db.add(user)
         db.commit()
         db.refresh(user)
-
-        # Create default profile
-        profile = UserProfile(user_id=user.id, nickname=username)
-        db.add(profile)
-        db.commit()
 
         token = generate_email_verification_token(email)
         # verify_url = f"{settings.FRONTEND_URL}/verify?token={token}"
@@ -110,15 +105,12 @@ class AuthService:
             # Let's improve and hash it so internal consistency is kept.
 
             user.set_password(secrets.token_hex(16))
+            user.nickname = name
+            user.avatar = avatar
 
             db.add(user)
             db.commit()
             db.refresh(user)
-
-            # Create default profile for oauth user
-            profile = UserProfile(user_id=user.id, nickname=name, avatar=avatar)
-            db.add(profile)
-            db.commit()
 
         # Update login info for oauth user too
         user.last_login_at = datetime.now(timezone.utc)
