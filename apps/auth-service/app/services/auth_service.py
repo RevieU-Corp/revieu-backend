@@ -3,6 +3,17 @@ import secrets
 import structlog
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
+from app.core.security import (
+    create_access_token,
+    generate_email_verification_token,
+    verify_email_token,
+)
+from app.models.user import User
+from app.services.email_service import EmailService
+
+logger = structlog.get_logger()
+
 
 class AuthService:
     @staticmethod
