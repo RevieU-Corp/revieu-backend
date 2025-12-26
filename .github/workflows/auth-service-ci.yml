@@ -52,8 +52,8 @@ jobs:
 
       - name: Set up Image Name (lowercase)
         run: |
-          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
-          # 这里 ${GITHUB_REPOSITORY,,} 是 bash 语法，将变量转为全小写
+          OWNER="${{ github.repository_owner }}"
+          echo "IMAGE_NAME=${OWNER,,}/revieu-auth-service" >> ${GITHUB_ENV}
 
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
