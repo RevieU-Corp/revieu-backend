@@ -1,0 +1,119 @@
+name: Auth Service CI/CD
+
+on:
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "apps/auth-service/**"
+      - ".github/workflows/auth-service-ci.yml"
+  push:
+    branches: [main, dev]
+    paths:
+      - "apps/auth-service/**"
+      - ".github/workflows/auth-service-ci.yml"
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: read
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/revieu-auth-service
+
+jobs:
+  validate:
+    name: Validate Flow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR Source Branch
+        if: github.event_name == 'pull_request'
+        run: |
+          # 如果目标是 main，必须来自 dev
+          if [[ "${{ github.base_ref }}" == "main" && "${{ github.head_ref }}" != "dev" ]]; then
+            echo "Error: Pull Requests to 'main' must originate from the 'dev' branch."
+            exit 1
+          fi
+          # 如果目标是 dev，不能直接来自 main
+          if [[ "${{ github.base_ref }}" == "dev" && "${{ github.head_ref }}" == "main" ]]; then
+            echo "Error: You cannot merge 'main' into 'dev' via PR."
+            exit 1
+          fi
+
+  ci-build:
+    name: Lint and Build/Push
+    needs: [validate]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/auth-service
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint with ruff
+        run: |
+          uv pip install ruff
+          uv run ruff check .
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: apps/auth-service
+          # 只有在代码真正进入 dev 或 main 分支（push 事件）时才推送到仓库
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest,enable=${{ github.ref == 'refs/heads/main' }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev,enable=${{ github.ref == 'refs/heads/dev' }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Production
+    needs: ci-build
+    # 只有推送到 main 分支（即 PR 合并到 main）时才触发布署
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          # [MANUAL CONFIG] Setup these in GitHub Settings -> Secrets
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            # [MANUAL CONFIG] Change this to the actual directory on your server
+            cd /path/to/project
+
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            export GITHUB_REPOSITORY_OWNER=${{ github.repository_owner }}
+
+            docker compose pull revieu-login
+            docker compose up -d revieu-login
+            docker image prune -f
