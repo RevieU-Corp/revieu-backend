@@ -10,33 +10,18 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    nickname: Optional[str] = None
 
 
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class UserProfileBase(BaseModel):
+class UserUpdate(BaseModel):
     nickname: Optional[str] = None
     avatar: Optional[str] = None
     bio: Optional[str] = None
 
 
-class UserProfileCreate(UserProfileBase):
-    pass
-
-
-class UserProfileUpdate(UserProfileBase):
-    pass
-
-
-class UserProfileResponse(UserProfileBase):
-    id: str
-    user_id: str
-
-    class Config:
-        from_attributes = True
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
 
 
 class UserResponse(UserBase):
@@ -46,7 +31,9 @@ class UserResponse(UserBase):
     is_verified: bool
     created_at: datetime
     last_login_at: Optional[datetime] = None
-    profile: Optional[UserProfileResponse] = None
+    nickname: Optional[str] = None
+    avatar: Optional[str] = None
+    bio: Optional[str] = None
 
     class Config:
         from_attributes = True

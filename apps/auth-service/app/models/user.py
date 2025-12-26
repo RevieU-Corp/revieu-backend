@@ -32,6 +32,11 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
 
+    # Profile fields (merged from tb_profiles)
+    nickname = Column(String(50), nullable=True)
+    avatar = Column(String(255), nullable=True)
+    bio = Column(String(500), nullable=True)
+
     # 密码操作方法
     def set_password(self, password: str):
         """生成密码哈希"""
@@ -43,17 +48,3 @@ class User(Base):
 
     def __repr__(self):
         return f"<User uuid={self.id} username={self.username} email={self.email}>"
-
-
-class UserProfile(Base):
-    __tablename__ = "tb_profiles"
-
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String(36), ForeignKey("tb_users.id"), unique=True, nullable=False)
-
-    nickname = Column(String(50), nullable=True)
-    avatar = Column(String(255), nullable=True)
-    bio = Column(String(500), nullable=True)
-
-    def __repr__(self):
-        return f"<UserProfile user_id={self.user_id} nickname={self.nickname}>"
