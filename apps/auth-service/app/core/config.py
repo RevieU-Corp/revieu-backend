@@ -7,8 +7,6 @@ class Settings(BaseSettings):
     # App
     PROJECT_NAME: str = "Auth Service"
     VERSION: str = "0.1.0"
-    ADDRESS: str = "0.0.0.0"
-    PORT: int = 8082
     FRONTEND_URL: str = "http://localhost:3000"
     DOMAIN: str = "http://localhost:8082"
     ENV: str = "development"

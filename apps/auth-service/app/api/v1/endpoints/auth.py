@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.services.auth_service import AuthService
 from app.api.deps import get_db, get_current_user
 from app.core.config import settings
-from app.schemas.user import UserCreate, UserLogin, UserResponse, UserProfileUpdate
+from app.schemas.user import UserCreate, UserLogin, UserResponse, UserUpdate
 from app.schemas.common import MessageResponse
 from app.models.user import User
 import requests
@@ -232,21 +232,16 @@ def profile(current_user: User = Depends(get_current_user)):
 # 更新用户信息（受保护接口）
 @router.put("/profile", response_model=MessageResponse)
 def update_profile(
-    profile_in: UserProfileUpdate,
+    user_update: UserUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if not current_user.profile:
-        from app.models.user import UserProfile
-
-        current_user.profile = UserProfile(user_id=current_user.id)
-
-    if profile_in.nickname is not None:
-        current_user.profile.nickname = profile_in.nickname
-    if profile_in.avatar is not None:
-        current_user.profile.avatar = profile_in.avatar
-    if profile_in.bio is not None:
-        current_user.profile.bio = profile_in.bio
+    if user_update.nickname is not None:
+        current_user.nickname = user_update.nickname
+    if user_update.avatar is not None:
+        current_user.avatar = user_update.avatar
+    if user_update.bio is not None:
+        current_user.bio = user_update.bio
 
     db.commit()
     db.refresh(current_user)
