@@ -63,7 +63,15 @@ apps/auth-service/
    uv sync
    ```
 2. **环境配置**:
-   拷贝 `.env.example` 并重命名为 `.env`，填入必要的数据库和 OAuth 凭证。
+   拷贝 `.env.example` 并重命名为 `.env`。针对数据库连接，确保填入以下关键变量：
+   ```ini
+   # Database
+   POSTGRES_USER=postgres
+   POSTGRES_PASSWORD=yourpassword
+   POSTGRES_DB=RevieU
+   # 建议使用 asyncpg 驱动进行异步连接
+   SQLALCHEMY_DATABASE_URI=postgresql+asyncpg://postgres:yourpassword@localhost:5432/RevieU
+   ```
 3. **运行迁移**:
    ```bash
    uv run alembic upgrade head
@@ -71,6 +79,14 @@ apps/auth-service/
 4. **启动服务**:
    ```bash
    uv run uvicorn app.main:app --reload --port 8080
+   ```
+5. **初始化数据库 (可选)**:
+   如果还没有数据库，可以使用命令手动创建并导入基础数据：
+   ```bash
+   # 创建数据库
+   psql -h localhost -U postgres -c 'CREATE DATABASE "RevieU";'
+   # 初始化 Schema (如有 sample.sql)
+   psql -h localhost -U postgres -d RevieU -f sample.sql
    ```
 
 ---
