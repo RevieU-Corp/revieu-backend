@@ -34,59 +34,21 @@ The `auth-service` handles user registration, login (email/password & OAuth), an
 - PostgreSQL
 - `uv` package manager
 
-### 🚀 Getting Started
+### 🚀 快速开始
 
-#### 1. Setup Environment
+#### 1. 设置环境与依赖
 
-Navigate to the service directory:
+详细的子服务配置（如数据库、OAuth、部署等）请参阅各子目录下的 `README.md`。
 
 ```bash
 cd apps/auth-service
-```
-
-Create a `.env` file based on your configuration. Key variables include:
-
-```ini
-# Database
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=yourpassword
-POSTGRES_DB=RevieU
-SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://postgres:yourpassword@localhost:5432/RevieU
-
-# Application
-PORT=8082
-DOMAIN=http://localhost:8082
-FRONTEND_URL=http://localhost:3000
-
-# Security
-JWT_SECRET_KEY=your_secret_key
-
-# OAuth (Optional)
-GITHUB_CLIENT_ID=...
-GOOGLE_CLIENT_ID=...
-```
-
-#### 2. Database Setup
-
-Ensure PostgreSQL is running and create the database:
-
-```bash
-# Create database
-psql -h localhost -U postgres -c 'CREATE DATABASE "RevieU";'
-
-# Initialize schema
-psql -h localhost -U postgres -d RevieU -f sample.sql
-```
-
-#### 3. Install Dependencies & Run
-
-Using `uv`:
-
-```bash
-# Install dependencies and sync environment
 uv sync
+```
 
-# Run the development server
+#### 2. 启动服务
+
+```bash
+cd apps/auth-service
 uv run uvicorn main:app --reload --port 8082
 ```
 
