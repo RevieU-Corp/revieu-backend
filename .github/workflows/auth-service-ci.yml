@@ -19,6 +19,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
+  IMAGE_NAME: ""
 
 jobs:
   validate:
@@ -110,20 +111,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Copy docker-compose.yaml to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          source: "apps/auth-service/docker-compose.yaml"
+          target: ${{ secrets.DEPLOY_PATH }}
+          strip_components: 2
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          # [MANUAL CONFIG] Setup these in GitHub Settings -> Secrets
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
-            # 使用配置的 DEPLOY_PATH
             cd ${{ secrets.DEPLOY_PATH }}
 
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            export GITHUB_REPOSITORY_OWNER=${{ github.repository_owner }}
+            # Use lowercase for registry owner to match the build step
+            OWNER="${{ github.repository_owner }}"
+            export GITHUB_REPOSITORY_OWNER=${OWNER,,}
 
             docker compose pull revieu-login
             docker compose up -d revieu-login
