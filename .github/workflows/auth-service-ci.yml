@@ -70,6 +70,9 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
+            # Fix git workshop ownership issue
+            git config --global --add safe.directory ${{ secrets.DEPLOY_PATH }}
+
             cd ${{ secrets.DEPLOY_PATH }}
 
             # Update source code
