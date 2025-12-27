@@ -17,13 +17,9 @@ permissions:
   packages: write
   pull-requests: read
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ""
-
 jobs:
   validate:
-    name: Validate Flow
+    name: Validate and Lint
     runs-on: ubuntu-latest
     steps:
       - name: Validate PR Source Branch
@@ -40,21 +36,7 @@ jobs:
             exit 1
           fi
 
-  ci-build:
-    name: Lint and Build/Push
-    needs: [validate]
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/auth-service
-
-    steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Image Name (lowercase)
-        run: |
-          OWNER="${{ github.repository_owner }}"
-          echo "IMAGE_NAME=${OWNER,,}/revieu-auth-service" >> ${GITHUB_ENV}
 
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
@@ -65,62 +47,22 @@ jobs:
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: Install dependencies
+        working-directory: apps/auth-service
         run: uv sync --frozen
 
       - name: Lint with ruff
+        working-directory: apps/auth-service
         run: |
           uv pip install ruff
           uv run ruff check .
 
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=ref,event=branch
-            type=sha,format=short
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: apps/auth-service
-          push: ${{ github.event_name == 'push' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
   deploy:
     name: Deploy to Production
-    needs: ci-build
+    needs: validate
     # 只有推送到 main 分支（即 PR 合并到 main）时才触发布署
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Copy docker-compose.yaml to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_KEY }}
-          source: "apps/auth-service/docker-compose.yaml"
-          target: ${{ secrets.DEPLOY_PATH }}
-          strip_components: 2
-
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -130,12 +72,46 @@ jobs:
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
 
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            # Update source code
+            git pull origin main
 
-            # Use lowercase for registry owner to match the build step
-            OWNER="${{ github.repository_owner }}"
-            export GITHUB_REPOSITORY_OWNER=${OWNER,,}
+            cd apps/auth-service
 
-            docker compose pull revieu-login
-            docker compose up -d revieu-login
+            # Build and deploy locally
+            docker compose up -d --build
             docker image prune -f
+
+      - name: Notify Discord
+        if: always()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK" ]; then
+            echo "DISCORD_WEBHOOK is not set, skipping notification."
+            exit 0
+          fi
+
+          STATUS="${{ job.status }}"
+          case "$STATUS" in
+            success) COLOR=3066993 ;; # Green
+            failure) COLOR=15158332 ;; # Red
+            cancelled) COLOR=9807270 ;; # Grey
+            *) COLOR=0 ;;
+          esac
+
+          MESSAGE="Deployment of **${{ github.repository }}** (${{ github.ref_name }}) was a **$STATUS**."
+
+          curl -X POST -H "Content-Type: application/json" \
+            -d "{
+              \"embeds\": [{
+                \"title\": \"Deployment Notification\",
+                \"description\": \"$MESSAGE\",
+                \"color\": $COLOR,
+                \"fields\": [
+                  {\"name\": \"Commit\", \"value\": \"[${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})\", \"inline\": false},
+                  {\"name\": \"Host\", \"value\": \"${{ secrets.DEPLOY_HOST }}\", \"inline\": true}
+                ],
+                \"footer\": {\"text\": \"RevieU CI/CD\"}
+              }]
+            }" \
+            $DISCORD_WEBHOOK
