@@ -2,8 +2,7 @@ version: "3.9"
 
 services:
   revieu-login:
-    # [MANUAL CONFIG] Replace with your GitHub username if not using environment variables
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/revieu-auth-service:latest
+    image: revieu-auth-service:latest
     build: .
     container_name: revieu-login
     env_file:
