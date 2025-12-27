@@ -75,6 +75,40 @@ apps/auth-service/
 
 ---
 
+## 🐘 PostgreSQL 环境配置 (Ubuntu/Debian)
+
+在 Linux 生产环境，PostgreSQL 默认使用 **Peer Authentication**，这可能导致 `Ident authentication failed` 或无法直接使用密码登录。请按照以下步骤配置：
+
+### 1. 修改超级用户密码
+借用 `sudo` 权限以 `postgres` 系统用户身份进入终端并设置密码：
+```bash
+sudo -u postgres psql
+# 在 psql 中执行以下命令（或使用 \password postgres）
+ALTER USER postgres PASSWORD '你的新密码';
+\q
+```
+
+### 2. 开启密码认证 (pg_hba.conf)
+必须将本地连接方式从 `peer` 修改为密码认证。找到配置文件（如 `/etc/postgresql/16/main/pg_hba.conf`）：
+```bash
+sudo nano /etc/postgresql/<版本号>/main/pg_hba.conf
+```
+
+将 `local` 行的 `peer` 修改为 `scram-sha-256`：
+```text
+# "local" is for Unix domain socket connections only
+local   all             all                                     scram-sha-256
+```
+
+### 3. 重启并验证
+```bash
+sudo systemctl restart postgresql
+# 验证登录（-h localhost 会强制使用 TCP 连接并触发密码校验）
+psql -U postgres -h localhost
+```
+
+---
+
 ## 🐳 Docker 与联通性
 
 ### 宿主机数据库配置
