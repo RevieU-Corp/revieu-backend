@@ -1,6 +1,6 @@
 name: ✨ Feature Request (新功能建议)
 description: 建议一个新功能或改进
-title: "[Feat]: "
+title: "[feat]: "
 labels: ["enhancement", "discussion"]
 body:
   - type: markdown
