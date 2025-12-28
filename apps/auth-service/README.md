@@ -63,7 +63,15 @@ apps/auth-service/
    uv sync
    ```
 2. **环境配置**:
-   拷贝 `.env.example` 并重命名为 `.env`，填入必要的数据库和 OAuth 凭证。
+   拷贝 `.env.example` 并重命名为 `.env`。针对数据库连接，确保填入以下关键变量：
+   ```ini
+   # Database
+   POSTGRES_USER=postgres
+   POSTGRES_PASSWORD=yourpassword
+   POSTGRES_DB=RevieU
+   # 建议使用 asyncpg 驱动进行异步连接
+   SQLALCHEMY_DATABASE_URI=postgresql+asyncpg://postgres:yourpassword@localhost:5432/RevieU
+   ```
 3. **运行迁移**:
    ```bash
    uv run alembic upgrade head
@@ -72,6 +80,48 @@ apps/auth-service/
    ```bash
    uv run uvicorn app.main:app --reload --port 8080
    ```
+5. **初始化数据库 (可选)**:
+   如果还没有数据库，可以使用命令手动创建并导入基础数据：
+   ```bash
+   # 创建数据库
+   psql -h localhost -U postgres -c 'CREATE DATABASE "RevieU";'
+   # 初始化 Schema (如有 sample.sql)
+   psql -h localhost -U postgres -d RevieU -f sample.sql
+   ```
+
+---
+
+## 🐘 PostgreSQL 环境配置 (Ubuntu/Debian)
+
+在 Linux 生产环境，PostgreSQL 默认使用 **Peer Authentication**，这可能导致 `Ident authentication failed` 或无法直接使用密码登录。请按照以下步骤配置：
+
+### 1. 修改超级用户密码
+借用 `sudo` 权限以 `postgres` 系统用户身份进入终端并设置密码：
+```bash
+sudo -u postgres psql
+# 在 psql 中执行以下命令（或使用 \password postgres）
+ALTER USER postgres PASSWORD '你的新密码';
+\q
+```
+
+### 2. 开启密码认证 (pg_hba.conf)
+必须将本地连接方式从 `peer` 修改为密码认证。找到配置文件（如 `/etc/postgresql/16/main/pg_hba.conf`）：
+```bash
+sudo nano /etc/postgresql/<版本号>/main/pg_hba.conf
+```
+
+将 `local` 行的 `peer` 修改为 `scram-sha-256`：
+```text
+# "local" is for Unix domain socket connections only
+local   all             all                                     scram-sha-256
+```
+
+### 3. 重启并验证
+```bash
+sudo systemctl restart postgresql
+# 验证登录（-h localhost 会强制使用 TCP 连接并触发密码校验）
+psql -U postgres -h localhost
+```
 
 ---
 

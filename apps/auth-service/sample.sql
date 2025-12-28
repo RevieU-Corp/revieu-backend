@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS tb_users (
     email VARCHAR(120) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL DEFAULT 'user',
+    nickname VARCHAR(50) DEFAULT NULL,
+    avatar VARCHAR(255) DEFAULT NULL,
+    bio VARCHAR(500) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login_at TIMESTAMP DEFAULT NULL,
@@ -31,24 +34,9 @@ CREATE TRIGGER update_user_modtime
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TABLE IF NOT EXISTS tb_profiles (
-    id CHAR(36) PRIMARY KEY,
-    user_id CHAR(36) NOT NULL UNIQUE,
-    nickname VARCHAR(50) DEFAULT NULL,
-    avatar VARCHAR(255) DEFAULT NULL,
-    bio VARCHAR(500) DEFAULT NULL,
-    FOREIGN KEY (user_id) REFERENCES tb_users(id) ON DELETE CASCADE
-);
-
 -- 可以插入测试用户
-INSERT INTO tb_users (id, username, email, password_hash, role, is_active, is_verified)
+INSERT INTO tb_users (id, username, email, password_hash, role, nickname, is_active, is_verified)
 VALUES
-('11111111-1111-1111-1111-111111111111', 'alice', 'alice@example.com', 'hashed_password_here', 'user', TRUE, TRUE),
-('11111111-1111-1111-1111-111111111112', 'weijun', 'weijun@example.com', 'hashed_password_here122', 'admin', TRUE, TRUE)
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO tb_profiles (id, user_id, nickname)
-VALUES
-('22222222-2222-2222-2222-222222222221', '11111111-1111-1111-1111-111111111111', 'AliceInWonderland'),
-('22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111112', 'WeiJunAdmin')
+('11111111-1111-1111-1111-111111111111', 'alice', 'alice@example.com', 'hashed_password_here', 'user', 'AliceInWonderland', TRUE, TRUE),
+('11111111-1111-1111-1111-111111111112', 'weijun', 'weijun@example.com', 'hashed_password_here122', 'admin', 'WeiJunAdmin', TRUE, TRUE)
 ON CONFLICT (id) DO NOTHING;

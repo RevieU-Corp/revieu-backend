@@ -30,10 +30,20 @@ jobs:
             echo "Error: Pull Requests to 'main' must originate from the 'dev' branch."
             exit 1
           fi
+
           # 如果目标是 dev，不能直接来自 main
           if [[ "${{ github.base_ref }}" == "dev" && "${{ github.head_ref }}" == "main" ]]; then
             echo "Error: You cannot merge 'main' into 'dev' via PR."
             exit 1
+          fi
+
+          # 如果是直接 push 到 main，且不是 merge commit，则报错
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_name }}" == "main" ]]; then
+            # 检查当前提交是否为合并提交 (具有多个父节点)
+            if [[ $(git show -s --format=%P HEAD | wc -w) -le 1 ]]; then
+              echo "Error: Direct pushes to 'main' are not allowed. Please use a Pull Request from 'dev'."
+              exit 1
+            fi
           fi
 
       - uses: actions/checkout@v4
