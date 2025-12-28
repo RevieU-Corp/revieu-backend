@@ -1,6 +1,6 @@
 name: 🔨 Refactor / Tech Debt (技术优化)
 description: 记录代码重构、依赖升级或技术债清理
-title: "[Refactor]: "
+title: "[refactor]: "
 labels: ["maintenance", "internal"]
 body:
   - type: textarea

@@ -1,6 +1,6 @@
 name: 🐛 Bug Report (错误报告)
 description: 提交一个 Bug 帮助我们修复问题
-title: "[Bug]: "
+title: "[fix]: "
 labels: ["bug", "triage"]
 body:
   - type: markdown
