@@ -17,7 +17,9 @@ logger = structlog.get_logger()
 
 class AuthService:
     @staticmethod
-    async def register_user(db: Session, username: str, email: str, password: str):
+    async def register_user(
+        db: Session, username: str, email: str, password: str, base_url: str
+    ):
         if db.query(User).filter(User.email == email).first():
             return None, "user already exists"
 
@@ -31,9 +33,8 @@ class AuthService:
         db.refresh(user)
 
         token = generate_email_verification_token(email)
-        # verify_url = f"{settings.FRONTEND_URL}/verify?token={token}"
-        # Use backend domain for verification link
-        verify_url = f"{settings.DOMAIN}/api/v1/auth/verify?token={token}"
+        # Use provided base_url for verification link
+        verify_url = f"{base_url}/api/v1/auth/verify?token={token}"
         logger.info(f"Verification link for {email}: {verify_url}")
 
         # Send email (async fire and forget or await)
