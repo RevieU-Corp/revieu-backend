@@ -3,7 +3,6 @@ import secrets
 import structlog
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.core.security import (
     create_access_token,
     generate_email_verification_token,
