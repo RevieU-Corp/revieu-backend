@@ -7,8 +7,8 @@ class Settings(BaseSettings):
     # App
     PROJECT_NAME: str = "Auth Service"
     VERSION: str = "0.1.0"
-    FRONTEND_URL: str = "http://localhost:3000"
-    DOMAIN: str = "http://localhost:8082"
+    # 核心配置：开发环境设为 http://localhost:5173，生产环境设为空字符串即可实现相对路径
+    FRONTEND_URL: str = ""
     ENV: str = "development"
 
     # Database
@@ -48,15 +48,11 @@ class Settings(BaseSettings):
     MAIL_SENDER_NAME: Optional[str] = "RevieU"
     MAIL_SENDER_EMAIL: Optional[str] = None
 
-    # OAuth - GitHub
+    # OAuth
     GITHUB_CLIENT_ID: Optional[str] = None
     GITHUB_CLIENT_SECRET: Optional[str] = None
-    GITHUB_REDIRECT_URI: Optional[str] = None
-
-    # OAuth - Google
     GOOGLE_CLIENT_ID: Optional[str] = None
     GOOGLE_CLIENT_SECRET: Optional[str] = None
-    GOOGLE_REDIRECT_URI: Optional[str] = None
 
     model_config = SettingsConfigDict(
         env_file=".env", case_sensitive=True, extra="ignore"

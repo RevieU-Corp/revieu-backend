@@ -18,28 +18,31 @@ router = APIRouter()
 
 # Step 1: 跳转到 GitHub 登录授权页
 @router.get("/github/login")
-def github_login():
-    if not (settings.GITHUB_CLIENT_ID and settings.GITHUB_REDIRECT_URI):
+def github_login(request: Request):
+    # Dynamically generate redirect_uri
+    redirect_uri = str(request.url_for("github_callback"))
+
+    if not settings.GITHUB_CLIENT_ID:
         raise HTTPException(status_code=500, detail="GitHub login not configured")
 
     params = {
         "client_id": settings.GITHUB_CLIENT_ID,
-        "redirect_uri": settings.GITHUB_REDIRECT_URI,
+        "redirect_uri": redirect_uri,
         "scope": "read:user user:email",
         "allow_signup": "true",
     }
-    logger.info(
-        f"redirect_uri:{settings.GITHUB_REDIRECT_URI}\nclient_id:{settings.GITHUB_CLIENT_ID}"
-    )
+    logger.debug(f"GitHub login redirect_uri: {redirect_uri}")
     github_auth_url = f"https://github.com/login/oauth/authorize?{urlencode(params)}"
     return RedirectResponse(github_auth_url)
 
 
 # Step 2: GitHub 回调
 @router.get("/github/callback")
-def github_callback(code: str, db: Session = Depends(get_db)):
+def github_callback(request: Request, code: str, db: Session = Depends(get_db)):
     if not code:
         return {"code": 1, "message": "Missing code"}
+
+    redirect_uri = str(request.url_for("github_callback"))
 
     # 用 code 换取 access token
     token_url = "https://github.com/login/oauth/access_token"
@@ -47,7 +50,7 @@ def github_callback(code: str, db: Session = Depends(get_db)):
         "client_id": settings.GITHUB_CLIENT_ID,
         "client_secret": settings.GITHUB_CLIENT_SECRET,
         "code": code,
-        "redirect_uri": settings.GITHUB_REDIRECT_URI,
+        "redirect_uri": redirect_uri,
     }
 
     headers = {"Accept": "application/json"}
@@ -55,7 +58,6 @@ def github_callback(code: str, db: Session = Depends(get_db)):
     access_token = token_resp.get("access_token")
 
     if not access_token:
-        # Avoid returning data directly in production
         return {"code": 1, "message": "Failed to get access token"}
 
     # 获取用户信息
@@ -69,7 +71,6 @@ def github_callback(code: str, db: Session = Depends(get_db)):
         headers={"Authorization": f"Bearer {access_token}"},
     ).json()
 
-    # GitHub 可能没有公开邮箱，需要取第一个 primary email
     email = None
     if isinstance(email_resp, list):
         primary_emails = [
@@ -83,24 +84,24 @@ def github_callback(code: str, db: Session = Depends(get_db)):
 
     name = user_info_resp.get("name") or user_info_resp.get("login")
 
-    # 登录或注册
     user, token = AuthService.login_or_register_oauth_user(
         db, email, name, provider="github", avatar=user_info_resp.get("avatar_url")
     )
 
-    frontend_callback_url = f"{settings.FRONTEND_URL}/oauth-callback?token={token}"
-    return RedirectResponse(frontend_callback_url)
+    return RedirectResponse(f"{settings.FRONTEND_URL}/oauth-callback?token={token}")
 
 
 # Step 1: 跳转到 Google 登录
 @router.get("/google/login")
-def google_login():
-    if not (settings.GOOGLE_CLIENT_ID and settings.GOOGLE_REDIRECT_URI):
+def google_login(request: Request):
+    redirect_uri = str(request.url_for("google_callback"))
+
+    if not settings.GOOGLE_CLIENT_ID:
         raise HTTPException(status_code=500, detail="Google login not configured")
 
     params = {
         "client_id": settings.GOOGLE_CLIENT_ID,
-        "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+        "redirect_uri": redirect_uri,
         "response_type": "code",
         "scope": "openid email profile",
         "access_type": "offline",
@@ -113,9 +114,11 @@ def google_login():
 
 # Step 2: Google 回调
 @router.get("/google/callback")
-def google_callback(code: str, db: Session = Depends(get_db)):
+def google_callback(request: Request, code: str, db: Session = Depends(get_db)):
     if not code:
         return {"code": 1, "message": "Missing code"}
+
+    redirect_uri = str(request.url_for("google_callback"))
 
     # 用 code 换取 access token
     token_url = "https://oauth2.googleapis.com/token"
@@ -123,7 +126,7 @@ def google_callback(code: str, db: Session = Depends(get_db)):
         "code": code,
         "client_id": settings.GOOGLE_CLIENT_ID,
         "client_secret": settings.GOOGLE_CLIENT_SECRET,
-        "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+        "redirect_uri": redirect_uri,
         "grant_type": "authorization_code",
     }
 
@@ -149,22 +152,23 @@ def google_callback(code: str, db: Session = Depends(get_db)):
         db, email, name, provider="google", avatar=user_info_resp.get("picture")
     )
 
-    frontend_callback_url = f"{settings.FRONTEND_URL}/oauth-callback?token={token}"
-    return RedirectResponse(frontend_callback_url)
+    return RedirectResponse(f"{settings.FRONTEND_URL}/oauth-callback?token={token}")
 
 
 # 注册
 @router.post(
     "/register", response_model=MessageResponse, status_code=status.HTTP_201_CREATED
 )
-async def register(user_in: UserCreate, db: Session = Depends(get_db)):
+async def register(
+    request: Request, user_in: UserCreate, db: Session = Depends(get_db)
+):
+    # Get base URL for verification link
+    base_url = str(request.base_url).rstrip("/")
     user, message = await AuthService.register_user(
-        db, user_in.username, user_in.email, user_in.password
+        db, user_in.username, user_in.email, user_in.password, base_url=base_url
     )
 
     if not user:
-        # Should probably raise HTTPException depending on message
-        # Original code raised 400 with {code:1, message:message}
         raise HTTPException(status_code=400, detail={"code": 1, "message": message})
 
     return {
@@ -209,16 +213,10 @@ def login(login_in: UserLogin, request: Request, db: Session = Depends(get_db)):
             detail={"code": 1, "message": message},
         )
 
-    frontend_callback_url = f"{settings.FRONTEND_URL}/oauth-callback?token={token}"
-    # Original behavior returned RedirectResponse for POST login?
-    # Usually login API returns JSON with token.
-    # But original code returned RedirectResponse.
-    # That is weird for a JSON API used by frontend, but maybe they want to redirect immediately?
-    # I will keep original behavior for compatibility.
-    return RedirectResponse(frontend_callback_url)
+    # 生产标准：API 应该只返回数据，由前端决定如何跳转
+    return {"code": 0, "message": "Login successful", "data": {"token": token}}
 
 
-# 获取用户信息（受保护接口）
 # 获取用户信息（受保护接口）
 @router.get("/profile", response_model=MessageResponse)
 def profile(current_user: User = Depends(get_current_user)):
