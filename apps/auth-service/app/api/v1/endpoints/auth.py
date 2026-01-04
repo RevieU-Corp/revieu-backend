@@ -95,6 +95,7 @@ def github_callback(request: Request, code: str, db: Session = Depends(get_db)):
 @router.get("/google/login")
 def google_login(request: Request):
     redirect_uri = str(request.url_for("google_callback"))
+    logger.debug(f"Google login redirect_uri: {redirect_uri}")
 
     if not settings.GOOGLE_CLIENT_ID:
         raise HTTPException(status_code=500, detail="Google login not configured")

@@ -10,4 +10,5 @@ if __name__ == "__main__":
         host=settings.ADDRESS,
         port=settings.PORT,
         reload=settings.ENV == "development",
+        log_level="debug",
     )
