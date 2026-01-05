@@ -11,4 +11,6 @@ if __name__ == "__main__":
         port=settings.PORT,
         reload=settings.ENV == "development",
         log_level="debug",
+        proxy_headers=True,
+        forwarded_allow_ips="*",
     )

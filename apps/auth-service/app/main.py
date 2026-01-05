@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from app.api.v1 import api_router
 from app.core.config import settings
 from app.db.base import Base as Base  # noqa: F401
@@ -24,6 +25,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Trust reverse proxy headers (X-Forwarded-Proto, etc.)
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
     # Include routers
     app.include_router(api_router, prefix="/api/v1")
