@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Auth Service"
     VERSION: str = "0.1.0"
     # 核心配置：开发环境设为 http://localhost:5173，生产环境设为空字符串即可实现相对路径
+    PORT: int = 8000
     FRONTEND_URL: str = ""
     ENV: str = "development"
 

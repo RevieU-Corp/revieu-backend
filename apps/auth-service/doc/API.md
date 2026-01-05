@@ -116,7 +116,7 @@
 }
 ```
 
-### 3. 用户登录 — `POST` `/api/v1/auth/login`
+### 3. 用户登录 — `POST` `/api/v1/auth/login/revieu`
 
 #### 请求头
         Content-Type: application/json
@@ -205,10 +205,10 @@
 
 ### 5. GitHub 登录
 
-- 1) 跳转到 GitHub 授权页 — `GET` `/api/v1/auth/github/login`
+- 1) 跳转到 GitHub 授权页 — `GET` `/api/v1/auth/login/github`
     - 功能：将用户重定向到 GitHub 的 OAuth 授权页面。无需请求体或特殊 header。
 
-- 2) 授权回调 — `GET` `/api/v1/auth/github/callback?code=<code>`
+- 2) 授权回调 — `GET` `/api/v1/auth/callback/github?code=<code>`
     - 功能：从查询参数读取 `code`，用该 code 向 GitHub 换取 access token，然后使用该 token 获取用户信息与邮箱列表。若找到经过验证的 primary 邮箱，会使用该邮箱登录或注册（通过服务层 `AuthService.login_or_register_github_user`），并返回应用内 JWT token。
 
 #### 成功响应示例 (200)：
@@ -248,10 +248,10 @@
 
 ### 6. Google 登录
 
-- 1) 跳转到 Google 授权页 — `GET` `/api/v1/auth/google/login`
+- 1) 跳转到 Google 授权页 — `GET` `/api/v1/auth/login/google`
     - 功能：重定向到 Google 的 OAuth 授权页面，使用 `scope=open id email profile` 等参数。
 
-- 2) 授权回调 — `GET` `/api/v1/auth/google/callback?code=<code>`
+- 2) 授权回调 — `GET` `/api/v1/auth/callback/google?code=<code>`
     - 功能：用 `code` 交换 access token（向 `https://oauth2.googleapis.com/token`），然后用 access token 请求用户信息（`/oauth2/v3/userinfo`）。使用返回的 email/name 调用 `AuthService.login_or_register_google_user`，并返回应用内 JWT token。
 
 #### 成功响应示例 (200)：
