@@ -17,7 +17,7 @@ router = APIRouter()
 
 
 # Step 1: 跳转到 GitHub 登录授权页
-@router.get("/github/login")
+@router.get("/login/github")
 def github_login(request: Request):
     # Dynamically generate redirect_uri
     redirect_uri = str(request.url_for("github_callback"))
@@ -37,7 +37,7 @@ def github_login(request: Request):
 
 
 # Step 2: GitHub 回调
-@router.get("/github/callback")
+@router.get("/callback/github")
 def github_callback(request: Request, code: str, db: Session = Depends(get_db)):
     if not code:
         return {"code": 1, "message": "Missing code"}
@@ -92,9 +92,10 @@ def github_callback(request: Request, code: str, db: Session = Depends(get_db)):
 
 
 # Step 1: 跳转到 Google 登录
-@router.get("/google/login")
+@router.get("/login/google")
 def google_login(request: Request):
     redirect_uri = str(request.url_for("google_callback"))
+    logger.debug(f"Google login redirect_uri: {redirect_uri}")
 
     if not settings.GOOGLE_CLIENT_ID:
         raise HTTPException(status_code=500, detail="Google login not configured")
@@ -113,7 +114,7 @@ def google_login(request: Request):
 
 
 # Step 2: Google 回调
-@router.get("/google/callback")
+@router.get("/callback/google")
 def google_callback(request: Request, code: str, db: Session = Depends(get_db)):
     if not code:
         return {"code": 1, "message": "Missing code"}
@@ -200,7 +201,7 @@ def verify_email(token: str = Query(...), db: Session = Depends(get_db)):
 
 
 # 登录
-@router.post("/login")
+@router.post("/login/revieu")
 def login(login_in: UserLogin, request: Request, db: Session = Depends(get_db)):
     ip_address = request.client.host if request.client else None
     token, message = AuthService.login_user(
