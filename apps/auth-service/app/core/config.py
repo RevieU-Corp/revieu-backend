@@ -1,16 +1,13 @@
 from typing import Optional, Any
-from pydantic import Field, PostgresDsn, field_validator, ValidationInfo
+from pydantic import PostgresDsn, field_validator, ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # App
     PROJECT_NAME: str = "Auth Service"
     VERSION: str = "0.1.0"
     # 核心配置：开发环境设为 http://localhost:5173，生产环境设为空字符串即可实现相对路径
-    PORT: int = 8000
     FRONTEND_URL: str = ""
-    ENV: str = "development"
 
     # Database
     POSTGRES_USER: str = "postgres"
@@ -37,7 +34,7 @@ class Settings(BaseSettings):
         )
 
     # Security
-    SECRET_KEY: str = Field(validation_alias="JWT_SECRET_KEY")
+    JWT_SECRET_KEY: str = "JWT_SECRET_KEY"
 
     # Mail
     MAIL_SERVER: str = "smtp.gmail.com"
