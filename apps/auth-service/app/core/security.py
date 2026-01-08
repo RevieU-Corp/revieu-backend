@@ -16,39 +16,45 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def create_access_token(subject: Union[str, Any], email: str, username: str, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(
+    subject: Union[str, Any],
+    email: str,
+    username: str,
+    expires_delta: Optional[timedelta] = None,
+) -> str:
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    
+
     to_encode = {
         "id": str(subject),
         "email": email,
         "username": username,
         "exp": expire,
-        "iat": datetime.now(timezone.utc)
+        "iat": datetime.now(timezone.utc),
     }
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm="HS256")
+    encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm="HS256")
     return encoded_jwt
 
 
 def generate_email_verification_token(email: str) -> str:
-    s = URLSafeTimedSerializer(settings.SECRET_KEY)
+    s = URLSafeTimedSerializer(settings.JWT_SECRET_KEY)
     return s.dumps(email, salt="email-verify")
 
 
 def verify_email_token(token: str, max_age: int = 900) -> Optional[str]:
-    s = URLSafeTimedSerializer(settings.SECRET_KEY)
+    s = URLSafeTimedSerializer(settings.JWT_SECRET_KEY)
     try:
         email = s.loads(token, salt="email-verify", max_age=max_age)
         return email
     except Exception:
         return None
 
+
 def decode_access_token(token: str) -> Optional[dict]:
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=["HS256"])
         return payload
     except JWTError:
         return None
