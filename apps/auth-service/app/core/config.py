@@ -1,5 +1,5 @@
 from typing import Optional, Any
-from pydantic import Field, PostgresDsn, field_validator, ValidationInfo
+from pydantic import PostgresDsn, field_validator, ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
