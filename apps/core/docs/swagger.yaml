@@ -1,0 +1,65 @@
+basePath: /
+definitions:
+  handler.TestResponse:
+    properties:
+      message:
+        example: Hello, World!
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is the core backend service for RevieU
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: RevieU Core API
+  version: "1.0"
+paths:
+  /api/v1/test:
+    get:
+      consumes:
+      - application/json
+      description: Returns a test message to verify API is working
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.TestResponse'
+      summary: Test endpoint
+      tags:
+      - test
+    post:
+      consumes:
+      - application/json
+      description: Echoes back the received message
+      parameters:
+      - description: Message to echo
+        in: body
+        name: message
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.TestResponse'
+      summary: Test POST endpoint
+      tags:
+      - test
+schemes:
+- http
+- https
+swagger: "2.0"
