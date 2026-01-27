@@ -1,0 +1,16 @@
+server:
+  address: ":8080"
+  port: 8080
+  mode: "debug"  # debug, release, test
+
+database:
+  driver: "postgres"
+  host: "localhost"
+  port: 5432
+  database: "mydb"
+  username: "user"
+  password: "password"
+
+logger:
+  level: "info"  # debug, info, warn, error
+  format: "json" # json, text
