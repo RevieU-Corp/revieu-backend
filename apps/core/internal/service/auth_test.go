@@ -130,3 +130,29 @@ func TestLogin(t *testing.T) {
 		t.Error("Expected error for user not found, got nil")
 	}
 }
+
+func TestUserProfileHasCounts(t *testing.T) {
+	db := setupTestDB(t)
+	type Column struct {
+		Name string
+	}
+	var cols []Column
+	if err := db.Raw("PRAGMA table_info(user_profiles)").Scan(&cols).Error; err != nil {
+		t.Fatalf("schema query failed: %v", err)
+	}
+	want := map[string]bool{
+		"follower_count":  true,
+		"following_count": true,
+		"post_count":      true,
+		"review_count":    true,
+		"like_count":      true,
+	}
+	for _, c := range cols {
+		if _, ok := want[c.Name]; ok {
+			delete(want, c.Name)
+		}
+	}
+	if len(want) != 0 {
+		t.Fatalf("missing columns: %v", want)
+	}
+}
