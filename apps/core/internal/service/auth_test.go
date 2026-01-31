@@ -165,9 +165,7 @@ func TestUserProfileHasCounts(t *testing.T) {
 		"like_count":      true,
 	}
 	for _, c := range cols {
-		if _, ok := want[c.Name]; ok {
-			delete(want, c.Name)
-		}
+		delete(want, c.Name)
 	}
 	if len(want) != 0 {
 		t.Fatalf("missing columns: %v", want)
