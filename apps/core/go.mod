@@ -1,6 +1,6 @@
 module github.com/RevieU-Corp/revieu-backend/apps/core
 
-go 1.25.6
+go 1.24.0
 
 require (
 	github.com/gin-gonic/gin v1.10.0
