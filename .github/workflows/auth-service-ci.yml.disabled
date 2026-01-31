@@ -1,0 +1,145 @@
+name: Auth Service CI/CD
+
+on:
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "apps/auth-service/**"
+      - ".github/workflows/auth-service-ci.yml"
+  push:
+    branches: [main, dev]
+    paths:
+      - "apps/auth-service/**"
+      - ".github/workflows/auth-service-ci.yml"
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: read
+
+jobs:
+  validate:
+    name: Validate and Lint
+    runs-on: self-hosted
+    steps:
+      - name: Validate PR Source Branch
+        if: github.event_name == 'pull_request'
+        run: |
+          # 如果目标是 main，必须来自 dev
+          if [[ "${{ github.base_ref }}" == "main" && "${{ github.head_ref }}" != "dev" ]]; then
+            echo "Error: Pull Requests to 'main' must originate from the 'dev' branch."
+            exit 1
+          fi
+
+          # 如果目标是 dev，不能直接来自 main
+          if [[ "${{ github.base_ref }}" == "dev" && "${{ github.head_ref }}" == "main" ]]; then
+            echo "Error: You cannot merge 'main' into 'dev' via PR."
+            exit 1
+          fi
+
+          # 如果是直接 push 到 main，且不是 merge commit，则报错
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_name }}" == "main" ]]; then
+            # 检查当前提交是否为合并提交 (具有多个父节点)
+            if [[ $(git show -s --format=%P HEAD | wc -w) -le 1 ]]; then
+              echo "Error: Direct pushes to 'main' are not allowed. Please use a Pull Request from 'dev'."
+              exit 1
+            fi
+          fi
+
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install dependencies
+        working-directory: apps/auth-service
+        run: uv sync --frozen
+
+      - name: Lint with ruff
+        working-directory: apps/auth-service
+        run: |
+          uv pip install ruff
+          uv run ruff check .
+
+  build-and-push:
+    name: Build and Push Image
+    needs: validate
+    # 只有推送到 main 或 dev 分支时才触发
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    runs-on: self-hosted
+    env:
+      REGISTRY: ghcr.io
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Lowercase repo owner
+        run: |
+          echo "IMAGE_NAME_LOWER=$(echo ${{ github.repository_owner }}/revieu-auth-service | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}
+          tags: |
+            type=ref,event=branch
+            type=sha,format=short
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/auth-service
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
+
+      - name: Notify Discord
+        if: always()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK" ]; then
+            echo "DISCORD_WEBHOOK is not set, skipping notification."
+            exit 0
+          fi
+
+          STATUS="${{ job.status }}"
+          case "$STATUS" in
+            success) COLOR=3066993 ;; # Green
+            failure) COLOR=15158332 ;; # Red
+            cancelled) COLOR=9807270 ;; # Grey
+            *) COLOR=0 ;;
+          esac
+
+          MESSAGE="Build and Push of **${{ github.repository }}** (${{ github.ref_name }}) was a **$STATUS**."
+
+          curl -X POST -H "Content-Type: application/json" \
+            -d "{
+              \"embeds\": [{
+                \"title\": \"CI/CD Notification\",
+                \"description\": \"$MESSAGE\",
+                \"color\": $COLOR,
+                \"fields\": [
+                  {\"name\": \"Commit\", \"value\": \"[${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})\", \"inline\": false},
+                  {\"name\": \"Tags\", \"value\": \"\`\`\`${{ steps.meta.outputs.tags }}\`\`\`\", \"inline\": false}
+                ],
+                \"footer\": {\"text\": \"RevieU CI/CD\"}
+              }]
+            }" \
+            $DISCORD_WEBHOOK
