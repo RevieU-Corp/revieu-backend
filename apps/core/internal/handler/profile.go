@@ -36,6 +36,17 @@ func NewProfileHandler(userService *service.UserService, followService *service.
 	}
 }
 
+// GetPublicProfile godoc
+// @Summary Get public user profile
+// @Description Returns a user's public profile
+// @Tags profile
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} dto.PublicProfileResponse
+// @Failure 400 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /users/{id} [get]
 func (h *ProfileHandler) GetPublicProfile(c *gin.Context) {
 	targetID, err := parseIDParam(c, "id")
 	if err != nil {
@@ -80,6 +91,18 @@ func (h *ProfileHandler) GetPublicProfile(c *gin.Context) {
 	})
 }
 
+// ListUserPosts godoc
+// @Summary List user's posts
+// @Description Returns a user's posts
+// @Tags profile
+// @Produce json
+// @Param id path int true "User ID"
+// @Param cursor query int false "Cursor"
+// @Param limit query int false "Limit"
+// @Success 200 {object} dto.PostListResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /users/{id}/posts [get]
 func (h *ProfileHandler) ListUserPosts(c *gin.Context) {
 	targetID, err := parseIDParam(c, "id")
 	if err != nil {
@@ -115,6 +138,18 @@ func (h *ProfileHandler) ListUserPosts(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.PostListResponse{Posts: items, Total: int(total), Cursor: nextCursor(posts)})
 }
 
+// ListUserReviews godoc
+// @Summary List user's reviews
+// @Description Returns a user's reviews
+// @Tags profile
+// @Produce json
+// @Param id path int true "User ID"
+// @Param cursor query int false "Cursor"
+// @Param limit query int false "Limit"
+// @Success 200 {object} dto.ReviewListResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /users/{id}/reviews [get]
 func (h *ProfileHandler) ListUserReviews(c *gin.Context) {
 	targetID, err := parseIDParam(c, "id")
 	if err != nil {
@@ -154,6 +189,16 @@ func (h *ProfileHandler) ListUserReviews(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.ReviewListResponse{Reviews: items, Total: int(total), Cursor: nextCursor(reviews)})
 }
 
+// FollowUser godoc
+// @Summary Follow user
+// @Description Follow a user
+// @Tags profile
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /users/{id}/follow [post]
 func (h *ProfileHandler) FollowUser(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	targetID, err := parseIDParam(c, "id")
@@ -168,6 +213,17 @@ func (h *ProfileHandler) FollowUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
+// UnfollowUser godoc
+// @Summary Unfollow user
+// @Description Unfollow a user
+// @Tags profile
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /users/{id}/follow [delete]
 func (h *ProfileHandler) UnfollowUser(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	targetID, err := parseIDParam(c, "id")
@@ -182,6 +238,16 @@ func (h *ProfileHandler) UnfollowUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
+// FollowMerchant godoc
+// @Summary Follow merchant
+// @Description Follow a merchant
+// @Tags profile
+// @Produce json
+// @Param id path int true "Merchant ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /merchants/{id}/follow [post]
 func (h *ProfileHandler) FollowMerchant(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	merchantID, err := parseIDParam(c, "id")
@@ -196,6 +262,17 @@ func (h *ProfileHandler) FollowMerchant(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
+// UnfollowMerchant godoc
+// @Summary Unfollow merchant
+// @Description Unfollow a merchant
+// @Tags profile
+// @Produce json
+// @Param id path int true "Merchant ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /merchants/{id}/follow [delete]
 func (h *ProfileHandler) UnfollowMerchant(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	merchantID, err := parseIDParam(c, "id")
