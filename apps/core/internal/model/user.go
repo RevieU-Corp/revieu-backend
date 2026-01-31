@@ -60,6 +60,12 @@ type UserProfile struct {
 	AvatarURL string `gorm:"type:varchar(255)" json:"avatar_url"`
 	Intro     string `gorm:"type:varchar(255)" json:"intro"`    // 一句话简介
 	Location  string `gorm:"type:varchar(100)" json:"location"`
+	// Stats (denormalized)
+	FollowerCount  int `gorm:"default:0" json:"follower_count"`
+	FollowingCount int `gorm:"default:0" json:"following_count"`
+	PostCount      int `gorm:"default:0" json:"post_count"`
+	ReviewCount    int `gorm:"default:0" json:"review_count"`
+	LikeCount      int `gorm:"default:0" json:"like_count"`
 
 	User *User `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }

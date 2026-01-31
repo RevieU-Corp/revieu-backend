@@ -1,5 +1,291 @@
 basePath: /
 definitions:
+  dto.AddressItem:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      district:
+        type: string
+      id:
+        type: integer
+      is_default:
+        type: boolean
+      name:
+        type: string
+      phone:
+        type: string
+      postal_code:
+        type: string
+      province:
+        type: string
+    type: object
+  dto.AddressListResponse:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/dto.AddressItem'
+        type: array
+    type: object
+  dto.CreateAddressRequest:
+    properties:
+      address:
+        maxLength: 255
+        type: string
+      city:
+        maxLength: 50
+        type: string
+      district:
+        maxLength: 50
+        type: string
+      is_default:
+        type: boolean
+      name:
+        maxLength: 50
+        type: string
+      phone:
+        maxLength: 20
+        type: string
+      postal_code:
+        maxLength: 20
+        type: string
+      province:
+        maxLength: 50
+        type: string
+    required:
+    - address
+    - name
+    - phone
+    type: object
+  dto.FavoriteItem:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      merchant:
+        $ref: '#/definitions/dto.MerchantBrief'
+      post:
+        $ref: '#/definitions/dto.PostItem'
+      review:
+        $ref: '#/definitions/dto.ReviewItem'
+      target_id:
+        type: integer
+      target_type:
+        type: string
+    type: object
+  dto.FavoriteListResponse:
+    properties:
+      cursor:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/dto.FavoriteItem'
+        type: array
+      total:
+        type: integer
+    type: object
+  dto.FollowersResponse:
+    properties:
+      total:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/dto.UserBrief'
+        type: array
+    type: object
+  dto.FollowingUsersResponse:
+    properties:
+      total:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/dto.UserBrief'
+        type: array
+    type: object
+  dto.MerchantBrief:
+    properties:
+      category:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  dto.NotificationSettings:
+    properties:
+      email_enabled:
+        type: boolean
+      push_enabled:
+        type: boolean
+    type: object
+  dto.PostItem:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      images:
+        items:
+          type: string
+        type: array
+      is_liked:
+        type: boolean
+      like_count:
+        type: integer
+      merchant:
+        $ref: '#/definitions/dto.MerchantBrief'
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      view_count:
+        type: integer
+    type: object
+  dto.PostListResponse:
+    properties:
+      cursor:
+        type: integer
+      posts:
+        items:
+          $ref: '#/definitions/dto.PostItem'
+        type: array
+      total:
+        type: integer
+    type: object
+  dto.PrivacySettings:
+    properties:
+      is_public:
+        type: boolean
+    type: object
+  dto.ProfileResponse:
+    properties:
+      avatar_url:
+        type: string
+      intro:
+        type: string
+      location:
+        type: string
+      nickname:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  dto.PublicProfileResponse:
+    properties:
+      avatar_url:
+        type: string
+      follower_count:
+        type: integer
+      following_count:
+        type: integer
+      intro:
+        type: string
+      is_following:
+        type: boolean
+      like_count:
+        type: integer
+      location:
+        type: string
+      nickname:
+        type: string
+      post_count:
+        type: integer
+      review_count:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  dto.ReviewItem:
+    properties:
+      avg_cost:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      images:
+        items:
+          type: string
+        type: array
+      is_liked:
+        type: boolean
+      like_count:
+        type: integer
+      merchant:
+        $ref: '#/definitions/dto.MerchantBrief'
+      rating:
+        type: number
+      rating_env:
+        type: number
+      rating_service:
+        type: number
+      rating_value:
+        type: number
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
+  dto.ReviewListResponse:
+    properties:
+      cursor:
+        type: integer
+      reviews:
+        items:
+          $ref: '#/definitions/dto.ReviewItem'
+        type: array
+      total:
+        type: integer
+    type: object
+  dto.UpdateAddressRequest:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      district:
+        type: string
+      is_default:
+        type: boolean
+      name:
+        type: string
+      phone:
+        type: string
+      postal_code:
+        type: string
+      province:
+        type: string
+    type: object
+  dto.UpdateProfileRequest:
+    properties:
+      avatar_url:
+        type: string
+      intro:
+        type: string
+      location:
+        type: string
+      nickname:
+        type: string
+    type: object
+  dto.UserBrief:
+    properties:
+      avatar_url:
+        type: string
+      intro:
+        type: string
+      nickname:
+        type: string
+      user_id:
+        type: integer
+    type: object
   handler.LoginRequest:
     properties:
       email:
@@ -238,6 +524,945 @@ paths:
       summary: Verify user email
       tags:
       - auth
+  /merchants/{id}/follow:
+    delete:
+      description: Unfollow a merchant
+      parameters:
+      - description: Merchant ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Unfollow merchant
+      tags:
+      - profile
+    post:
+      description: Follow a merchant
+      parameters:
+      - description: Merchant ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Follow merchant
+      tags:
+      - profile
+  /user/account:
+    delete:
+      consumes:
+      - application/json
+      description: Schedules account deletion (cooling period)
+      parameters:
+      - description: Deletion reason
+        in: body
+        name: request
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Request account deletion
+      tags:
+      - user
+  /user/account/export:
+    post:
+      description: Queues a user data export
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Request account export
+      tags:
+      - user
+  /user/addresses:
+    get:
+      description: Returns the authenticated user's saved addresses
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AddressListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List addresses
+      tags:
+      - user
+    post:
+      consumes:
+      - application/json
+      description: Adds a new address for the authenticated user
+      parameters:
+      - description: Create Address Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateAddressRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.AddressItem'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create address
+      tags:
+      - user
+  /user/addresses/{id}:
+    delete:
+      description: Deletes an address
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete address
+      tags:
+      - user
+    patch:
+      consumes:
+      - application/json
+      description: Updates an existing address
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Address Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateAddressRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update address
+      tags:
+      - user
+  /user/addresses/{id}/default:
+    post:
+      description: Sets an address as default
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Set default address
+      tags:
+      - user
+  /user/favorites:
+    get:
+      description: Returns favorites for the authenticated user
+      parameters:
+      - description: Target type (post|review|merchant)
+        in: query
+        name: type
+        type: string
+      - description: Cursor
+        in: query
+        name: cursor
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FavoriteListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List my favorites
+      tags:
+      - user
+  /user/followers:
+    get:
+      description: Returns followers of the authenticated user
+      parameters:
+      - description: Cursor
+        in: query
+        name: cursor
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FollowersResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List followers
+      tags:
+      - user
+  /user/following/merchants:
+    get:
+      description: Returns merchants the authenticated user follows
+      parameters:
+      - description: Cursor
+        in: query
+        name: cursor
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List following merchants
+      tags:
+      - user
+  /user/following/users:
+    get:
+      description: Returns users the authenticated user follows
+      parameters:
+      - description: Cursor
+        in: query
+        name: cursor
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FollowingUsersResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List following users
+      tags:
+      - user
+  /user/likes:
+    get:
+      description: Returns likes for the authenticated user
+      parameters:
+      - description: Cursor
+        in: query
+        name: cursor
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List my likes
+      tags:
+      - user
+  /user/notifications:
+    get:
+      description: Returns the authenticated user's notification settings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.NotificationSettings'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get notification settings
+      tags:
+      - user
+    patch:
+      consumes:
+      - application/json
+      description: Updates the authenticated user's notification settings
+      parameters:
+      - description: Notification Settings
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NotificationSettings'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update notification settings
+      tags:
+      - user
+  /user/posts:
+    get:
+      description: Returns posts created by the authenticated user
+      parameters:
+      - description: Cursor
+        in: query
+        name: cursor
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PostListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List my posts
+      tags:
+      - user
+  /user/privacy:
+    get:
+      description: Returns the authenticated user's privacy settings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PrivacySettings'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get privacy settings
+      tags:
+      - user
+    patch:
+      consumes:
+      - application/json
+      description: Updates the authenticated user's privacy settings
+      parameters:
+      - description: Privacy Settings
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PrivacySettings'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update privacy settings
+      tags:
+      - user
+  /user/profile:
+    get:
+      description: Returns the authenticated user's profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProfileResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get current user profile
+      tags:
+      - user
+    patch:
+      consumes:
+      - application/json
+      description: Updates nickname, avatar, intro, or location
+      parameters:
+      - description: Update Profile Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update current user profile
+      tags:
+      - user
+  /user/reviews:
+    get:
+      description: Returns reviews created by the authenticated user
+      parameters:
+      - description: Cursor
+        in: query
+        name: cursor
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ReviewListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List my reviews
+      tags:
+      - user
+  /users/{id}:
+    get:
+      description: Returns a user's public profile
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PublicProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get public user profile
+      tags:
+      - profile
+  /users/{id}/follow:
+    delete:
+      description: Unfollow a user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Unfollow user
+      tags:
+      - profile
+    post:
+      description: Follow a user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Follow user
+      tags:
+      - profile
+  /users/{id}/posts:
+    get:
+      description: Returns a user's posts
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Cursor
+        in: query
+        name: cursor
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PostListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List user's posts
+      tags:
+      - profile
+  /users/{id}/reviews:
+    get:
+      description: Returns a user's reviews
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Cursor
+        in: query
+        name: cursor
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ReviewListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List user's reviews
+      tags:
+      - profile
 schemes:
 - http
 - https
