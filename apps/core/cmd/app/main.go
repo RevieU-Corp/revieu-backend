@@ -76,6 +76,10 @@ func main() {
 		&model.Tag{},
 		&model.Post{},
 		&model.Review{},
+		&model.UserFollow{},
+		&model.MerchantFollow{},
+		&model.Like{},
+		&model.Favorite{},
 	); err != nil {
 		logger.Error(ctx, "Failed to migrate database", "error", err.Error())
 		os.Exit(1)

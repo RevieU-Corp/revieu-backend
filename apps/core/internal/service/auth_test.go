@@ -42,6 +42,10 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		&model.Tag{},
 		&model.Post{},
 		&model.Review{},
+		&model.UserFollow{},
+		&model.MerchantFollow{},
+		&model.Like{},
+		&model.Favorite{},
 	); err != nil {
 		t.Fatalf("Failed to migrate test database: %v", err)
 	}
@@ -196,6 +200,28 @@ func TestPostAndReviewModels(t *testing.T) {
 
 	review := model.Review{UserID: user.ID, MerchantID: merchant.ID, Rating: 4.5, Content: "great"}
 	if err := db.Create(&review).Error; err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestFollowAndInteractionModels(t *testing.T) {
+	db := setupTestDB(t)
+	u1 := model.User{Role: "user", Status: 0}
+	u2 := model.User{Role: "user", Status: 0}
+	if err := db.Create(&u1).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Create(&u2).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	follow := model.UserFollow{FollowerID: u1.ID, FollowingID: u2.ID}
+	if err := db.Create(&follow).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	like := model.Like{UserID: u1.ID, TargetType: "post", TargetID: 123}
+	if err := db.Create(&like).Error; err != nil {
 		t.Fatal(err)
 	}
 }
