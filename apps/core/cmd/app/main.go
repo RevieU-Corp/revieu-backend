@@ -67,7 +67,24 @@ func main() {
 	}
 
 	// Auto migrate database schema
-	if err := database.DB.AutoMigrate(&model.User{}, &model.UserAuth{}, &model.UserProfile{}, &model.EmailVerification{}); err != nil {
+	if err := database.DB.AutoMigrate(
+		&model.User{},
+		&model.UserAuth{},
+		&model.UserProfile{},
+		&model.EmailVerification{},
+		&model.Merchant{},
+		&model.Tag{},
+		&model.Post{},
+		&model.Review{},
+		&model.UserFollow{},
+		&model.MerchantFollow{},
+		&model.Like{},
+		&model.Favorite{},
+		&model.UserAddress{},
+		&model.UserPrivacy{},
+		&model.UserNotification{},
+		&model.AccountDeletion{},
+	); err != nil {
 		logger.Error(ctx, "Failed to migrate database", "error", err.Error())
 		os.Exit(1)
 	}

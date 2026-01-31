@@ -33,7 +33,24 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	}
 
 	// Auto migrate
-	if err := db.AutoMigrate(&model.User{}, &model.UserAuth{}, &model.UserProfile{}, &model.EmailVerification{}); err != nil {
+	if err := db.AutoMigrate(
+		&model.User{},
+		&model.UserAuth{},
+		&model.UserProfile{},
+		&model.EmailVerification{},
+		&model.Merchant{},
+		&model.Tag{},
+		&model.Post{},
+		&model.Review{},
+		&model.UserFollow{},
+		&model.MerchantFollow{},
+		&model.Like{},
+		&model.Favorite{},
+		&model.UserAddress{},
+		&model.UserPrivacy{},
+		&model.UserNotification{},
+		&model.AccountDeletion{},
+	); err != nil {
 		t.Fatalf("Failed to migrate test database: %v", err)
 	}
 
@@ -128,5 +145,103 @@ func TestLogin(t *testing.T) {
 	_, err = authService.Login(ctx, "nonexistent@example.com", password, "127.0.0.1")
 	if err == nil {
 		t.Error("Expected error for user not found, got nil")
+	}
+}
+
+func TestUserProfileHasCounts(t *testing.T) {
+	db := setupTestDB(t)
+	type Column struct {
+		Name string
+	}
+	var cols []Column
+	if err := db.Raw("PRAGMA table_info(user_profiles)").Scan(&cols).Error; err != nil {
+		t.Fatalf("schema query failed: %v", err)
+	}
+	want := map[string]bool{
+		"follower_count":  true,
+		"following_count": true,
+		"post_count":      true,
+		"review_count":    true,
+		"like_count":      true,
+	}
+	for _, c := range cols {
+		delete(want, c.Name)
+	}
+	if len(want) != 0 {
+		t.Fatalf("missing columns: %v", want)
+	}
+}
+
+func TestMerchantAndTagModels(t *testing.T) {
+	db := setupTestDB(t)
+	merchant := model.Merchant{Name: "Cafe", Category: "food"}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("merchant create failed: %v", err)
+	}
+	tag := model.Tag{Name: "#coffee"}
+	if err := db.Create(&tag).Error; err != nil {
+		t.Fatalf("tag create failed: %v", err)
+	}
+}
+
+func TestPostAndReviewModels(t *testing.T) {
+	db := setupTestDB(t)
+	user := model.User{Role: "user", Status: 0}
+	if err := db.Create(&user).Error; err != nil {
+		t.Fatal(err)
+	}
+	merchant := model.Merchant{Name: "Cafe"}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	post := model.Post{UserID: user.ID, MerchantID: &merchant.ID, Content: "hello"}
+	if err := db.Create(&post).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	review := model.Review{UserID: user.ID, MerchantID: merchant.ID, Rating: 4.5, Content: "great"}
+	if err := db.Create(&review).Error; err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestFollowAndInteractionModels(t *testing.T) {
+	db := setupTestDB(t)
+	u1 := model.User{Role: "user", Status: 0}
+	u2 := model.User{Role: "user", Status: 0}
+	if err := db.Create(&u1).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Create(&u2).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	follow := model.UserFollow{FollowerID: u1.ID, FollowingID: u2.ID}
+	if err := db.Create(&follow).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	like := model.Like{UserID: u1.ID, TargetType: "post", TargetID: 123}
+	if err := db.Create(&like).Error; err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestSettingsAndAddressModels(t *testing.T) {
+	db := setupTestDB(t)
+	user := model.User{Role: "user", Status: 0}
+	if err := db.Create(&user).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	privacy := model.UserPrivacy{UserID: user.ID, IsPublic: true}
+	if err := db.Create(&privacy).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	address := model.UserAddress{UserID: user.ID, Name: "A", Phone: "1", Address: "Street"}
+	if err := db.Create(&address).Error; err != nil {
+		t.Fatal(err)
 	}
 }
