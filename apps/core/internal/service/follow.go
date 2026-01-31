@@ -25,8 +25,16 @@ func (s *FollowService) FollowUser(ctx context.Context, followerID, followingID 
 		return errors.New("cannot follow self")
 	}
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existing model.UserFollow
+		result := tx.Where("follower_id = ? AND following_id = ?", followerID, followingID).Limit(1).Find(&existing)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected > 0 {
+			return nil
+		}
 		follow := model.UserFollow{FollowerID: followerID, FollowingID: followingID}
-		if err := tx.FirstOrCreate(&follow, follow).Error; err != nil {
+		if err := tx.Create(&follow).Error; err != nil {
 			return err
 		}
 		if err := tx.Model(&model.UserProfile{}).Where("user_id = ?", followerID).UpdateColumn("following_count", gorm.Expr("following_count + 1")).Error; err != nil {
@@ -38,8 +46,12 @@ func (s *FollowService) FollowUser(ctx context.Context, followerID, followingID 
 
 func (s *FollowService) UnfollowUser(ctx context.Context, followerID, followingID int64) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("follower_id = ? AND following_id = ?", followerID, followingID).Delete(&model.UserFollow{}).Error; err != nil {
-			return err
+		result := tx.Where("follower_id = ? AND following_id = ?", followerID, followingID).Delete(&model.UserFollow{})
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return nil
 		}
 		if err := tx.Model(&model.UserProfile{}).Where("user_id = ?", followerID).UpdateColumn("following_count", gorm.Expr("GREATEST(following_count - 1, 0)")).Error; err != nil {
 			return err
