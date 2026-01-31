@@ -597,3 +597,12 @@ account_deletions      # 账号删除请求
 - `post_count`
 - `review_count`
 - `like_count`
+
+---
+
+## Implementation Notes (2026-01-31)
+
+- `posts.images` and `reviews.images` are stored as JSON text (`jsonb` column) without a custom JSON type.
+- Cursor pagination is wired in handlers but currently returns `null` for next cursor.
+- Account export endpoint returns `202 Accepted` with a placeholder response; async pipeline still pending.
+- Follow counts are updated idempotently (repeat follow does not double-count).
