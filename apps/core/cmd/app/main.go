@@ -74,6 +74,8 @@ func main() {
 		&model.EmailVerification{},
 		&model.Merchant{},
 		&model.Tag{},
+		&model.Post{},
+		&model.Review{},
 	); err != nil {
 		logger.Error(ctx, "Failed to migrate database", "error", err.Error())
 		os.Exit(1)

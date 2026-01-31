@@ -40,6 +40,8 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		&model.EmailVerification{},
 		&model.Merchant{},
 		&model.Tag{},
+		&model.Post{},
+		&model.Review{},
 	); err != nil {
 		t.Fatalf("Failed to migrate test database: %v", err)
 	}
@@ -173,5 +175,27 @@ func TestMerchantAndTagModels(t *testing.T) {
 	tag := model.Tag{Name: "#coffee"}
 	if err := db.Create(&tag).Error; err != nil {
 		t.Fatalf("tag create failed: %v", err)
+	}
+}
+
+func TestPostAndReviewModels(t *testing.T) {
+	db := setupTestDB(t)
+	user := model.User{Role: "user", Status: 0}
+	if err := db.Create(&user).Error; err != nil {
+		t.Fatal(err)
+	}
+	merchant := model.Merchant{Name: "Cafe"}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	post := model.Post{UserID: user.ID, MerchantID: &merchant.ID, Content: "hello"}
+	if err := db.Create(&post).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	review := model.Review{UserID: user.ID, MerchantID: merchant.ID, Rating: 4.5, Content: "great"}
+	if err := db.Create(&review).Error; err != nil {
+		t.Fatal(err)
 	}
 }
