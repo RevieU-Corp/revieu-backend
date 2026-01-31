@@ -46,6 +46,10 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		&model.MerchantFollow{},
 		&model.Like{},
 		&model.Favorite{},
+		&model.UserAddress{},
+		&model.UserPrivacy{},
+		&model.UserNotification{},
+		&model.AccountDeletion{},
 	); err != nil {
 		t.Fatalf("Failed to migrate test database: %v", err)
 	}
@@ -222,6 +226,24 @@ func TestFollowAndInteractionModels(t *testing.T) {
 
 	like := model.Like{UserID: u1.ID, TargetType: "post", TargetID: 123}
 	if err := db.Create(&like).Error; err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestSettingsAndAddressModels(t *testing.T) {
+	db := setupTestDB(t)
+	user := model.User{Role: "user", Status: 0}
+	if err := db.Create(&user).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	privacy := model.UserPrivacy{UserID: user.ID, IsPublic: true}
+	if err := db.Create(&privacy).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	address := model.UserAddress{UserID: user.ID, Name: "A", Phone: "1", Address: "Street"}
+	if err := db.Create(&address).Error; err != nil {
 		t.Fatal(err)
 	}
 }
