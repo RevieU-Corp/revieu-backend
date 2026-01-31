@@ -12,6 +12,7 @@ func RegisterRoutes(router *gin.Engine, cfg *config.Config) {
 	testHandler := NewTestHandler()
 	authHandler := NewAuthHandler(cfg.JWT, cfg.OAuth, cfg.SMTP, cfg.FrontendURL)
 	userHandler := NewUserHandler(nil, nil, nil, nil)
+	profileHandler := NewProfileHandler(nil, nil, nil)
 
 	// API routes (prefix handled by Ingress)
 	api := router.Group("/")
@@ -33,6 +34,23 @@ func RegisterRoutes(router *gin.Engine, cfg *config.Config) {
 		{
 			test.GET("", testHandler.GetTest)
 			test.POST("", testHandler.PostTest)
+		}
+
+		// Public user profile routes
+		users := api.Group("/users")
+		{
+			users.GET("/:id", profileHandler.GetPublicProfile)
+			users.GET("/:id/posts", profileHandler.ListUserPosts)
+			users.GET("/:id/reviews", profileHandler.ListUserReviews)
+			users.POST("/:id/follow", middleware.JWTAuth(cfg.JWT), profileHandler.FollowUser)
+			users.DELETE("/:id/follow", middleware.JWTAuth(cfg.JWT), profileHandler.UnfollowUser)
+		}
+
+		// Merchant follow routes
+		merchants := api.Group("/merchants")
+		{
+			merchants.POST("/:id/follow", middleware.JWTAuth(cfg.JWT), profileHandler.FollowMerchant)
+			merchants.DELETE("/:id/follow", middleware.JWTAuth(cfg.JWT), profileHandler.UnfollowMerchant)
 		}
 
 		// User routes (JWT required)
