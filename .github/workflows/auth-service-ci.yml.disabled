@@ -20,7 +20,7 @@ permissions:
 jobs:
   validate:
     name: Validate and Lint
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Validate PR Source Branch
         if: github.event_name == 'pull_request'
@@ -71,7 +71,7 @@ jobs:
     needs: validate
     # 只有推送到 main 或 dev 分支时才触发
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     env:
       REGISTRY: ghcr.io
 

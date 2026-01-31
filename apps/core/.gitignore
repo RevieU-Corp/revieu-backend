@@ -45,3 +45,5 @@ logs/
 # Temporary files
 tmp/
 temp/
+
+secrets.yaml
