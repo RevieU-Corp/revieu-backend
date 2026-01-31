@@ -33,7 +33,14 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	}
 
 	// Auto migrate
-	if err := db.AutoMigrate(&model.User{}, &model.UserAuth{}, &model.UserProfile{}, &model.EmailVerification{}); err != nil {
+	if err := db.AutoMigrate(
+		&model.User{},
+		&model.UserAuth{},
+		&model.UserProfile{},
+		&model.EmailVerification{},
+		&model.Merchant{},
+		&model.Tag{},
+	); err != nil {
 		t.Fatalf("Failed to migrate test database: %v", err)
 	}
 
@@ -154,5 +161,17 @@ func TestUserProfileHasCounts(t *testing.T) {
 	}
 	if len(want) != 0 {
 		t.Fatalf("missing columns: %v", want)
+	}
+}
+
+func TestMerchantAndTagModels(t *testing.T) {
+	db := setupTestDB(t)
+	merchant := model.Merchant{Name: "Cafe", Category: "food"}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("merchant create failed: %v", err)
+	}
+	tag := model.Tag{Name: "#coffee"}
+	if err := db.Create(&tag).Error; err != nil {
+		t.Fatalf("tag create failed: %v", err)
 	}
 }
