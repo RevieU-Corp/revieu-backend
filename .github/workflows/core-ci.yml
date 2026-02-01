@@ -94,7 +94,6 @@ jobs:
 
   build-and-push:
     name: Build and Push Image
-    needs: validate
     # 只有推送到 main 或 dev 分支时才触发
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     runs-on: self-hosted
