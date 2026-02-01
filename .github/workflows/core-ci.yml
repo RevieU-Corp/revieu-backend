@@ -93,10 +93,6 @@ jobs:
             exit 1
           fi
 
-      - name: Build
-        working-directory: apps/core
-        run: go build -v ./...
-
       - name: Run tests
         working-directory: apps/core
         env:
