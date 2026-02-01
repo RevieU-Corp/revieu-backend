@@ -5,7 +5,7 @@ server:
 
 database:
   driver: "postgres"
-  host: "postgres-host.revieu-prod.svc.cluster.local"
+  host: "10.42.0.1"
   port: 5432
   database: "revieu"
   username: "postgres"
