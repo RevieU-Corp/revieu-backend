@@ -132,7 +132,10 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 
 	// Build callback URL
 	scheme := "http"
-	if c.Request.TLS != nil {
+	// Check X-Forwarded-Proto header first (set by reverse proxy/ingress)
+	if proto := c.GetHeader("X-Forwarded-Proto"); proto == "https" {
+		scheme = "https"
+	} else if c.Request.TLS != nil {
 		scheme = "https"
 	}
 	redirectURI := fmt.Sprintf("%s://%s%s/auth/callback/google", scheme, c.Request.Host, h.apiBasePath)
@@ -166,7 +169,10 @@ func (h *AuthHandler) GoogleCallback(c *gin.Context) {
 
 	// Build callback URL (same as in GoogleLogin)
 	scheme := "http"
-	if c.Request.TLS != nil {
+	// Check X-Forwarded-Proto header first (set by reverse proxy/ingress)
+	if proto := c.GetHeader("X-Forwarded-Proto"); proto == "https" {
+		scheme = "https"
+	} else if c.Request.TLS != nil {
 		scheme = "https"
 	}
 	redirectURI := fmt.Sprintf("%s://%s%s/auth/callback/google", scheme, c.Request.Host, h.apiBasePath)
