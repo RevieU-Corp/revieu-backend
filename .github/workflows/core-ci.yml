@@ -20,6 +20,8 @@ permissions:
 jobs:
   validate:
     name: Validate and Lint
+    # 只在 PR 时运行验证，merge 后跳过（因为 PR 已经验证过了）
+    if: github.event_name == 'pull_request'
     runs-on: self-hosted
     steps:
       - name: Validate PR Source Branch
@@ -52,16 +54,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.24"
-
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('apps/core/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+          cache-dependency-path: apps/core/go.sum
 
       - name: Download dependencies
         working-directory: apps/core
