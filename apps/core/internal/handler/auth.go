@@ -130,6 +130,20 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 		return
 	}
 
+	// Get frontend URL from Referer header (user is coming from frontend)
+	frontendURL := h.frontendURL
+	if frontendURL == "" {
+		if referer := c.GetHeader("Referer"); referer != "" {
+			if parsedURL, err := url.Parse(referer); err == nil {
+				frontendURL = fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Host)
+			}
+		} else if origin := c.GetHeader("Origin"); origin != "" {
+			frontendURL = origin
+		} else {
+			frontendURL = "http://localhost:3000"
+		}
+	}
+
 	// Build callback URL
 	scheme := "http"
 	// Check X-Forwarded-Proto header first (set by reverse proxy/ingress)
@@ -140,12 +154,16 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 	}
 	redirectURI := fmt.Sprintf("%s://%s%s/auth/callback/google", scheme, c.Request.Host, h.apiBasePath)
 
-	// Build Google OAuth URL
+	// Encode frontend URL in state parameter to pass it through OAuth flow
+	state := url.QueryEscape(frontendURL)
+
+	// Build Google OAuth URL with state parameter
 	authURL := fmt.Sprintf(
-		"https://accounts.google.com/o/oauth2/v2/auth?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&access_type=offline",
+		"https://accounts.google.com/o/oauth2/v2/auth?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&access_type=offline&state=%s",
 		url.QueryEscape(clientID),
 		url.QueryEscape(redirectURI),
 		url.QueryEscape("openid email profile"),
+		state,
 	)
 
 	c.Redirect(http.StatusFound, authURL)
@@ -165,6 +183,22 @@ func (h *AuthHandler) GoogleCallback(c *gin.Context) {
 	if code == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing authorization code"})
 		return
+	}
+
+	// Get frontend URL from state parameter (passed from GoogleLogin)
+	state := c.Query("state")
+	frontendURL := h.frontendURL
+	if frontendURL == "" {
+		if state != "" {
+			// Decode the frontend URL from state parameter
+			if decodedURL, err := url.QueryUnescape(state); err == nil && decodedURL != "" {
+				frontendURL = decodedURL
+			} else {
+				frontendURL = "http://localhost:3000"
+			}
+		} else {
+			frontendURL = "http://localhost:3000"
+		}
 	}
 
 	// Build callback URL (same as in GoogleLogin)
@@ -268,11 +302,7 @@ func (h *AuthHandler) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	// Redirect to frontend with token
-	frontendURL := h.frontendURL
-	if frontendURL == "" {
-		frontendURL = "http://localhost:3000"
-	}
+	// Redirect to frontend with token (frontendURL already set at beginning of function)
 	redirectURL := fmt.Sprintf("%s/auth/callback?token=%s", frontendURL, url.QueryEscape(token))
 	c.Redirect(http.StatusFound, redirectURL)
 }
@@ -304,7 +334,17 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 	// Redirect to frontend with success message
 	frontendURL := h.frontendURL
 	if frontendURL == "" {
-		frontendURL = "http://localhost:3000"
+		// Try to get the origin from Referer or Origin header
+		if referer := c.GetHeader("Referer"); referer != "" {
+			if parsedURL, err := url.Parse(referer); err == nil {
+				frontendURL = fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Host)
+			}
+		} else if origin := c.GetHeader("Origin"); origin != "" {
+			frontendURL = origin
+		} else {
+			// Fallback to localhost only if no headers available
+			frontendURL = "http://localhost:3000"
+		}
 	}
 	redirectURL := fmt.Sprintf("%s/auth/verified", frontendURL)
 	c.Redirect(http.StatusFound, redirectURL)
