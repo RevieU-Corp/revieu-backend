@@ -14,8 +14,8 @@ func RegisterRoutes(router *gin.Engine, cfg *config.Config) {
 	userHandler := NewUserHandler(nil, nil, nil, nil)
 	profileHandler := NewProfileHandler(nil, nil, nil)
 
-	// API routes (prefix handled by Ingress)
-	api := router.Group("/")
+	// API routes with configurable base path
+	api := router.Group(cfg.Server.APIBasePath)
 	{
 		auth := api.Group("/auth")
 		{

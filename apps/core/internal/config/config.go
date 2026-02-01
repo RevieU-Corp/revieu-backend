@@ -48,9 +48,10 @@ type JWTConfig struct {
 
 // ServerConfig holds server configuration
 type ServerConfig struct {
-	Address string `yaml:"address"`
-	Port    int    `yaml:"port"`
-	Mode    string `yaml:"mode"` // debug, release, test
+	Address     string `yaml:"address"`
+	Port        int    `yaml:"port"`
+	Mode        string `yaml:"mode"`          // debug, release, test
+	APIBasePath string `yaml:"api_base_path"` // API version prefix (e.g., /api/v1)
 }
 
 // DatabaseConfig holds database configuration

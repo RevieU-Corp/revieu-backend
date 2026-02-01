@@ -31,7 +31,7 @@ import (
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @host localhost:8080
-// @BasePath /
+// @BasePath /api/v1
 // @schemes http https
 func main() {
 	ctx := context.Background()
@@ -95,15 +95,19 @@ func main() {
 	router.Use(gin.Recovery())
 	router.Use(jsonLoggerMiddleware())
 
-	// Health check endpoint
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status": "ok",
+	// API routes with configurable base path
+	apiGroup := router.Group(cfg.Server.APIBasePath)
+	{
+		// Health check endpoint
+		apiGroup.GET("/health", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{
+				"status": "ok",
+			})
 		})
-	})
 
-	// Swagger documentation
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+		// Swagger documentation
+		apiGroup.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
 
 	// Register API routes
 	handler.RegisterRoutes(router, cfg)

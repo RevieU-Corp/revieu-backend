@@ -2,6 +2,7 @@ server:
   address: ":8080"
   port: 8080
   mode: "debug"  # debug, release, test
+  api_base_path: "/api/v1"  # API version prefix
 
 database:
   driver: "postgres"
