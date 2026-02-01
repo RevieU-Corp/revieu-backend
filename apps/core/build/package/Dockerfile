@@ -20,10 +20,10 @@ ARG VERSION=dev
 ARG COMMIT=unknown
 ARG BUILD_TIME=unknown
 
-# Build the application with optimizations
+# Build the application with release optimizations
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -trimpath \
     -ldflags="-w -s -X main.Version=${VERSION} -X main.Commit=${COMMIT} -X main.BuildTime=${BUILD_TIME}" \
-    -a -installsuffix cgo \
     -o /app/server ./cmd/app
 
 # ============================================
