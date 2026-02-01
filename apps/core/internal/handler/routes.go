@@ -10,7 +10,7 @@ import (
 func RegisterRoutes(router *gin.Engine, cfg *config.Config) {
 	// Initialize handlers
 	testHandler := NewTestHandler()
-	authHandler := NewAuthHandler(cfg.JWT, cfg.OAuth, cfg.SMTP, cfg.FrontendURL)
+	authHandler := NewAuthHandler(cfg.JWT, cfg.OAuth, cfg.SMTP, cfg.FrontendURL, cfg.Server.APIBasePath)
 	userHandler := NewUserHandler(nil, nil, nil, nil)
 	profileHandler := NewProfileHandler(nil, nil, nil)
 

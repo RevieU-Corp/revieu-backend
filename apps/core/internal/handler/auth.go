@@ -17,13 +17,15 @@ type AuthHandler struct {
 	authService *service.AuthService
 	oauthCfg    config.OAuthConfig
 	frontendURL string
+	apiBasePath string
 }
 
-func NewAuthHandler(jwtCfg config.JWTConfig, oauthCfg config.OAuthConfig, smtpCfg config.SMTPConfig, frontendURL string) *AuthHandler {
+func NewAuthHandler(jwtCfg config.JWTConfig, oauthCfg config.OAuthConfig, smtpCfg config.SMTPConfig, frontendURL string, apiBasePath string) *AuthHandler {
 	return &AuthHandler{
 		authService: service.NewAuthService(nil, jwtCfg, smtpCfg),
 		oauthCfg:    oauthCfg,
 		frontendURL: frontendURL,
+		apiBasePath: apiBasePath,
 	}
 }
 
@@ -65,7 +67,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	user, err := h.authService.Register(c.Request.Context(), req.Username, req.Email, req.Password, baseURL)
 	if err != nil {
-		logger.Error(c.Request.Context(), "Registration failed", 
+		logger.Error(c.Request.Context(), "Registration failed",
 			"error", err.Error(),
 			"event", "user_register_failed",
 		)
@@ -100,7 +102,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	ipAddress := c.ClientIP()
 	token, err := h.authService.Login(c.Request.Context(), req.Email, req.Password, ipAddress)
 	if err != nil {
-		logger.Warn(c.Request.Context(), "Login failed", 
+		logger.Warn(c.Request.Context(), "Login failed",
 			"error", err.Error(),
 			"email", req.Email,
 			"event", "user_login_failed",
@@ -133,7 +135,7 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 	if c.Request.TLS != nil {
 		scheme = "https"
 	}
-	redirectURI := fmt.Sprintf("%s://%s/auth/callback/google", scheme, c.Request.Host)
+	redirectURI := fmt.Sprintf("%s://%s%s/auth/callback/google", scheme, c.Request.Host, h.apiBasePath)
 
 	// Build Google OAuth URL
 	authURL := fmt.Sprintf(
@@ -167,7 +169,7 @@ func (h *AuthHandler) GoogleCallback(c *gin.Context) {
 	if c.Request.TLS != nil {
 		scheme = "https"
 	}
-	redirectURI := fmt.Sprintf("%s://%s/auth/callback/google", scheme, c.Request.Host)
+	redirectURI := fmt.Sprintf("%s://%s%s/auth/callback/google", scheme, c.Request.Host, h.apiBasePath)
 
 	// Exchange code for token
 	tokenResp, err := http.PostForm("https://oauth2.googleapis.com/token", url.Values{
