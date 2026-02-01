@@ -20,6 +20,8 @@ permissions:
 jobs:
   validate:
     name: Validate and Lint
+    # 只在 PR 时运行验证，merge 后跳过（因为 PR 已经验证过了）
+    if: github.event_name == 'pull_request'
     runs-on: self-hosted
     steps:
       - name: Validate PR Source Branch
