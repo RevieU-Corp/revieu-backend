@@ -1,70 +1,142 @@
 # RevieU Backend
 
-Backend services for the RevieU platform, built with Python and FastAPI.
+Backend services for the RevieU platform.
+
+## ⚠️ 首次克隆后必须执行
+
+```bash
+./scripts/setup.sh
+```
+
+这会自动安装 Git hooks 防止提交未加密的 secrets 和强制 commit message 规范。
+
+---
 
 ## 📂 Project Structure
-
-The project follows a monorepo-style structure containing individual microservices:
 
 ```
 revieu-backend/
 ├── apps/
-│   └── auth-service/     # Authentication & User Management Service
-└── README.md
+│   ├── core/              # Core API Service (Go)
+│   └── example-service/   # Placeholder for future services
+├── scripts/
+│   ├── setup.sh          # 🔥 首次运行这个！
+│   ├── seal-secrets.sh   # 加密 secrets
+│   └── hooks/            # Git hooks
+└── lefthook.yml          # Hook 配置
 ```
 
 ## 🛠 Technology Stack
 
-- **Language**: Python 3.12+
-- **Framework**: FastAPI
-- **Database**: PostgreSQL
-- **ORM**: SQLAlchemy
-- **Package Manager**: [uv](https://github.com/astral-sh/uv)
-- **Logging**: Structlog
+- **Core Service**: Go 1.24+, Gin, GORM, PostgreSQL
+- **Infrastructure**: Kubernetes (k3s), ArgoCD, Sealed Secrets
+- **CI/CD**: GitHub Actions
 
 ---
 
-## 🔐 Auth Service
+## 🚀 Quick Start
 
-The `auth-service` handles user registration, login (email/password & OAuth), and profile management.
-
-### Prerequisites
-
-- Python 3.12 or higher
-- PostgreSQL
-- `uv` package manager
-
-### 🚀 快速开始
-
-#### 1. 设置环境与依赖
-
-详细的子服务配置（如数据库、OAuth、部署等）请参阅各子目录下的 `README.md`。
+### 1. Clone and Setup
 
 ```bash
-cd apps/auth-service
-uv sync
+git clone git@github.com:RevieU-Corp/revieu-backend.git
+cd revieu-backend
+
+# 🔥 重要：安装 Git hooks
+./scripts/setup.sh
 ```
 
-#### 2. 启动服务
+### 2. Configure Secrets
 
 ```bash
-cd apps/auth-service
-uv run uvicorn main:app --reload --port 8082
+# Copy example secrets
+cp apps/core/configs/secrets.yaml.example apps/core/configs/secrets.yaml
+
+# Edit with your values
+vim apps/core/configs/secrets.yaml
+
+# Encrypt before committing
+./scripts/seal-secrets.sh
 ```
 
-The service will start at `http://localhost:8082`.
-
-### 📚 API Documentation
-
-Once the server is running, you can access the interactive API docs at:
-
-- **Swagger UI**: [http://localhost:8082/api/v1/docs](http://localhost:8082/api/v1/docs)
-- **ReDoc**: [http://localhost:8082/api/v1/redoc](http://localhost:8082/api/v1/redoc)
-
-### ✅ Verification
-
-You can verify the setup by running the included helper script (if available) or by checking the status via curl:
+### 3. Run Core Service
 
 ```bash
-curl http://localhost:8082/api/v1/docs
+cd apps/core
+go run cmd/app/main.go
 ```
+
+---
+
+## 🔐 Secrets Management
+
+**Never commit unencrypted secrets!** The Git hooks will block you.
+
+### Workflow
+
+1. Edit `apps/core/configs/secrets.yaml`
+2. Encrypt: `./scripts/seal-secrets.sh`
+3. Commit: `git add apps/core/configs/sealed-secrets.yaml`
+
+See [scripts/README.md](scripts/README.md) for details.
+
+---
+
+## 📝 Commit Message Convention
+
+We use [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>(<scope>): <description>
+
+Examples:
+  feat(core): add user authentication
+  fix(api): resolve null pointer exception
+  docs(readme): update installation instructions
+```
+
+**Types**: feat, fix, docs, style, refactor, perf, test, chore, ci, build, revert
+
+The commit-msg hook will enforce this format.
+
+---
+
+## 🧪 Development
+
+### Run Tests
+
+```bash
+cd apps/core
+go test ./...
+```
+
+### Run with Docker
+
+```bash
+docker build -t revieu-core -f apps/core/build/package/Dockerfile apps/core
+docker run -p 8080:8080 revieu-core
+```
+
+---
+
+## 📚 Documentation
+
+- [Scripts README](scripts/README.md) - Secrets management and hooks
+- [Core Service](apps/core/) - API documentation
+- [Infrastructure Repo](https://github.com/RevieU-Corp/revieu-infra) - K8s configs
+
+---
+
+## 🤝 Contributing
+
+1. Run `./scripts/setup.sh` first
+2. Create a feature branch
+3. Follow commit message conventions
+4. Encrypt secrets before committing
+5. Create a PR to `dev` branch
+
+---
+
+## 📄 License
+
+[Add your license here]
