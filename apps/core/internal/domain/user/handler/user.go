@@ -324,7 +324,7 @@ func (h *UserHandler) SetDefaultAddress(c *gin.Context) {
 // @Produce json
 // @Param cursor query int false "Cursor"
 // @Param limit query int false "Limit"
-// @Success 200 {object} contentdto.FollowingUsersResponse
+// @Success 200 {object} dto.FollowingUsersResponse
 // @Failure 401 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /user/following/users [get]
@@ -387,7 +387,7 @@ func (h *UserHandler) ListFollowingMerchants(c *gin.Context) {
 // @Produce json
 // @Param cursor query int false "Cursor"
 // @Param limit query int false "Limit"
-// @Success 200 {object} contentdto.FollowersResponse
+// @Success 200 {object} dto.FollowersResponse
 // @Failure 401 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /user/followers [get]

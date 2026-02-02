@@ -24,61 +24,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/test": {
-            "get": {
-                "description": "Returns a test message to verify API is working",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "test"
-                ],
-                "summary": "Test endpoint",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/handler.TestResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Echoes back the received message",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "test"
-                ],
-                "summary": "Test POST endpoint",
-                "parameters": [
-                    {
-                        "description": "Message to echo",
-                        "name": "message",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/handler.TestResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/auth/callback/google": {
             "get": {
                 "description": "Handles Google OAuth callback, creates/logs in user, redirects to frontend with token",
@@ -140,7 +85,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.LoginRequest"
+                            "$ref": "#/definitions/internal_domain_auth.LoginRequest"
                         }
                     }
                 ],
@@ -148,10 +93,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_domain_auth.LoginResponse"
                         }
                     },
                     "400": {
@@ -208,8 +150,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/internal_domain_auth.UserInfoResponse"
                         }
                     },
                     "401": {
@@ -244,7 +185,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.RegisterRequest"
+                            "$ref": "#/definitions/internal_domain_auth.RegisterRequest"
                         }
                     }
                 ],
@@ -252,8 +193,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/internal_domain_auth.RegisterResponse"
                         }
                     },
                     "400": {
@@ -322,7 +262,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "profile"
+                    "follow"
                 ],
                 "summary": "Follow merchant",
                 "parameters": [
@@ -370,7 +310,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "profile"
+                    "follow"
                 ],
                 "summary": "Unfollow merchant",
                 "parameters": [
@@ -525,7 +465,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.AddressListResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressListResponse"
                         }
                     },
                     "401": {
@@ -567,7 +507,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateAddressRequest"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.CreateAddressRequest"
                         }
                     }
                 ],
@@ -575,7 +515,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.AddressItem"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem"
                         }
                     },
                     "400": {
@@ -683,7 +623,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateAddressRequest"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateAddressRequest"
                         }
                     }
                 ],
@@ -793,7 +733,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "content"
                 ],
                 "summary": "List my favorites",
                 "parameters": [
@@ -820,7 +760,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.FavoriteListResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteListResponse"
                         }
                     },
                     "401": {
@@ -872,7 +812,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.FollowersResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.FollowersResponse"
                         }
                     },
                     "401": {
@@ -977,7 +917,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.FollowingUsersResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.FollowingUsersResponse"
                         }
                     },
                     "401": {
@@ -1008,7 +948,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "content"
                 ],
                 "summary": "List my likes",
                 "parameters": [
@@ -1068,7 +1008,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.NotificationSettings"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.NotificationSettings"
                         }
                     },
                     "401": {
@@ -1110,7 +1050,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.NotificationSettings"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.NotificationSettings"
                         }
                     }
                 ],
@@ -1161,7 +1101,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "content"
                 ],
                 "summary": "List my posts",
                 "parameters": [
@@ -1182,7 +1122,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PostListResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostListResponse"
                         }
                     },
                     "401": {
@@ -1220,7 +1160,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PrivacySettings"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.PrivacySettings"
                         }
                     },
                     "401": {
@@ -1262,7 +1202,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.PrivacySettings"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.PrivacySettings"
                         }
                     }
                 ],
@@ -1320,7 +1260,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.ProfileResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.ProfileResponse"
                         }
                     },
                     "401": {
@@ -1362,7 +1302,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateProfileRequest"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateProfileRequest"
                         }
                     }
                 ],
@@ -1413,7 +1353,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "content"
                 ],
                 "summary": "List my reviews",
                 "parameters": [
@@ -1434,7 +1374,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.ReviewListResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewListResponse"
                         }
                     },
                     "401": {
@@ -1481,7 +1421,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PublicProfileResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_profile_service.PublicProfileResponse"
                         }
                     },
                     "400": {
@@ -1521,7 +1461,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "profile"
+                    "follow"
                 ],
                 "summary": "Follow user",
                 "parameters": [
@@ -1569,7 +1509,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "profile"
+                    "follow"
                 ],
                 "summary": "Unfollow user",
                 "parameters": [
@@ -1628,7 +1568,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "profile"
+                    "content"
                 ],
                 "summary": "List user's posts",
                 "parameters": [
@@ -1656,7 +1596,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PostListResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostListResponse"
                         }
                     },
                     "400": {
@@ -1687,7 +1627,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "profile"
+                    "content"
                 ],
                 "summary": "List user's reviews",
                 "parameters": [
@@ -1715,7 +1655,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.ReviewListResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewListResponse"
                         }
                     },
                     "400": {
@@ -1741,7 +1681,227 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.AddressItem": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteItem": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "merchant": {
+                    "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief"
+                },
+                "post": {
+                    "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostItem"
+                },
+                "review": {
+                    "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewItem"
+                },
+                "target_id": {
+                    "type": "integer"
+                },
+                "target_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteListResponse": {
+            "type": "object",
+            "properties": {
+                "cursor": {
+                    "type": "integer"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteItem"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostItem": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "is_liked": {
+                    "type": "boolean"
+                },
+                "like_count": {
+                    "type": "integer"
+                },
+                "merchant": {
+                    "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "view_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostListResponse": {
+            "type": "object",
+            "properties": {
+                "cursor": {
+                    "type": "integer"
+                },
+                "posts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostItem"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewItem": {
+            "type": "object",
+            "properties": {
+                "avg_cost": {
+                    "type": "integer"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "is_liked": {
+                    "type": "boolean"
+                },
+                "like_count": {
+                    "type": "integer"
+                },
+                "merchant": {
+                    "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "rating_env": {
+                    "type": "number"
+                },
+                "rating_service": {
+                    "type": "number"
+                },
+                "rating_value": {
+                    "type": "number"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewListResponse": {
+            "type": "object",
+            "properties": {
+                "cursor": {
+                    "type": "integer"
+                },
+                "reviews": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewItem"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_profile_service.PublicProfileResponse": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "follower_count": {
+                    "type": "integer"
+                },
+                "following_count": {
+                    "type": "integer"
+                },
+                "intro": {
+                    "type": "string"
+                },
+                "is_following": {
+                    "type": "boolean"
+                },
+                "like_count": {
+                    "type": "integer"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "post_count": {
+                    "type": "integer"
+                },
+                "review_count": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem": {
             "type": "object",
             "properties": {
                 "address": {
@@ -1773,18 +1933,18 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.AddressListResponse": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressListResponse": {
             "type": "object",
             "properties": {
                 "addresses": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.AddressItem"
+                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem"
                     }
                 }
             }
         },
-        "dto.CreateAddressRequest": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.CreateAddressRequest": {
             "type": "object",
             "required": [
                 "address",
@@ -1825,50 +1985,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.FavoriteItem": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "merchant": {
-                    "$ref": "#/definitions/dto.MerchantBrief"
-                },
-                "post": {
-                    "$ref": "#/definitions/dto.PostItem"
-                },
-                "review": {
-                    "$ref": "#/definitions/dto.ReviewItem"
-                },
-                "target_id": {
-                    "type": "integer"
-                },
-                "target_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.FavoriteListResponse": {
-            "type": "object",
-            "properties": {
-                "cursor": {
-                    "type": "integer"
-                },
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.FavoriteItem"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.FollowersResponse": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.FollowersResponse": {
             "type": "object",
             "properties": {
                 "total": {
@@ -1877,12 +1994,12 @@ const docTemplate = `{
                 "users": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.UserBrief"
+                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UserBrief"
                     }
                 }
             }
         },
-        "dto.FollowingUsersResponse": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.FollowingUsersResponse": {
             "type": "object",
             "properties": {
                 "total": {
@@ -1891,26 +2008,12 @@ const docTemplate = `{
                 "users": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.UserBrief"
+                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UserBrief"
                     }
                 }
             }
         },
-        "dto.MerchantBrief": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.NotificationSettings": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.NotificationSettings": {
             "type": "object",
             "properties": {
                 "email_enabled": {
@@ -1921,65 +2024,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.PostItem": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "images": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "is_liked": {
-                    "type": "boolean"
-                },
-                "like_count": {
-                    "type": "integer"
-                },
-                "merchant": {
-                    "$ref": "#/definitions/dto.MerchantBrief"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "title": {
-                    "type": "string"
-                },
-                "view_count": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.PostListResponse": {
-            "type": "object",
-            "properties": {
-                "cursor": {
-                    "type": "integer"
-                },
-                "posts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.PostItem"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.PrivacySettings": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.PrivacySettings": {
             "type": "object",
             "properties": {
                 "is_public": {
@@ -1987,7 +2032,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ProfileResponse": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.ProfileResponse": {
             "type": "object",
             "properties": {
                 "avatar_url": {
@@ -2007,112 +2052,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.PublicProfileResponse": {
-            "type": "object",
-            "properties": {
-                "avatar_url": {
-                    "type": "string"
-                },
-                "follower_count": {
-                    "type": "integer"
-                },
-                "following_count": {
-                    "type": "integer"
-                },
-                "intro": {
-                    "type": "string"
-                },
-                "is_following": {
-                    "type": "boolean"
-                },
-                "like_count": {
-                    "type": "integer"
-                },
-                "location": {
-                    "type": "string"
-                },
-                "nickname": {
-                    "type": "string"
-                },
-                "post_count": {
-                    "type": "integer"
-                },
-                "review_count": {
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.ReviewItem": {
-            "type": "object",
-            "properties": {
-                "avg_cost": {
-                    "type": "integer"
-                },
-                "content": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "images": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "is_liked": {
-                    "type": "boolean"
-                },
-                "like_count": {
-                    "type": "integer"
-                },
-                "merchant": {
-                    "$ref": "#/definitions/dto.MerchantBrief"
-                },
-                "rating": {
-                    "type": "number"
-                },
-                "rating_env": {
-                    "type": "number"
-                },
-                "rating_service": {
-                    "type": "number"
-                },
-                "rating_value": {
-                    "type": "number"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "dto.ReviewListResponse": {
-            "type": "object",
-            "properties": {
-                "cursor": {
-                    "type": "integer"
-                },
-                "reviews": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.ReviewItem"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.UpdateAddressRequest": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateAddressRequest": {
             "type": "object",
             "properties": {
                 "address": {
@@ -2141,7 +2081,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateProfileRequest": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateProfileRequest": {
             "type": "object",
             "properties": {
                 "avatar_url": {
@@ -2158,7 +2098,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UserBrief": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UserBrief": {
             "type": "object",
             "properties": {
                 "avatar_url": {
@@ -2175,7 +2115,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.LoginRequest": {
+        "internal_domain_auth.LoginRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -2190,7 +2130,18 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.RegisterRequest": {
+        "internal_domain_auth.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_auth.RegisterRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -2210,17 +2161,26 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.TestResponse": {
+        "internal_domain_auth.RegisterResponse": {
             "type": "object",
             "properties": {
                 "message": {
-                    "type": "string",
-                    "example": "Hello, World!"
+                    "type": "string"
                 },
-                "status": {
-                    "type": "string",
-                    "example": "success"
+                "user_id": {
+                    "type": "integer"
                 }
+            }
+        },
+        "internal_domain_auth.UserInfoResponse": {
+            "type": "object",
+            "properties": {
+                "email": {},
+                "message": {
+                    "type": "string"
+                },
+                "role": {},
+                "user_id": {}
             }
         }
     }
