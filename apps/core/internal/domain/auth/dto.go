@@ -1,0 +1,46 @@
+package auth
+
+import "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+
+// RegisterRequest registers a new user.
+type RegisterRequest struct {
+	Username string `json:"username" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=6"`
+}
+
+// LoginRequest logs in an existing user.
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
+// RegisterResponse is returned on successful registration.
+type RegisterResponse struct {
+	Message string `json:"message"`
+	UserID  int64  `json:"user_id"`
+}
+
+// LoginResponse is returned on successful login.
+type LoginResponse struct {
+	Token string `json:"token"`
+	Type  string `json:"type"`
+}
+
+// UserInfoResponse describes the authenticated user.
+type UserInfoResponse struct {
+	UserID  interface{} `json:"user_id"`
+	Email   interface{} `json:"email"`
+	Role    interface{} `json:"role"`
+	Message string      `json:"message"`
+}
+
+// ToUserResponse maps model.User to the auth response.
+func ToUserResponse(user *model.User) UserInfoResponse {
+	return UserInfoResponse{
+		UserID:  user.ID,
+		Email:   "",
+		Role:    user.Role,
+		Message: "Token is valid!",
+	}
+}
