@@ -1,14 +1,14 @@
 package router
 
 import (
-    "testing"
+	"testing"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/gin-gonic/gin"
+	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
+	"github.com/gin-gonic/gin"
 )
 
 func TestSetupExists(t *testing.T) {
-    r := gin.New()
-    cfg := &config.Config{}
-    Setup(r, cfg)
+	r := gin.New()
+	cfg := &config.Config{}
+	Setup(r, cfg)
 }

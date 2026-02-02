@@ -58,7 +58,7 @@ type UserProfile struct {
 	UserID    int64  `gorm:"primaryKey" json:"user_id"`
 	Nickname  string `gorm:"type:varchar(50);not null" json:"nickname"`
 	AvatarURL string `gorm:"type:varchar(255)" json:"avatar_url"`
-	Intro     string `gorm:"type:varchar(255)" json:"intro"`    // 一句话简介
+	Intro     string `gorm:"type:varchar(255)" json:"intro"` // 一句话简介
 	Location  string `gorm:"type:varchar(100)" json:"location"`
 	// Stats (denormalized)
 	FollowerCount  int `gorm:"default:0" json:"follower_count"`
