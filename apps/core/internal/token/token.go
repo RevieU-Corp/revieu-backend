@@ -1,4 +1,4 @@
-package service
+package token
 
 import (
 	"fmt"
@@ -9,19 +9,21 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type TokenService struct {
+// Service issues and validates JWTs.
+type Service struct {
 	secret     []byte
 	expireHour int
 }
 
-func NewTokenService(cfg config.JWTConfig) *TokenService {
-	return &TokenService{
+// New creates a JWT service.
+func New(cfg config.JWTConfig) *Service {
+	return &Service{
 		secret:     []byte(cfg.Secret),
 		expireHour: cfg.ExpireHour,
 	}
 }
 
-func (s *TokenService) GenerateToken(user *model.User, auth *model.UserAuth) (string, error) {
+func (s *Service) GenerateToken(user *model.User, auth *model.UserAuth) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":           user.ID,
 		"email":         auth.Identifier,
@@ -31,11 +33,11 @@ func (s *TokenService) GenerateToken(user *model.User, auth *model.UserAuth) (st
 		"iat":           time.Now().Unix(),
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(s.secret)
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return t.SignedString(s.secret)
 }
 
-func (s *TokenService) ValidateToken(tokenString string) (jwt.MapClaims, error) {
+func (s *Service) ValidateToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

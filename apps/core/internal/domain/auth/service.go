@@ -8,6 +8,7 @@ import (
 
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/token"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/email"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/logger"
@@ -25,7 +26,7 @@ type Service interface {
 
 type service struct {
 	db           *gorm.DB
-	tokenService *TokenService
+	tokenService *token.Service
 	emailClient  *email.SMTPClient
 }
 
@@ -40,7 +41,7 @@ func NewService(db *gorm.DB, jwtCfg config.JWTConfig, smtpCfg config.SMTPConfig)
 	}
 	return &service{
 		db:           db,
-		tokenService: NewTokenService(jwtCfg),
+		tokenService: token.New(jwtCfg),
 		emailClient:  emailClient,
 	}
 }

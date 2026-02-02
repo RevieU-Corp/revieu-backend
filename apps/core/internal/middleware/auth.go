@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/service"
+	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/token"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,7 +18,7 @@ const (
 )
 
 func JWTAuth(jwtCfg config.JWTConfig) gin.HandlerFunc {
-	tokenService := service.NewTokenService(jwtCfg)
+	tokenService := token.New(jwtCfg)
 
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader(AuthorizationHeader)
