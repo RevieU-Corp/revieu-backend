@@ -1,0 +1,16 @@
+# Global fallback
+* @team-lead
+
+# Domain ownership
+apps/core/internal/domain/auth/ @auth-team
+apps/core/internal/domain/user/ @user-team
+apps/core/internal/domain/profile/ @profile-team
+apps/core/internal/domain/follow/ @social-team
+apps/core/internal/domain/content/ @content-team
+
+# Infrastructure
+apps/core/internal/config/ @platform-team
+apps/core/internal/middleware/ @platform-team
+apps/core/internal/model/ @platform-team
+apps/core/pkg/ @platform-team
+apps/core/internal/router/ @platform-team
