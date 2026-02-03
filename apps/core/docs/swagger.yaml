@@ -1,6 +1,150 @@
 basePath: /api/v1
 definitions:
-  dto.AddressItem:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteItem:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      merchant:
+        $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief'
+      post:
+        $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostItem'
+      review:
+        $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewItem'
+      target_id:
+        type: integer
+      target_type:
+        type: string
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteListResponse:
+    properties:
+      cursor:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteItem'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief:
+    properties:
+      category:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostItem:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      images:
+        items:
+          type: string
+        type: array
+      is_liked:
+        type: boolean
+      like_count:
+        type: integer
+      merchant:
+        $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief'
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      view_count:
+        type: integer
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostListResponse:
+    properties:
+      cursor:
+        type: integer
+      posts:
+        items:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostItem'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewItem:
+    properties:
+      avg_cost:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      images:
+        items:
+          type: string
+        type: array
+      is_liked:
+        type: boolean
+      like_count:
+        type: integer
+      merchant:
+        $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief'
+      rating:
+        type: number
+      rating_env:
+        type: number
+      rating_service:
+        type: number
+      rating_value:
+        type: number
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewListResponse:
+    properties:
+      cursor:
+        type: integer
+      reviews:
+        items:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewItem'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_profile_service.PublicProfileResponse:
+    properties:
+      avatar_url:
+        type: string
+      follower_count:
+        type: integer
+      following_count:
+        type: integer
+      intro:
+        type: string
+      is_following:
+        type: boolean
+      like_count:
+        type: integer
+      location:
+        type: string
+      nickname:
+        type: string
+      post_count:
+        type: integer
+      review_count:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem:
     properties:
       address:
         type: string
@@ -21,14 +165,14 @@ definitions:
       province:
         type: string
     type: object
-  dto.AddressListResponse:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressListResponse:
     properties:
       addresses:
         items:
-          $ref: '#/definitions/dto.AddressItem'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem'
         type: array
     type: object
-  dto.CreateAddressRequest:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.CreateAddressRequest:
     properties:
       address:
         maxLength: 255
@@ -58,112 +202,37 @@ definitions:
     - name
     - phone
     type: object
-  dto.FavoriteItem:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: integer
-      merchant:
-        $ref: '#/definitions/dto.MerchantBrief'
-      post:
-        $ref: '#/definitions/dto.PostItem'
-      review:
-        $ref: '#/definitions/dto.ReviewItem'
-      target_id:
-        type: integer
-      target_type:
-        type: string
-    type: object
-  dto.FavoriteListResponse:
-    properties:
-      cursor:
-        type: integer
-      items:
-        items:
-          $ref: '#/definitions/dto.FavoriteItem'
-        type: array
-      total:
-        type: integer
-    type: object
-  dto.FollowersResponse:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.FollowersResponse:
     properties:
       total:
         type: integer
       users:
         items:
-          $ref: '#/definitions/dto.UserBrief'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UserBrief'
         type: array
     type: object
-  dto.FollowingUsersResponse:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.FollowingUsersResponse:
     properties:
       total:
         type: integer
       users:
         items:
-          $ref: '#/definitions/dto.UserBrief'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UserBrief'
         type: array
     type: object
-  dto.MerchantBrief:
-    properties:
-      category:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-    type: object
-  dto.NotificationSettings:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.NotificationSettings:
     properties:
       email_enabled:
         type: boolean
       push_enabled:
         type: boolean
     type: object
-  dto.PostItem:
-    properties:
-      content:
-        type: string
-      created_at:
-        type: string
-      id:
-        type: integer
-      images:
-        items:
-          type: string
-        type: array
-      is_liked:
-        type: boolean
-      like_count:
-        type: integer
-      merchant:
-        $ref: '#/definitions/dto.MerchantBrief'
-      tags:
-        items:
-          type: string
-        type: array
-      title:
-        type: string
-      view_count:
-        type: integer
-    type: object
-  dto.PostListResponse:
-    properties:
-      cursor:
-        type: integer
-      posts:
-        items:
-          $ref: '#/definitions/dto.PostItem'
-        type: array
-      total:
-        type: integer
-    type: object
-  dto.PrivacySettings:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.PrivacySettings:
     properties:
       is_public:
         type: boolean
     type: object
-  dto.ProfileResponse:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.ProfileResponse:
     properties:
       avatar_url:
         type: string
@@ -176,76 +245,7 @@ definitions:
       user_id:
         type: integer
     type: object
-  dto.PublicProfileResponse:
-    properties:
-      avatar_url:
-        type: string
-      follower_count:
-        type: integer
-      following_count:
-        type: integer
-      intro:
-        type: string
-      is_following:
-        type: boolean
-      like_count:
-        type: integer
-      location:
-        type: string
-      nickname:
-        type: string
-      post_count:
-        type: integer
-      review_count:
-        type: integer
-      user_id:
-        type: integer
-    type: object
-  dto.ReviewItem:
-    properties:
-      avg_cost:
-        type: integer
-      content:
-        type: string
-      created_at:
-        type: string
-      id:
-        type: integer
-      images:
-        items:
-          type: string
-        type: array
-      is_liked:
-        type: boolean
-      like_count:
-        type: integer
-      merchant:
-        $ref: '#/definitions/dto.MerchantBrief'
-      rating:
-        type: number
-      rating_env:
-        type: number
-      rating_service:
-        type: number
-      rating_value:
-        type: number
-      tags:
-        items:
-          type: string
-        type: array
-    type: object
-  dto.ReviewListResponse:
-    properties:
-      cursor:
-        type: integer
-      reviews:
-        items:
-          $ref: '#/definitions/dto.ReviewItem'
-        type: array
-      total:
-        type: integer
-    type: object
-  dto.UpdateAddressRequest:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateAddressRequest:
     properties:
       address:
         type: string
@@ -264,7 +264,7 @@ definitions:
       province:
         type: string
     type: object
-  dto.UpdateProfileRequest:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateProfileRequest:
     properties:
       avatar_url:
         type: string
@@ -275,7 +275,7 @@ definitions:
       nickname:
         type: string
     type: object
-  dto.UserBrief:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UserBrief:
     properties:
       avatar_url:
         type: string
@@ -286,7 +286,7 @@ definitions:
       user_id:
         type: integer
     type: object
-  handler.LoginRequest:
+  internal_domain_auth.LoginRequest:
     properties:
       email:
         type: string
@@ -296,7 +296,14 @@ definitions:
     - email
     - password
     type: object
-  handler.RegisterRequest:
+  internal_domain_auth.LoginResponse:
+    properties:
+      token:
+        type: string
+      type:
+        type: string
+    type: object
+  internal_domain_auth.RegisterRequest:
     properties:
       email:
         type: string
@@ -310,14 +317,20 @@ definitions:
     - password
     - username
     type: object
-  handler.TestResponse:
+  internal_domain_auth.RegisterResponse:
     properties:
       message:
-        example: Hello, World!
         type: string
-      status:
-        example: success
+      user_id:
+        type: integer
+    type: object
+  internal_domain_auth.UserInfoResponse:
+    properties:
+      email: {}
+      message:
         type: string
+      role: {}
+      user_id: {}
     type: object
 host: localhost:8080
 info:
@@ -333,42 +346,6 @@ info:
   title: RevieU Core API
   version: "1.0"
 paths:
-  /api/v1/test:
-    get:
-      consumes:
-      - application/json
-      description: Returns a test message to verify API is working
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.TestResponse'
-      summary: Test endpoint
-      tags:
-      - test
-    post:
-      consumes:
-      - application/json
-      description: Echoes back the received message
-      parameters:
-      - description: Message to echo
-        in: body
-        name: message
-        required: true
-        schema:
-          type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.TestResponse'
-      summary: Test POST endpoint
-      tags:
-      - test
   /auth/callback/google:
     get:
       description: Handles Google OAuth callback, creates/logs in user, redirects
@@ -408,16 +385,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.LoginRequest'
+          $ref: '#/definitions/internal_domain_auth.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/internal_domain_auth.LoginResponse'
         "400":
           description: Bad Request
           schema:
@@ -451,8 +426,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/internal_domain_auth.UserInfoResponse'
         "401":
           description: Unauthorized
           schema:
@@ -475,15 +449,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.RegisterRequest'
+          $ref: '#/definitions/internal_domain_auth.RegisterRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/internal_domain_auth.RegisterResponse'
         "400":
           description: Bad Request
           schema:
@@ -562,7 +535,7 @@ paths:
             type: object
       summary: Unfollow merchant
       tags:
-      - profile
+      - follow
     post:
       description: Follow a merchant
       parameters:
@@ -594,7 +567,7 @@ paths:
             type: object
       summary: Follow merchant
       tags:
-      - profile
+      - follow
   /user/account:
     delete:
       consumes:
@@ -662,7 +635,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.AddressListResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressListResponse'
         "401":
           description: Unauthorized
           schema:
@@ -688,14 +661,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateAddressRequest'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.CreateAddressRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.AddressItem'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem'
         "400":
           description: Bad Request
           schema:
@@ -765,7 +738,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateAddressRequest'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateAddressRequest'
       produces:
       - application/json
       responses:
@@ -857,7 +830,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.FavoriteListResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteListResponse'
         "401":
           description: Unauthorized
           schema:
@@ -872,7 +845,7 @@ paths:
             type: object
       summary: List my favorites
       tags:
-      - user
+      - content
   /user/followers:
     get:
       description: Returns followers of the authenticated user
@@ -891,7 +864,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.FollowersResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.FollowersResponse'
         "401":
           description: Unauthorized
           schema:
@@ -960,7 +933,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.FollowingUsersResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.FollowingUsersResponse'
         "401":
           description: Unauthorized
           schema:
@@ -1010,7 +983,7 @@ paths:
             type: object
       summary: List my likes
       tags:
-      - user
+      - content
   /user/notifications:
     get:
       description: Returns the authenticated user's notification settings
@@ -1020,7 +993,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.NotificationSettings'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.NotificationSettings'
         "401":
           description: Unauthorized
           schema:
@@ -1046,7 +1019,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.NotificationSettings'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.NotificationSettings'
       produces:
       - application/json
       responses:
@@ -1095,7 +1068,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PostListResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostListResponse'
         "401":
           description: Unauthorized
           schema:
@@ -1110,7 +1083,7 @@ paths:
             type: object
       summary: List my posts
       tags:
-      - user
+      - content
   /user/privacy:
     get:
       description: Returns the authenticated user's privacy settings
@@ -1120,7 +1093,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PrivacySettings'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.PrivacySettings'
         "401":
           description: Unauthorized
           schema:
@@ -1146,7 +1119,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.PrivacySettings'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.PrivacySettings'
       produces:
       - application/json
       responses:
@@ -1186,7 +1159,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.ProfileResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.ProfileResponse'
         "401":
           description: Unauthorized
           schema:
@@ -1212,7 +1185,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateProfileRequest'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateProfileRequest'
       produces:
       - application/json
       responses:
@@ -1261,7 +1234,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.ReviewListResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewListResponse'
         "401":
           description: Unauthorized
           schema:
@@ -1276,7 +1249,7 @@ paths:
             type: object
       summary: List my reviews
       tags:
-      - user
+      - content
   /users/{id}:
     get:
       description: Returns a user's public profile
@@ -1292,7 +1265,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PublicProfileResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_profile_service.PublicProfileResponse'
         "400":
           description: Bad Request
           schema:
@@ -1352,7 +1325,7 @@ paths:
             type: object
       summary: Unfollow user
       tags:
-      - profile
+      - follow
     post:
       description: Follow a user
       parameters:
@@ -1384,7 +1357,7 @@ paths:
             type: object
       summary: Follow user
       tags:
-      - profile
+      - follow
   /users/{id}/posts:
     get:
       description: Returns a user's posts
@@ -1408,7 +1381,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PostListResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostListResponse'
         "400":
           description: Bad Request
           schema:
@@ -1423,7 +1396,7 @@ paths:
             type: object
       summary: List user's posts
       tags:
-      - profile
+      - content
   /users/{id}/reviews:
     get:
       description: Returns a user's reviews
@@ -1447,7 +1420,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.ReviewListResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewListResponse'
         "400":
           description: Bad Request
           schema:
@@ -1462,7 +1435,7 @@ paths:
             type: object
       summary: List user's reviews
       tags:
-      - profile
+      - content
 schemes:
 - http
 - https

@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/handler"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/router"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/logger"
 	"github.com/gin-gonic/gin"
@@ -91,26 +91,7 @@ func main() {
 
 	// Initialize Gin router with JSON logging
 	gin.SetMode(gin.ReleaseMode)
-	router := gin.New()
-	router.Use(gin.Recovery())
-	router.Use(jsonLoggerMiddleware())
-
-	// API routes with configurable base path
-	apiGroup := router.Group(cfg.Server.APIBasePath)
-	{
-		// Health check endpoint
-		apiGroup.GET("/health", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{
-				"status": "ok",
-			})
-		})
-
-		// Swagger documentation
-		apiGroup.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	}
-
-	// Register API routes
-	handler.RegisterRoutes(router, cfg)
+	router := buildRouter(cfg)
 
 	// Start server
 	addr := cfg.Server.Address
@@ -120,6 +101,24 @@ func main() {
 		logger.Error(ctx, "Failed to start server", "error", err.Error())
 		os.Exit(1)
 	}
+}
+
+func buildRouter(cfg *config.Config) *gin.Engine {
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.Use(jsonLoggerMiddleware())
+
+	apiGroup := r.Group(cfg.Server.APIBasePath)
+	{
+		apiGroup.GET("/health", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"status": "ok"})
+		})
+
+		apiGroup.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
+
+	router.Setup(r, cfg)
+	return r
 }
 
 func jsonLoggerMiddleware() gin.HandlerFunc {
