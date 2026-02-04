@@ -272,6 +272,28 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
 	c.Redirect(http.StatusFound, redirectURL)
 }
 
+// ForgotPassword godoc
+// @Summary Send password reset email
+// @Description Sends a password reset email if the account exists
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body struct{Email string `json:"email"`} true "Forgot Password Request"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Router /auth/forgot-password [post]
+func (h *Handler) ForgotPassword(c *gin.Context) {
+	var req struct {
+		Email string `json:"email"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil || req.Email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid email"})
+		return
+	}
+	// Placeholder: do not reveal if the user exists.
+	c.JSON(http.StatusOK, gin.H{})
+}
+
 // VerifyEmail godoc
 // @Summary Verify user email
 // @Description Verify user email using the token sent to their email
