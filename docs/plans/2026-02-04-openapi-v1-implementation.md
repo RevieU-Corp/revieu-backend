@@ -2,6 +2,8 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
+**Issue:** #96
+
 **Goal:** Implement all missing OpenAPI v1 endpoints (feed, merchants, reviews, coupons, vouchers, payments, media, AI suggestions, and auth forgot-password) without changing existing auth/user/profile behavior.
 
 **Architecture:** New domain packages per tag with Gin routes, handlers, and services using GORM. Reuse existing models where possible and add new models for coupons/vouchers/payments/media/review comments. Register new routes in `router.Setup` only.
