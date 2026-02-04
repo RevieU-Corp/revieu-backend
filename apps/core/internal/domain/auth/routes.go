@@ -14,6 +14,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	{
 		auth.POST("/register", handler.Register)
 		auth.POST("/login", handler.Login)
+		auth.POST("/forgot-password", handler.ForgotPassword)
 		auth.GET("/login/google", handler.GoogleLogin)
 		auth.GET("/callback/google", handler.GoogleCallback)
 		auth.GET("/verify", handler.VerifyEmail)
