@@ -18,6 +18,14 @@ func NewFeedHandler(svc *service.FeedService) *FeedHandler {
 	return &FeedHandler{svc: svc}
 }
 
+// HomeFeed godoc
+// @Summary Get home feed
+// @Description Returns the home feed items
+// @Tags feed
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]string
+// @Router /feed/home [get]
 func (h *FeedHandler) Home(c *gin.Context) {
 	items, err := h.svc.Home(c.Request.Context())
 	if err != nil {

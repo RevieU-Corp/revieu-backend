@@ -278,14 +278,12 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param request body struct{Email string `json:"email"`} true "Forgot Password Request"
+// @Param request body ForgotPasswordRequest true "Forgot Password Request"
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Router /auth/forgot-password [post]
 func (h *Handler) ForgotPassword(c *gin.Context) {
-	var req struct {
-		Email string `json:"email"`
-	}
+	var req ForgotPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil || req.Email == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid email"})
 		return

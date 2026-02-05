@@ -19,6 +19,11 @@ type Review struct {
 	CreatedAt  string   `json:"createdAt"`
 }
 
+// CommentRequest is the request body for adding a review comment.
+type CommentRequest struct {
+	Text string `json:"text" binding:"required"`
+}
+
 func (r Review) MerchantIDValue() (int64, error) {
 	if r.MerchantID == "" {
 		return 0, errors.New("merchantId required")

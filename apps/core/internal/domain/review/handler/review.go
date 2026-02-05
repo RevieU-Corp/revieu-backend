@@ -20,6 +20,15 @@ func NewReviewHandler(svc *service.ReviewService) *ReviewHandler {
 	return &ReviewHandler{svc: svc}
 }
 
+// ListMyReviews godoc
+// @Summary List my reviews
+// @Description Returns reviews created by the authenticated user
+// @Tags review
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /reviews [get]
 func (h *ReviewHandler) ListMyReviews(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	reviews, err := h.svc.ListByUser(c.Request.Context(), userID)
@@ -30,6 +39,17 @@ func (h *ReviewHandler) ListMyReviews(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": dto.FromModels(reviews)})
 }
 
+// CreateReview godoc
+// @Summary Create a review
+// @Description Creates a new review for the authenticated user
+// @Tags review
+// @Accept json
+// @Produce json
+// @Param request body dto.Review true "Create review request"
+// @Success 201 {object} dto.Review
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /reviews [post]
 func (h *ReviewHandler) Create(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	var req dto.Review
@@ -45,6 +65,16 @@ func (h *ReviewHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, dto.FromModel(created))
 }
 
+// ReviewDetail godoc
+// @Summary Get review detail
+// @Description Returns a single review by ID
+// @Tags review
+// @Produce json
+// @Param id path int true "Review ID"
+// @Success 200 {object} dto.Review
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /reviews/{id} [get]
 func (h *ReviewHandler) Detail(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -59,6 +89,16 @@ func (h *ReviewHandler) Detail(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.FromModel(*review))
 }
 
+// LikeReview godoc
+// @Summary Like a review
+// @Description Likes a review for the authenticated user
+// @Tags review
+// @Produce json
+// @Param id path int true "Review ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /reviews/{id}/like [post]
 func (h *ReviewHandler) Like(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -73,6 +113,18 @@ func (h *ReviewHandler) Like(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
+// CommentReview godoc
+// @Summary Add a review comment
+// @Description Adds a comment to a review
+// @Tags review
+// @Accept json
+// @Produce json
+// @Param id path int true "Review ID"
+// @Param request body dto.CommentRequest true "Comment request"
+// @Success 201 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /reviews/{id}/comments [post]
 func (h *ReviewHandler) Comment(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -80,9 +132,7 @@ func (h *ReviewHandler) Comment(c *gin.Context) {
 		return
 	}
 	userID := c.GetInt64("user_id")
-	var req struct {
-		Text string `json:"text"`
-	}
+	var req dto.CommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil || req.Text == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid text"})
 		return

@@ -19,6 +19,17 @@ func NewPaymentHandler(svc *service.PaymentService) *PaymentHandler {
 	return &PaymentHandler{svc: svc}
 }
 
+// CreatePayment godoc
+// @Summary Create payment
+// @Description Creates a payment record
+// @Tags payment
+// @Accept json
+// @Produce json
+// @Param request body service.CreatePaymentRequest true "Create payment request"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /payments [post]
 func (h *PaymentHandler) Create(c *gin.Context) {
 	var req service.CreatePaymentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -33,6 +44,17 @@ func (h *PaymentHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, p)
 }
 
+// PaymentDetail godoc
+// @Summary Get payment detail
+// @Description Returns a payment by ID
+// @Tags payment
+// @Produce json
+// @Param id path int true "Payment ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /payments/{id} [get]
 func (h *PaymentHandler) Detail(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

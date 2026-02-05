@@ -96,7 +96,7 @@ func main() {
 	// Start server
 	addr := cfg.Server.Address
 	logger.Info(ctx, "Starting server", "address", addr)
-	logger.Info(ctx, "Swagger documentation available", "url", "http://"+addr+"/swagger/index.html")
+	logger.Info(ctx, "Swagger documentation available", "url", "http://"+addr+cfg.Server.APIBasePath+"/swagger/index.html")
 	if err := router.Run(addr); err != nil {
 		logger.Error(ctx, "Failed to start server", "error", err.Error())
 		os.Exit(1)
