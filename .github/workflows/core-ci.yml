@@ -22,7 +22,7 @@ jobs:
     name: Validate and Lint
     # 只在 PR 时运行验证，merge 后跳过（因为 PR 已经验证过了）
     if: github.event_name == 'pull_request'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Validate PR Source Branch
         if: github.event_name == 'pull_request'
@@ -79,9 +79,9 @@ jobs:
         working-directory: apps/core
         run: |
           go install github.com/swaggo/swag/cmd/swag@latest
-          swag init -g cmd/app/main.go -o docs
+          swag init -g cmd/app/main.go -o docs --parseInternal --parseDependency
           if [ -n "$(git diff --name-only docs/)" ]; then
-            echo "Error: Swagger docs are out of date. Please run 'swag init -g cmd/app/main.go -o docs' and commit the changes."
+            echo "Error: Swagger docs are out of date. Please run 'swag init -g cmd/app/main.go -o docs --parseInternal --parseDependency' and commit the changes."
             git diff docs/
             exit 1
           fi
@@ -96,7 +96,7 @@ jobs:
     name: Build and Push Image
     # 只有推送到 main 或 dev 分支时才触发
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     env:
       REGISTRY: ghcr.io
 
