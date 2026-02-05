@@ -6,7 +6,7 @@ server:
 
 database:
   driver: "postgres"
-  host: "127.0.0.1"
+  host: "10.0.0.1"
   port: 5432
   database: "revieu"
   username: "postgres"
