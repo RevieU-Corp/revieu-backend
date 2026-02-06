@@ -16,6 +16,7 @@ type Config struct {
 	JWT         JWTConfig      `yaml:"jwt"`
 	OAuth       OAuthConfig    `yaml:"oauth"`
 	SMTP        SMTPConfig     `yaml:"smtp"`
+	R2          R2Config       `yaml:"r2"`
 	FrontendURL string         `yaml:"frontend_url"`
 }
 
@@ -27,6 +28,15 @@ type SMTPConfig struct {
 	Password string `yaml:"password"`
 	From     string `yaml:"from"`
 	UseTLS   bool   `yaml:"use_tls"`
+}
+
+// R2Config holds Cloudflare R2 storage configuration
+type R2Config struct {
+	AccountID       string `yaml:"account_id"`
+	AccessKeyID     string `yaml:"access_key_id"`
+	SecretAccessKey string `yaml:"secret_access_key"`
+	BucketName      string `yaml:"bucket_name"`
+	PublicURL       string `yaml:"public_url"`
 }
 
 // OAuthConfig holds OAuth provider configurations
@@ -121,6 +131,24 @@ func Load() (*Config, error) {
 	if strings.HasPrefix(cfg.SMTP.Password, "${") && strings.HasSuffix(cfg.SMTP.Password, "}") {
 		envVar := cfg.SMTP.Password[2 : len(cfg.SMTP.Password)-1]
 		cfg.SMTP.Password = os.Getenv(envVar)
+	}
+
+	// Expand environment variables in R2 config
+	if strings.HasPrefix(cfg.R2.AccountID, "${") && strings.HasSuffix(cfg.R2.AccountID, "}") {
+		envVar := cfg.R2.AccountID[2 : len(cfg.R2.AccountID)-1]
+		cfg.R2.AccountID = os.Getenv(envVar)
+	}
+	if strings.HasPrefix(cfg.R2.AccessKeyID, "${") && strings.HasSuffix(cfg.R2.AccessKeyID, "}") {
+		envVar := cfg.R2.AccessKeyID[2 : len(cfg.R2.AccessKeyID)-1]
+		cfg.R2.AccessKeyID = os.Getenv(envVar)
+	}
+	if strings.HasPrefix(cfg.R2.SecretAccessKey, "${") && strings.HasSuffix(cfg.R2.SecretAccessKey, "}") {
+		envVar := cfg.R2.SecretAccessKey[2 : len(cfg.R2.SecretAccessKey)-1]
+		cfg.R2.SecretAccessKey = os.Getenv(envVar)
+	}
+	if strings.HasPrefix(cfg.R2.PublicURL, "${") && strings.HasSuffix(cfg.R2.PublicURL, "}") {
+		envVar := cfg.R2.PublicURL[2 : len(cfg.R2.PublicURL)-1]
+		cfg.R2.PublicURL = os.Getenv(envVar)
 	}
 
 	return &cfg, nil
