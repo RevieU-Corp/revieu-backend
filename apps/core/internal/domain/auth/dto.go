@@ -15,6 +15,11 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+// ForgotPasswordRequest requests password reset email.
+type ForgotPasswordRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
 // RegisterResponse is returned on successful registration.
 type RegisterResponse struct {
 	Message string `json:"message"`

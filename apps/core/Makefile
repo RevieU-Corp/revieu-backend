@@ -50,7 +50,7 @@ lint: ## Run linter
 
 swagger: ## Generate Swagger documentation
 	@echo "Generating Swagger documentation..."
-	@swag init -g cmd/app/main.go -o docs
+	@swag init -g cmd/app/main.go -o docs --parseInternal --parseDependency
 	@echo "Swagger docs generated in ./docs"
 
 docker-build: ## Build Docker image

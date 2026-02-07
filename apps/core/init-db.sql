@@ -169,7 +169,53 @@ CREATE TABLE review_votes (
 );
 
 -- =============================================
--- D. 索引优化 (Indexes)
+-- D. 优惠券与支付 (Coupons, Vouchers, Payments, Media)
+-- =============================================
+
+CREATE TABLE coupons (
+    id BIGSERIAL PRIMARY KEY,
+    merchant_id BIGINT NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    type VARCHAR(20) NOT NULL, -- 'free', 'paid'
+    value VARCHAR(50),
+    price NUMERIC(10, 2) DEFAULT 0,
+    expiry_date TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE vouchers (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    coupon_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'active',
+    expiry_date TIMESTAMPTZ,
+    qr_code VARCHAR(255),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE payments (
+    id BIGSERIAL PRIMARY KEY,
+    amount NUMERIC(10, 2) NOT NULL,
+    currency VARCHAR(10) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    coupon_id BIGINT,
+    merchant_id BIGINT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE media_uploads (
+    id BIGSERIAL PRIMARY KEY,
+    upload_url VARCHAR(255) NOT NULL,
+    file_url VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- =============================================
+-- E. 索引优化 (Indexes)
 -- =============================================
 
 -- Users: 登录查找
@@ -192,9 +238,12 @@ CREATE INDEX idx_review_media_rid ON review_media(review_id);
 CREATE INDEX idx_review_comments_rid ON review_comments(review_id);
 CREATE INDEX idx_venue_cats_vid ON venue_categories(venue_id);
 CREATE INDEX idx_venue_cats_cid ON venue_categories(category_id);
+CREATE INDEX idx_coupons_merchant_id ON coupons(merchant_id);
+CREATE INDEX idx_vouchers_user_id ON vouchers(user_id);
+CREATE INDEX idx_payments_status ON payments(status);
 
 -- =============================================
--- E. 测试数据种子 (Seed Data Example)
+-- F. 测试数据种子 (Seed Data Example)
 -- =============================================
 -- 仅作为示例，演示如何插入 PostGIS 数据
 /*

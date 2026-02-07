@@ -1,5 +1,23 @@
 basePath: /api/v1
 definitions:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_service.SuggestionsRequest:
+    properties:
+      businessCategory:
+        type: string
+      currentText:
+        type: string
+      merchantName:
+        type: string
+      overallRating:
+        type: number
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_service.SuggestionsResponse:
+    properties:
+      suggestions:
+        items:
+          type: string
+        type: array
+    type: object
   github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteItem:
     properties:
       created_at:
@@ -119,6 +137,68 @@ definitions:
       total:
         type: integer
     type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.FileRequest:
+    properties:
+      content_type:
+        type: string
+      filename:
+        type: string
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLRequest:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.FileRequest'
+        type: array
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLResponse:
+    properties:
+      uploads:
+        items:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.UploadInfo'
+        type: array
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.UploadInfo:
+    properties:
+      expires_at:
+        type: string
+      file_url:
+        type: string
+      id:
+        type: string
+      upload_url:
+        type: string
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_merchant_dto.Merchant:
+    properties:
+      category:
+        type: string
+      coverImage:
+        type: string
+      distance:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      rating:
+        type: number
+      reviewCount:
+        type: integer
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_payment_service.CreatePaymentRequest:
+    properties:
+      amount:
+        type: number
+      currency:
+        type: string
+      status:
+        type: string
+    type: object
   github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_profile_service.PublicProfileResponse:
     properties:
       avatar_url:
@@ -143,6 +223,36 @@ definitions:
         type: integer
       user_id:
         type: integer
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.CommentRequest:
+    properties:
+      text:
+        type: string
+    required:
+    - text
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.Review:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      images:
+        items:
+          type: string
+        type: array
+      merchantId:
+        type: string
+      rating:
+        type: number
+      tags:
+        items:
+          type: string
+        type: array
+      text:
+        type: string
+      userId:
+        type: string
     type: object
   github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem:
     properties:
@@ -286,6 +396,22 @@ definitions:
       user_id:
         type: integer
     type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_voucher_service.CreateVoucherRequest:
+    properties:
+      code:
+        type: string
+      couponId:
+        type: string
+      userId:
+        type: string
+    type: object
+  internal_domain_auth.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
   internal_domain_auth.LoginRequest:
     properties:
       email:
@@ -332,6 +458,13 @@ definitions:
       role: {}
       user_id: {}
     type: object
+  internal_domain_coupon_handler.InitiatePaymentRequest:
+    properties:
+      userId:
+        type: string
+    required:
+    - userId
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -346,6 +479,40 @@ info:
   title: RevieU Core API
   version: "1.0"
 paths:
+  /ai/reviews/suggestions:
+    post:
+      consumes:
+      - application/json
+      description: Generates AI suggestions for improving a review
+      parameters:
+      - description: Suggestions request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_service.SuggestionsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_service.SuggestionsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get review suggestions
+      tags:
+      - ai
   /auth/callback/google:
     get:
       description: Handles Google OAuth callback, creates/logs in user, redirects
@@ -372,6 +539,36 @@ paths:
               type: string
             type: object
       summary: Handle Google OAuth callback
+      tags:
+      - auth
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Sends a password reset email if the account exists
+      parameters:
+      - description: Forgot Password Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_auth.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Send password reset email
       tags:
       - auth
   /auth/login:
@@ -497,6 +694,288 @@ paths:
       summary: Verify user email
       tags:
       - auth
+  /coupons/{id}/payment/initiate:
+    post:
+      consumes:
+      - application/json
+      description: Initiates payment flow for a coupon
+      parameters:
+      - description: Coupon ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Initiate payment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_coupon_handler.InitiatePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Initiate coupon payment
+      tags:
+      - coupon
+  /coupons/{id}/redeem:
+    post:
+      description: Redeems a coupon for the authenticated user
+      parameters:
+      - description: Coupon ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Redeem coupon
+      tags:
+      - coupon
+  /coupons/{id}/validate:
+    post:
+      description: Validates a coupon by ID
+      parameters:
+      - description: Coupon ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Validate coupon
+      tags:
+      - coupon
+  /feed/home:
+    get:
+      description: Returns the home feed items
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get home feed
+      tags:
+      - feed
+  /media/{id}/analysis:
+    post:
+      description: Triggers analysis for a media upload
+      parameters:
+      - description: Upload ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Analyze media upload
+      tags:
+      - media
+  /media/presigned-urls:
+    post:
+      consumes:
+      - application/json
+      description: Generates presigned URLs for uploading files directly to R2 storage
+      parameters:
+      - description: Files to upload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create presigned URLs for media upload
+      tags:
+      - media
+  /media/uploads:
+    post:
+      description: Creates a media upload and returns upload URLs
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create media upload
+      tags:
+      - media
+  /merchants:
+    get:
+      description: Returns merchants, optionally filtered by category
+      parameters:
+      - description: Category filter
+        in: query
+        name: category
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List merchants
+      tags:
+      - merchant
+  /merchants/{id}:
+    get:
+      description: Returns a merchant by ID
+      parameters:
+      - description: Merchant ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_merchant_dto.Merchant'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get merchant detail
+      tags:
+      - merchant
   /merchants/{id}/follow:
     delete:
       description: Unfollow a merchant
@@ -568,6 +1047,275 @@ paths:
       summary: Follow merchant
       tags:
       - follow
+  /merchants/{id}/reviews:
+    get:
+      description: Returns reviews for a merchant
+      parameters:
+      - description: Merchant ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List merchant reviews
+      tags:
+      - merchant
+  /payments:
+    post:
+      consumes:
+      - application/json
+      description: Creates a payment record
+      parameters:
+      - description: Create payment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_payment_service.CreatePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create payment
+      tags:
+      - payment
+  /payments/{id}:
+    get:
+      description: Returns a payment by ID
+      parameters:
+      - description: Payment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get payment detail
+      tags:
+      - payment
+  /reviews:
+    get:
+      description: Returns reviews created by the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List my reviews
+      tags:
+      - review
+    post:
+      consumes:
+      - application/json
+      description: Creates a new review for the authenticated user
+      parameters:
+      - description: Create review request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.Review'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.Review'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a review
+      tags:
+      - review
+  /reviews/{id}:
+    get:
+      description: Returns a single review by ID
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.Review'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get review detail
+      tags:
+      - review
+  /reviews/{id}/comments:
+    post:
+      consumes:
+      - application/json
+      description: Adds a comment to a review
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Comment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.CommentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add a review comment
+      tags:
+      - review
+  /reviews/{id}/like:
+    post:
+      description: Likes a review for the authenticated user
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Like a review
+      tags:
+      - review
   /user/account:
     delete:
       consumes:
@@ -1436,6 +2184,244 @@ paths:
       summary: List user's reviews
       tags:
       - content
+  /vouchers:
+    get:
+      description: Returns vouchers for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List vouchers
+      tags:
+      - voucher
+    post:
+      consumes:
+      - application/json
+      description: Creates a voucher for the authenticated user
+      parameters:
+      - description: Create voucher request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_voucher_service.CreateVoucherRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create voucher
+      tags:
+      - voucher
+  /vouchers/{id}:
+    get:
+      description: Returns a voucher by ID
+      parameters:
+      - description: Voucher ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get voucher detail
+      tags:
+      - voucher
+  /vouchers/{id}/status:
+    patch:
+      description: Updates voucher status to used
+      parameters:
+      - description: Voucher ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update voucher status
+      tags:
+      - voucher
+  /vouchers/{id}/use:
+    patch:
+      description: Marks a voucher as used
+      parameters:
+      - description: Voucher ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Use voucher
+      tags:
+      - voucher
+  /vouchers/code/{code}:
+    get:
+      description: Returns a voucher by code
+      parameters:
+      - description: Voucher code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get voucher by code
+      tags:
+      - voucher
+  /vouchers/share/email:
+    post:
+      description: Sends voucher share email
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Share voucher via email
+      tags:
+      - voucher
+  /vouchers/share/sms:
+    post:
+      description: Sends voucher share SMS
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Share voucher via SMS
+      tags:
+      - voucher
 schemes:
 - http
 - https

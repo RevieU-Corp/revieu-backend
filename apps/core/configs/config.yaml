@@ -1,23 +1,23 @@
 server:
   address: ":8080"
   port: 8080
-  mode: "debug"  # debug, release, test
-  api_base_path: "/api/v1"  # API version prefix
+  mode: "debug" # debug, release, test
+  api_base_path: "/api/v1" # API version prefix
 
 database:
   driver: "postgres"
-  host: "10.42.0.1"
+  host: "10.0.0.1"
   port: 5432
   database: "revieu"
   username: "postgres"
   password: "${DB_PASSWORD}"
 
 logger:
-  level: "info"  # debug, info, warn, error
+  level: "info" # debug, info, warn, error
   format: "json" # json, text
 
 jwt:
-  secret: "${JWT_SECRET}"  # Set via environment variable
+  secret: "${JWT_SECRET}" # Set via environment variable
   expire_hour: 24
 
 oauth:
@@ -34,3 +34,10 @@ smtp:
   password: "${SMTP_PASSWORD}"
   from: "${SMTP_FROM}"
   use_tls: true
+
+r2:
+  account_id: "${R2_ACCOUNT_ID}"
+  access_key_id: "${R2_ACCESS_KEY_ID}"
+  secret_access_key: "${R2_SECRET_ACCESS_KEY}"
+  bucket_name: "revieu-media"
+  public_url: "${R2_PUBLIC_URL}"
