@@ -42,13 +42,23 @@ func (s *ReviewService) Create(ctx context.Context, userID int64, req dto.Review
 	if err != nil {
 		return model.Review{}, err
 	}
+	venueID, err := req.VenueIDValue()
+	if err != nil {
+		return model.Review{}, err
+	}
+	visitDate, err := req.VisitDateValue()
+	if err != nil {
+		return model.Review{}, err
+	}
 	imagesJSON, _ := json.Marshal(req.Images)
 	review := model.Review{
 		UserID:     userID,
 		MerchantID: merchantID,
+		VenueID:    venueID,
 		Rating:     float32(req.Rating),
 		Content:    req.Text,
 		Images:     string(imagesJSON),
+		VisitDate:  visitDate,
 	}
 	if err := s.db.WithContext(ctx).Create(&review).Error; err != nil {
 		return model.Review{}, err
