@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"encoding/json"
 	"errors"
 	"strconv"
 	"time"
@@ -48,6 +49,13 @@ func (r Review) VisitDateValue() (time.Time, error) {
 }
 
 func FromModel(m model.Review) Review {
+	var images []string
+	if m.Images != "" {
+		_ = json.Unmarshal([]byte(m.Images), &images)
+	}
+	if images == nil {
+		images = []string{}
+	}
 	return Review{
 		ID:         strconv.FormatInt(m.ID, 10),
 		MerchantID: strconv.FormatInt(m.MerchantID, 10),
@@ -55,7 +63,7 @@ func FromModel(m model.Review) Review {
 		UserID:     strconv.FormatInt(m.UserID, 10),
 		Rating:     float64(m.Rating),
 		Text:       m.Content,
-		Images:     []string{},
+		Images:     images,
 		Tags:       []string{},
 		VisitDate:  m.VisitDate.Format("2006-01-02"),
 		CreatedAt:  m.CreatedAt.Format(time.RFC3339),
