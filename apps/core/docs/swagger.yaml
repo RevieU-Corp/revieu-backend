@@ -137,6 +137,38 @@ definitions:
       total:
         type: integer
     type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.FileRequest:
+    properties:
+      content_type:
+        type: string
+      filename:
+        type: string
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLRequest:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.FileRequest'
+        type: array
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLResponse:
+    properties:
+      uploads:
+        items:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.UploadInfo'
+        type: array
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.UploadInfo:
+    properties:
+      expires_at:
+        type: string
+      file_url:
+        type: string
+      id:
+        type: string
+      upload_url:
+        type: string
+    type: object
   github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_merchant_dto.Merchant:
     properties:
       category:
@@ -820,6 +852,46 @@ paths:
               type: string
             type: object
       summary: Analyze media upload
+      tags:
+      - media
+  /media/presigned-urls:
+    post:
+      consumes:
+      - application/json
+      description: Generates presigned URLs for uploading files directly to R2 storage
+      parameters:
+      - description: Files to upload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create presigned URLs for media upload
       tags:
       - media
   /media/uploads:

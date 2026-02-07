@@ -1,8 +1,8 @@
 server:
   address: ":8080"
   port: 8080
-  mode: "debug"  # debug, release, test
-  api_base_path: "/api/v1"  # API version prefix
+  mode: "debug" # debug, release, test
+  api_base_path: "/api/v1" # API version prefix
 
 database:
   driver: "postgres"
@@ -13,11 +13,11 @@ database:
   password: "${DB_PASSWORD}"
 
 logger:
-  level: "info"  # debug, info, warn, error
+  level: "info" # debug, info, warn, error
   format: "json" # json, text
 
 jwt:
-  secret: "${JWT_SECRET}"  # Set via environment variable
+  secret: "${JWT_SECRET}" # Set via environment variable
   expire_hour: 24
 
 oauth:

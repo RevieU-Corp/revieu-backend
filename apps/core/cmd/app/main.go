@@ -84,6 +84,7 @@ func main() {
 		&model.UserPrivacy{},
 		&model.UserNotification{},
 		&model.AccountDeletion{},
+		&model.MediaUpload{},
 	); err != nil {
 		logger.Error(ctx, "Failed to migrate database", "error", err.Error())
 		os.Exit(1)
