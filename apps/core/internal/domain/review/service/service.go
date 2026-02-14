@@ -46,6 +46,10 @@ func (s *ReviewService) Create(ctx context.Context, userID int64, req dto.Review
 	if err != nil {
 		return model.Review{}, err
 	}
+	storeID, err := req.StoreIDValue()
+	if err != nil {
+		return model.Review{}, err
+	}
 	visitDate, err := req.VisitDateValue()
 	if err != nil {
 		return model.Review{}, err
@@ -55,6 +59,7 @@ func (s *ReviewService) Create(ctx context.Context, userID int64, req dto.Review
 		UserID:     userID,
 		MerchantID: merchantID,
 		VenueID:    venueID,
+		StoreID:    storeID,
 		Rating:     float32(req.Rating),
 		Content:    req.Text,
 		Images:     string(imagesJSON),

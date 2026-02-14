@@ -29,6 +29,9 @@ func (s *CouponService) Validate(ctx context.Context, id int64) error {
 	if !coupon.ExpiryDate.IsZero() && coupon.ExpiryDate.Before(time.Now()) {
 		return errors.New("expired")
 	}
+	if coupon.ValidUntil != nil && coupon.ValidUntil.Before(time.Now()) {
+		return errors.New("expired")
+	}
 	return nil
 }
 
