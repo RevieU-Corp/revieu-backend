@@ -104,6 +104,10 @@ func Load() (*Config, error) {
 	}
 
 	// Expand environment variables in database config
+	if strings.HasPrefix(cfg.Database.Host, "${") && strings.HasSuffix(cfg.Database.Host, "}") {
+		envVar := cfg.Database.Host[2 : len(cfg.Database.Host)-1]
+		cfg.Database.Host = os.Getenv(envVar)
+	}
 	if strings.HasPrefix(cfg.Database.Password, "${") && strings.HasSuffix(cfg.Database.Password, "}") {
 		envVar := cfg.Database.Password[2 : len(cfg.Database.Password)-1]
 		cfg.Database.Password = os.Getenv(envVar)
