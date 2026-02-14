@@ -122,16 +122,13 @@ CREATE TABLE reviews (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     venue_id BIGINT NOT NULL REFERENCES venues(id) ON DELETE CASCADE,
-    
+
     rating SMALLINT NOT NULL CHECK (rating >= 1 AND rating <= 5),
     content TEXT, -- 允许长文本
     visit_date DATE NOT NULL, -- 用户实际去的时间
-    
+
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    
-    -- 约束: 一个用户对一个商户原则上只有一条主评
-    UNIQUE (user_id, venue_id) 
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- 8. 评论多媒体表 (图床链接)
