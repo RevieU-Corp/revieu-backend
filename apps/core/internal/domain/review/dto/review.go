@@ -13,6 +13,7 @@ type Review struct {
 	ID            string   `json:"id"`
 	MerchantID    string   `json:"merchantId"`
 	VenueID       string   `json:"venueId"`
+	StoreID       string   `json:"storeId"`
 	UserID        string   `json:"userId"`
 	Rating        float64  `json:"rating"`
 	Text          string   `json:"text"`
@@ -36,6 +37,17 @@ func (r Review) MerchantIDValue() (int64, error) {
 		return 0, errors.New("merchantId required")
 	}
 	return strconv.ParseInt(r.MerchantID, 10, 64)
+}
+
+func (r Review) StoreIDValue() (*int64, error) {
+	if r.StoreID == "" {
+		return nil, nil
+	}
+	v, err := strconv.ParseInt(r.StoreID, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	return &v, nil
 }
 
 func (r Review) VenueIDValue() (int64, error) {
@@ -64,14 +76,23 @@ func FromModel(m model.Review) Review {
 	var businessName, businessImage, location string
 	if m.Merchant != nil {
 		businessName = m.Merchant.Name
+		if m.Merchant.BusinessName != "" {
+			businessName = m.Merchant.BusinessName
+		}
 		businessImage = m.Merchant.CoverImage
 		location = m.Merchant.Address
+	}
+
+	var storeID string
+	if m.StoreID != nil {
+		storeID = strconv.FormatInt(*m.StoreID, 10)
 	}
 
 	return Review{
 		ID:            strconv.FormatInt(m.ID, 10),
 		MerchantID:    strconv.FormatInt(m.MerchantID, 10),
 		VenueID:       strconv.FormatInt(m.VenueID, 10),
+		StoreID:       storeID,
 		UserID:        strconv.FormatInt(m.UserID, 10),
 		Rating:        float64(m.Rating),
 		Text:          m.Content,
