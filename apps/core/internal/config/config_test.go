@@ -83,7 +83,7 @@ server:
 
 database:
   driver: "postgres"
-  host: "localhost"
+  host: "${DB_HOST}"
   port: 5432
   database: "testdb"
   username: "testuser"
@@ -110,12 +110,14 @@ frontend_url: "${FRONTEND_URL}"
 
 	// Set environment variables
 	os.Setenv("CONFIG_PATH", configPath)
+	os.Setenv("DB_HOST", "10.0.0.1")
 	os.Setenv("JWT_SECRET", "env-jwt-secret")
 	os.Setenv("GOOGLE_CLIENT_ID", "env-google-client-id")
 	os.Setenv("GOOGLE_CLIENT_SECRET", "env-google-client-secret")
 	os.Setenv("FRONTEND_URL", "https://example.com")
 	defer func() {
 		os.Unsetenv("CONFIG_PATH")
+		os.Unsetenv("DB_HOST")
 		os.Unsetenv("JWT_SECRET")
 		os.Unsetenv("GOOGLE_CLIENT_ID")
 		os.Unsetenv("GOOGLE_CLIENT_SECRET")
@@ -127,6 +129,9 @@ frontend_url: "${FRONTEND_URL}"
 		t.Fatalf("Load() error = %v", err)
 	}
 
+	if cfg.Database.Host != "10.0.0.1" {
+		t.Errorf("Database.Host = %v, want 10.0.0.1", cfg.Database.Host)
+	}
 	if cfg.JWT.Secret != "env-jwt-secret" {
 		t.Errorf("JWT.Secret = %v, want env-jwt-secret", cfg.JWT.Secret)
 	}

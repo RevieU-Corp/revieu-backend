@@ -96,3 +96,27 @@ func (h *CouponHandler) Redeem(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{})
 }
+
+// ListPackages godoc
+// @Summary List packages
+// @Description Returns a list of available packages
+// @Tags package
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Router /packages [get]
+func (h *CouponHandler) ListPackages(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+}
+
+// PackageDetail godoc
+// @Summary Get package detail
+// @Description Returns a package by ID
+// @Tags package
+// @Produce json
+// @Param id path int true "Package ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} map[string]string
+// @Router /packages/{id} [get]
+func (h *CouponHandler) PackageDetail(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+}

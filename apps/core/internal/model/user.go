@@ -66,6 +66,7 @@ type UserProfile struct {
 	PostCount      int `gorm:"default:0" json:"post_count"`
 	ReviewCount    int `gorm:"default:0" json:"review_count"`
 	LikeCount      int `gorm:"default:0" json:"like_count"`
+	CouponCount    int `gorm:"default:0" json:"coupon_count"`
 
 	User *User `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
