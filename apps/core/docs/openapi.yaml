@@ -39,6 +39,25 @@ paths:
                 $ref: '#/components/schemas/AuthTokenResponse'
         '400':
           $ref: '#/components/responses/ErrorResponse'
+  /auth/refresh:
+    post:
+      tags: [auth]
+      summary: Refresh token pair
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRefreshRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
   /auth/register:
     post:
       tags: [auth]
@@ -589,9 +608,22 @@ components:
           type: string
     AuthTokenResponse:
       type: object
-      required: [token]
+      required: [access_token, refresh_token, type]
       properties:
         token:
+          type: string
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        type:
+          type: string
+          example: Bearer
+    AuthRefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
           type: string
     AuthUser:
       type: object

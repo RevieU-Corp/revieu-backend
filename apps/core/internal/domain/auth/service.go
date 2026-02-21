@@ -19,9 +19,16 @@ import (
 // Service exposes auth operations used by handlers.
 type Service interface {
 	Register(ctx context.Context, username, userEmail, password, baseURL string) (*model.User, error)
-	Login(ctx context.Context, email, password, ipAddress string) (string, error)
+	Login(ctx context.Context, email, password, ipAddress string) (LoginTokens, error)
+	RefreshAccessToken(ctx context.Context, refreshToken string) (LoginTokens, error)
 	LoginOrRegisterOAuthUser(ctx context.Context, email, name, provider, avatar string) (string, error)
 	VerifyEmail(ctx context.Context, token string) error
+}
+
+// LoginTokens contains the access and refresh token pair.
+type LoginTokens struct {
+	AccessToken  string
+	RefreshToken string
 }
 
 type service struct {
@@ -128,29 +135,29 @@ func (s *service) Register(ctx context.Context, username, userEmail, password, b
 	return &user, nil
 }
 
-func (s *service) Login(ctx context.Context, email, password, ipAddress string) (string, error) {
+func (s *service) Login(ctx context.Context, email, password, ipAddress string) (LoginTokens, error) {
 	var auth model.UserAuth
 	if err := s.db.Where("identity_type = ? AND identifier = ?", "email", email).First(&auth).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return "", errors.New("invalid credentials")
+			return LoginTokens{}, errors.New("invalid credentials")
 		}
-		return "", err
+		return LoginTokens{}, err
 	}
 
 	if !auth.CheckPassword(password) {
-		return "", errors.New("invalid credentials")
+		return LoginTokens{}, errors.New("invalid credentials")
 	}
 
 	var user model.User
 	if err := s.db.First(&user, auth.UserID).Error; err != nil {
-		return "", err
+		return LoginTokens{}, err
 	}
 
 	if user.Status == 2 {
-		return "", errors.New("please verify your email before logging in")
+		return LoginTokens{}, errors.New("please verify your email before logging in")
 	}
 	if user.Status == 1 {
-		return "", errors.New("your account has been suspended")
+		return LoginTokens{}, errors.New("your account has been suspended")
 	}
 
 	now := time.Now().UTC()
@@ -162,9 +169,9 @@ func (s *service) Login(ctx context.Context, email, password, ipAddress string) 
 		)
 	}
 
-	token, err := s.tokenService.GenerateToken(&user, &auth)
+	tokens, err := s.issueTokens(ctx, &user, &auth)
 	if err != nil {
-		return "", err
+		return LoginTokens{}, err
 	}
 
 	logger.Info(ctx, "User logged in successfully",
@@ -173,7 +180,67 @@ func (s *service) Login(ctx context.Context, email, password, ipAddress string) 
 	)
 
 	_ = ipAddress
-	return token, nil
+	return tokens, nil
+}
+
+func (s *service) RefreshAccessToken(ctx context.Context, refreshToken string) (LoginTokens, error) {
+	if refreshToken == "" {
+		return LoginTokens{}, errors.New("invalid refresh token")
+	}
+
+	tokenHash := token.HashToken(refreshToken)
+	now := time.Now().UTC()
+
+	var stored model.RefreshToken
+	if err := s.db.Where("token_hash = ? AND revoked_at IS NULL", tokenHash).First(&stored).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return LoginTokens{}, errors.New("invalid refresh token")
+		}
+		return LoginTokens{}, err
+	}
+	if now.After(stored.ExpiresAt) {
+		return LoginTokens{}, errors.New("invalid refresh token")
+	}
+
+	var auth model.UserAuth
+	if err := s.db.Where("user_id = ? AND identity_type = ?", stored.UserID, "email").First(&auth).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return LoginTokens{}, errors.New("invalid refresh token")
+		}
+		return LoginTokens{}, err
+	}
+
+	var user model.User
+	if err := s.db.First(&user, stored.UserID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return LoginTokens{}, errors.New("invalid refresh token")
+		}
+		return LoginTokens{}, err
+	}
+
+	var tokens LoginTokens
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.RefreshToken{}).
+			Where("id = ? AND revoked_at IS NULL", stored.ID).
+			Updates(map[string]interface{}{
+				"revoked_at":   now,
+				"last_used_at": now,
+				"updated_at":   now,
+			}).Error; err != nil {
+			return err
+		}
+
+		issued, err := s.issueTokensInTx(tx, &user, &auth)
+		if err != nil {
+			return err
+		}
+		tokens = issued
+		return nil
+	}); err != nil {
+		return LoginTokens{}, err
+	}
+
+	return tokens, nil
 }
 
 func (s *service) LoginOrRegisterOAuthUser(ctx context.Context, email, name, provider, avatar string) (string, error) {
@@ -287,4 +354,46 @@ func (s *service) VerifyEmail(ctx context.Context, token string) error {
 	)
 
 	return nil
+}
+
+func (s *service) issueTokens(ctx context.Context, user *model.User, auth *model.UserAuth) (LoginTokens, error) {
+	var tokens LoginTokens
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		issued, err := s.issueTokensInTx(tx, user, auth)
+		if err != nil {
+			return err
+		}
+		tokens = issued
+		return nil
+	})
+	if err != nil {
+		return LoginTokens{}, err
+	}
+	return tokens, nil
+}
+
+func (s *service) issueTokensInTx(tx *gorm.DB, user *model.User, auth *model.UserAuth) (LoginTokens, error) {
+	accessToken, err := s.tokenService.GenerateToken(user, auth)
+	if err != nil {
+		return LoginTokens{}, err
+	}
+
+	refreshToken, refreshHash, err := s.tokenService.GenerateRefreshToken()
+	if err != nil {
+		return LoginTokens{}, err
+	}
+
+	record := model.RefreshToken{
+		UserID:    user.ID,
+		TokenHash: refreshHash,
+		ExpiresAt: time.Now().UTC().Add(s.tokenService.RefreshTokenTTL()),
+	}
+	if err := tx.Create(&record).Error; err != nil {
+		return LoginTokens{}, err
+	}
+
+	return LoginTokens{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }

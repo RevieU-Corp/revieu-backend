@@ -424,7 +424,27 @@ definitions:
     type: object
   internal_domain_auth.LoginResponse:
     properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
       token:
+        type: string
+      type:
+        type: string
+    type: object
+  internal_domain_auth.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  internal_domain_auth.RefreshResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
         type: string
       type:
         type: string
@@ -633,6 +653,40 @@ paths:
       security:
       - BearerAuth: []
       summary: Get current user info
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Rotates refresh token and returns a new access token pair
+      parameters:
+      - description: Refresh Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_auth.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_auth.RefreshResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Refresh access token
       tags:
       - auth
   /auth/register:

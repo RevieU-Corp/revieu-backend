@@ -52,8 +52,9 @@ type GoogleOAuthConfig struct {
 
 // JWTConfig holds JWT configuration
 type JWTConfig struct {
-	Secret     string `yaml:"secret"`
-	ExpireHour int    `yaml:"expire_hour"`
+	Secret            string `yaml:"secret"`
+	ExpireHour        int    `yaml:"expire_hour"`
+	RefreshExpireHour int    `yaml:"refresh_expire_hour"`
 }
 
 // ServerConfig holds server configuration

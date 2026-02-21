@@ -172,3 +172,54 @@ server:
 		t.Error("Load() expected error for invalid YAML, got nil")
 	}
 }
+
+func TestLoad_RefreshExpireHour(t *testing.T) {
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, "config.yaml")
+
+	configContent := `
+server:
+  address: ":8080"
+  port: 8080
+  mode: "debug"
+
+database:
+  driver: "postgres"
+  host: "localhost"
+  port: 5432
+  database: "testdb"
+  username: "testuser"
+  password: "testpass"
+
+logger:
+  level: "info"
+  format: "json"
+
+jwt:
+  secret: "test-secret"
+  expire_hour: 24
+  refresh_expire_hour: 168
+
+oauth:
+  google:
+    client_id: "test-client-id"
+    client_secret: "test-client-secret"
+
+frontend_url: "http://localhost:3000"
+`
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatalf("failed to write temp config: %v", err)
+	}
+
+	os.Setenv("CONFIG_PATH", configPath)
+	defer os.Unsetenv("CONFIG_PATH")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if cfg.JWT.RefreshExpireHour != 168 {
+		t.Errorf("JWT.RefreshExpireHour = %v, want 168", cfg.JWT.RefreshExpireHour)
+	}
+}
