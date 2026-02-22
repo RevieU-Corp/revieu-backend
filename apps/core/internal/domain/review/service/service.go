@@ -42,9 +42,12 @@ func (s *ReviewService) Create(ctx context.Context, userID int64, req dto.Review
 	if err != nil {
 		return model.Review{}, err
 	}
-	venueID, err := req.VenueIDValue()
-	if err != nil {
-		return model.Review{}, err
+	venueID := merchantID
+	if req.VenueID != "" {
+		venueID, err = req.VenueIDValue()
+		if err != nil {
+			return model.Review{}, err
+		}
 	}
 	storeID, err := req.StoreIDValue()
 	if err != nil {
