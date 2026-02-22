@@ -29,7 +29,15 @@ func NewVoucherService(db *gorm.DB) *VoucherService {
 func (s *VoucherService) Create(ctx context.Context, req CreateVoucherRequest) (model.Voucher, error) {
 	couponID, _ := strconv.ParseInt(req.CouponID, 10, 64)
 	userID, _ := strconv.ParseInt(req.UserID, 10, 64)
-	v := model.Voucher{Code: req.Code, CouponID: couponID, UserID: userID, Status: "active"}
+
+	// Look up coupon to get merchant ID
+	var coupon model.Coupon
+	var merchantID *int64
+	if err := s.db.WithContext(ctx).First(&coupon, couponID).Error; err == nil {
+		merchantID = &coupon.MerchantID
+	}
+
+	v := model.Voucher{Code: req.Code, CouponID: couponID, UserID: userID, MerchantID: merchantID, Status: "active"}
 	return v, s.db.WithContext(ctx).Create(&v).Error
 }
 

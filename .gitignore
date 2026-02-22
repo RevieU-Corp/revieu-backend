@@ -5,3 +5,7 @@
 
 *.txt
 .worktrees/
+
+# Secrets policy: ignore plaintext secrets, keep sealed secrets tracked
+apps/**/configs/*secrets*.yaml
+!apps/**/configs/sealed-secrets*.yaml

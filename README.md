@@ -89,15 +89,22 @@ We use [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 <type>(<scope>): <description>
 
-Examples:
-  feat(core): add user authentication
-  fix(api): resolve null pointer exception
-  docs(readme): update installation instructions
+<body>
+
+Closes #<issue-id>
+
+Co-Authored-By: Name <email@example.com>
 ```
 
 **Types**: feat, fix, docs, style, refactor, perf, test, chore, ci, build, revert
 
-The commit-msg hook will enforce this format.
+Examples:
+
+- `feat(core): add user authentication`
+- `fix(api): resolve null pointer exception`
+- `docs(readme): update installation instructions`
+
+The commit-msg hook enforces subject format, non-empty body, issue close trailer, and `Co-Authored-By` trailer.
 
 ---
 
@@ -139,4 +146,4 @@ docker run -p 8080:8080 revieu-core
 
 ## 📄 License
 
-[Add your license here]
+[Add your license here] test

@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterRoutes registers coupon routes.
+// RegisterRoutes registers coupon and package routes.
 func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	svc := service.NewCouponService(nil)
 	h := handler.NewCouponHandler(svc)
@@ -18,5 +18,11 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 		coupons.POST("/:id/validate", h.Validate)
 		coupons.POST("/:id/payment/initiate", h.InitiatePayment)
 		coupons.POST("/:id/redeem", middleware.JWTAuth(cfg.JWT), h.Redeem)
+	}
+
+	packages := r.Group("/packages")
+	{
+		packages.GET("", h.ListPackages)
+		packages.GET("/:id", h.PackageDetail)
 	}
 }

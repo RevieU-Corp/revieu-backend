@@ -171,6 +171,8 @@ definitions:
     type: object
   github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_merchant_dto.Merchant:
     properties:
+      businessName:
+        type: string
       category:
         type: string
       coverImage:
@@ -233,6 +235,10 @@ definitions:
     type: object
   github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.Review:
     properties:
+      businessImage:
+        type: string
+      businessName:
+        type: string
       createdAt:
         type: string
       id:
@@ -241,10 +247,16 @@ definitions:
         items:
           type: string
         type: array
+      likeCount:
+        type: integer
+      location:
+        type: string
       merchantId:
         type: string
       rating:
         type: number
+      storeId:
+        type: string
       tags:
         items:
           type: string
@@ -252,6 +264,10 @@ definitions:
       text:
         type: string
       userId:
+        type: string
+      venueId:
+        type: string
+      visitDate:
         type: string
     type: object
   github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem:
@@ -312,24 +328,6 @@ definitions:
     - name
     - phone
     type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.FollowersResponse:
-    properties:
-      total:
-        type: integer
-      users:
-        items:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UserBrief'
-        type: array
-    type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.FollowingUsersResponse:
-    properties:
-      total:
-        type: integer
-      users:
-        items:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UserBrief'
-        type: array
-    type: object
   github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.NotificationSettings:
     properties:
       email_enabled:
@@ -384,17 +382,6 @@ definitions:
         type: string
       nickname:
         type: string
-    type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UserBrief:
-    properties:
-      avatar_url:
-        type: string
-      intro:
-        type: string
-      nickname:
-        type: string
-      user_id:
-        type: integer
     type: object
   github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_voucher_service.CreateVoucherRequest:
     properties:
@@ -499,6 +486,102 @@ info:
   title: RevieU Core API
   version: "1.0"
 paths:
+  /admin/merchants:
+    get:
+      description: Returns a list of merchants for admin management
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List merchants for admin
+      tags:
+      - admin
+  /admin/merchants/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Updates a merchant's status or verification
+      parameters:
+      - description: Merchant ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update merchant status
+      tags:
+      - admin
+  /admin/reports:
+    get:
+      description: Returns a list of user reports for admin review
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List reports
+      tags:
+      - admin
+  /admin/reports/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Updates a report status (approve/reject)
+      parameters:
+      - description: Report ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update report
+      tags:
+      - admin
   /ai/reviews/suggestions:
     post:
       consumes:
@@ -748,6 +831,142 @@ paths:
       summary: Verify user email
       tags:
       - auth
+  /categories:
+    get:
+      description: Returns a list of all categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List categories
+      tags:
+      - category
+  /conversations:
+    get:
+      description: Returns conversations for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List conversations
+      tags:
+      - conversation
+    post:
+      consumes:
+      - application/json
+      description: Creates a new conversation
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create conversation
+      tags:
+      - conversation
+  /conversations/{id}/messages:
+    get:
+      description: Returns messages for a conversation
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get conversation messages
+      tags:
+      - conversation
+    post:
+      consumes:
+      - application/json
+      description: Sends a message in a conversation
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Send message
+      tags:
+      - conversation
+  /conversations/{id}/settings:
+    patch:
+      consumes:
+      - application/json
+      description: Updates settings for a conversation (e.g. mute)
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update conversation settings
+      tags:
+      - conversation
   /coupons/{id}/payment/initiate:
     post:
       consumes:
@@ -974,6 +1193,97 @@ paths:
       summary: Create media upload
       tags:
       - media
+  /merchant/stores:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new store for the authenticated merchant
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a store
+      tags:
+      - store
+  /merchant/stores/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Updates a store for the authenticated merchant
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a store
+      tags:
+      - store
+  /merchant/verification:
+    get:
+      description: Returns the verification status for the authenticated merchant
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get verification status
+      tags:
+      - verification
+    post:
+      consumes:
+      - application/json
+      description: Submits verification documents for the authenticated merchant
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Submit merchant verification
+      tags:
+      - verification
   /merchants:
     get:
       description: Returns merchants, optionally filtered by category
@@ -1133,6 +1443,187 @@ paths:
       summary: List merchant reviews
       tags:
       - merchant
+  /notifications:
+    get:
+      description: Returns notifications for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List notifications
+      tags:
+      - notification
+  /notifications/{id}/read:
+    patch:
+      description: Marks a single notification as read
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Mark notification as read
+      tags:
+      - notification
+  /notifications/read-all:
+    post:
+      description: Marks all notifications as read for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Mark all notifications as read
+      tags:
+      - notification
+  /orders:
+    get:
+      description: Returns orders for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List orders
+      tags:
+      - order
+    post:
+      consumes:
+      - application/json
+      description: Creates a new order for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create order
+      tags:
+      - order
+  /orders/{id}:
+    get:
+      description: Returns an order by ID
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get order detail
+      tags:
+      - order
+  /packages:
+    get:
+      description: Returns a list of available packages
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List packages
+      tags:
+      - package
+  /packages/{id}:
+    get:
+      description: Returns a package by ID
+      parameters:
+      - description: Package ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get package detail
+      tags:
+      - package
   /payments:
     post:
       consumes:
@@ -1370,6 +1861,86 @@ paths:
       summary: Like a review
       tags:
       - review
+  /stores:
+    get:
+      description: Returns a list of stores
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List stores
+      tags:
+      - store
+  /stores/{id}:
+    get:
+      description: Returns a store by ID
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get store detail
+      tags:
+      - store
+  /stores/{id}/hours:
+    get:
+      description: Returns operating hours for a store
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get store hours
+      tags:
+      - store
+  /stores/{id}/reviews:
+    get:
+      description: Returns reviews for a store
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get store reviews
+      tags:
+      - store
   /user/account:
     delete:
       consumes:
@@ -1666,7 +2237,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.FollowersResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
@@ -1735,7 +2307,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.FollowingUsersResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
