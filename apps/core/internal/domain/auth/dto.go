@@ -28,8 +28,22 @@ type RegisterResponse struct {
 
 // LoginResponse is returned on successful login.
 type LoginResponse struct {
-	Token string `json:"token"`
-	Type  string `json:"type"`
+	Token        string `json:"token,omitempty"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	Type         string `json:"type"`
+}
+
+// RefreshRequest requests a new token pair.
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+// RefreshResponse returns a rotated token pair.
+type RefreshResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	Type         string `json:"type"`
 }
 
 // UserInfoResponse describes the authenticated user.

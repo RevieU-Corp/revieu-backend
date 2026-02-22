@@ -19,6 +19,7 @@ logger:
 jwt:
   secret: "${JWT_SECRET}" # Set via environment variable
   expire_hour: 24
+  refresh_expire_hour: 168
 
 oauth:
   google:

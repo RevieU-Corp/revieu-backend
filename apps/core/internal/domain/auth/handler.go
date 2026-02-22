@@ -87,7 +87,7 @@ func (h *Handler) Login(c *gin.Context) {
 	}
 
 	ipAddress := c.ClientIP()
-	token, err := h.svc.Login(c.Request.Context(), req.Email, req.Password, ipAddress)
+	tokens, err := h.svc.Login(c.Request.Context(), req.Email, req.Password, ipAddress)
 	if err != nil {
 		logger.Warn(c.Request.Context(), "Login failed",
 			"error", err.Error(),
@@ -98,7 +98,12 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, LoginResponse{Token: token, Type: "Bearer"})
+	c.JSON(http.StatusOK, LoginResponse{
+		Token:        tokens.AccessToken,
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+		Type:         "Bearer",
+	})
 }
 
 // GoogleLogin godoc
@@ -351,5 +356,36 @@ func (h *Handler) Me(c *gin.Context) {
 		Email:   email,
 		Role:    role,
 		Message: "Token is valid!",
+	})
+}
+
+// Refresh godoc
+// @Summary Refresh access token
+// @Description Rotates refresh token and returns a new access token pair
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body RefreshRequest true "Refresh Request"
+// @Success 200 {object} RefreshResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /auth/refresh [post]
+func (h *Handler) Refresh(c *gin.Context) {
+	var req RefreshRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	tokens, err := h.svc.RefreshAccessToken(c.Request.Context(), req.RefreshToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid refresh token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, RefreshResponse{
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+		Type:         "Bearer",
 	})
 }

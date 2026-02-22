@@ -73,6 +73,7 @@ func main() {
 		&model.UserAuth{},
 		&model.UserProfile{},
 		&model.EmailVerification{},
+		&model.RefreshToken{},
 		// Social
 		&model.UserFollow{},
 		&model.MerchantFollow{},
