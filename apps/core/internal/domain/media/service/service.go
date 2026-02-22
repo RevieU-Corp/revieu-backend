@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -126,13 +125,4 @@ func (s *MediaService) CreateUpload(ctx context.Context) (model.MediaUpload, err
 func (s *MediaService) Analyze(ctx context.Context, id int64) error {
 	var upload model.MediaUpload
 	return s.db.WithContext(ctx).First(&upload, id).Error
-}
-
-// getExtensionFromFilename extracts the file extension from a filename
-func getExtensionFromFilename(filename string) string {
-	ext := filepath.Ext(filename)
-	if ext == "" {
-		return ""
-	}
-	return strings.ToLower(ext)
 }
