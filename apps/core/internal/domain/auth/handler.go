@@ -50,7 +50,7 @@ func (h *Handler) Register(c *gin.Context) {
 	if c.Request.TLS != nil {
 		scheme = "https"
 	}
-	baseURL := scheme + "://" + c.Request.Host
+	baseURL := scheme + "://" + c.Request.Host + h.apiBasePath
 
 	user, err := h.svc.Register(c.Request.Context(), req.Username, req.Email, req.Password, baseURL)
 	if err != nil {
