@@ -76,6 +76,23 @@ make test-coverage
 make lint
 ```
 
+### Database Migrations
+
+`AutoMigrate` is controlled by `database.auto_migrate` in `configs/config.yaml` and should stay `false` in production.
+
+Use SQL migrations managed by Goose:
+
+```bash
+# install goose (one-time)
+go install github.com/pressly/goose/v3/cmd/goose@latest
+
+# apply all migrations
+make migrate-up DB_DSN='postgres://postgres:postgres@localhost:5432/revieu?sslmode=disable'
+
+# check status
+make migrate-status DB_DSN='postgres://postgres:postgres@localhost:5432/revieu?sslmode=disable'
+```
+
 ### Docker
 
 ```bash

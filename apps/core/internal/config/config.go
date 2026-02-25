@@ -73,6 +73,8 @@ type DatabaseConfig struct {
 	Database string `yaml:"database"`
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
+	// AutoMigrate should stay false in production; prefer explicit SQL migrations.
+	AutoMigrate bool `yaml:"auto_migrate"`
 }
 
 // LoggerConfig holds logger configuration

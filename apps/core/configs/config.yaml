@@ -11,6 +11,7 @@ database:
   database: "revieu"
   username: "postgres"
   password: "${DB_PASSWORD}"
+  auto_migrate: false # Keep false in production; run SQL migrations separately
 
 logger:
   level: "info" # debug, info, warn, error
