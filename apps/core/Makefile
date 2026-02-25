@@ -1,10 +1,13 @@
-.PHONY: help build run test clean docker-build docker-run
+.PHONY: help build run test clean docker-build docker-run migrate-up migrate-down migrate-status migrate-create
 
 # Variables
 APP_NAME=core
 MAIN_PATH=./cmd/app
 BUILD_DIR=./build/bin
 DOCKER_IMAGE=$(APP_NAME):latest
+MIGRATIONS_DIR?=./migrations
+DB_DSN?=postgres://postgres:postgres@localhost:5432/revieu?sslmode=disable
+GOOSE?=goose
 
 help: ## Display this help message
 	@echo "Available commands:"
@@ -60,3 +63,19 @@ docker-build: ## Build Docker image
 docker-run: ## Run Docker container
 	@echo "Running Docker container..."
 	@docker run -p 8080:8080 $(DOCKER_IMAGE)
+
+migrate-up: ## Apply all pending SQL migrations
+	@echo "Running migrations up..."
+	@$(GOOSE) -dir $(MIGRATIONS_DIR) postgres "$(DB_DSN)" up
+
+migrate-down: ## Roll back the latest SQL migration
+	@echo "Rolling back latest migration..."
+	@$(GOOSE) -dir $(MIGRATIONS_DIR) postgres "$(DB_DSN)" down
+
+migrate-status: ## Show SQL migration status
+	@echo "Checking migration status..."
+	@$(GOOSE) -dir $(MIGRATIONS_DIR) postgres "$(DB_DSN)" status
+
+migrate-create: ## Create a new SQL migration file (usage: make migrate-create name=add_feature)
+	@if [ -z "$(name)" ]; then echo "Usage: make migrate-create name=add_feature"; exit 1; fi
+	@$(GOOSE) -dir $(MIGRATIONS_DIR) create $(name) sql

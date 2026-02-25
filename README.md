@@ -63,8 +63,77 @@ vim apps/core/configs/secrets.yaml
 
 ```bash
 cd apps/core
+
+# (first time / schema changes) apply DB migrations
+go install github.com/pressly/goose/v3/cmd/goose@latest
+make migrate-up DB_DSN='postgres://postgres:postgres@localhost:5432/revieu?sslmode=disable'
+
+# start API service
 go run cmd/app/main.go
 ```
+
+---
+
+## 🗄️ Manual DB Migration Runbook (Current)
+
+当前部署是容器 + ArgoCD + k3s，但 migration 先手动执行。应用内 `AutoMigrate` 保持关闭，发布前手动跑 Goose。
+
+### 0. One-time setup
+
+```bash
+cd apps/core
+go install github.com/pressly/goose/v3/cmd/goose@latest
+```
+
+### 1. Set connection variables
+
+```bash
+export GOOSE="$HOME/go/bin/goose"
+export DB_PASSWORD='123456'
+
+export DEV_DSN="postgres://postgres:${DB_PASSWORD}@10.0.0.4:5432/revieu?sslmode=disable"
+export PRD_DSN="postgres://postgres:${DB_PASSWORD}@10.0.0.1:5432/revieu?sslmode=disable"
+```
+
+### 2. Standard release flow
+
+```bash
+cd apps/core
+
+# check status
+make migrate-status GOOSE="$GOOSE" DB_DSN="$DEV_DSN"
+make migrate-status GOOSE="$GOOSE" DB_DSN="$PRD_DSN"
+
+# migrate dev first
+make migrate-up GOOSE="$GOOSE" DB_DSN="$DEV_DSN"
+
+# verify app behavior, then migrate prod
+make migrate-up GOOSE="$GOOSE" DB_DSN="$PRD_DSN"
+```
+
+### 3. Baseline rule for existing environments
+
+如果环境已经有历史表，不能直接执行 `00001_init_schema.sql` 的 `up`。先做 baseline（只写 Goose 元数据，不改业务表）：
+
+```bash
+cd apps/core
+make migrate-status GOOSE="$GOOSE" DB_DSN="$PRD_DSN" # initialize goose_db_version if missing
+
+PGPASSWORD="$DB_PASSWORD" psql -h 10.0.0.1 -p 5432 -U postgres -d revieu -v ON_ERROR_STOP=1 -c \
+"INSERT INTO goose_db_version (version_id, is_applied)
+ SELECT 1, true
+ WHERE NOT EXISTS (
+   SELECT 1 FROM goose_db_version WHERE version_id = 1 AND is_applied = true
+ );"
+
+make migrate-status GOOSE="$GOOSE" DB_DSN="$PRD_DSN"
+```
+
+### 4. Safety notes
+
+- 生产只执行 `migrate-up`，不要自动 `migrate-down`。
+- 顺序固定：`dev` -> `prd`。
+- 先 migration，后 ArgoCD 发布镜像。
 
 ---
 
