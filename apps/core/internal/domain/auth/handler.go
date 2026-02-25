@@ -170,17 +170,17 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
 	}
 
 	state := c.Query("state")
-	frontendURL := h.frontendURL
-	if frontendURL == "" {
-		if state != "" {
-			if decodedURL, err := url.QueryUnescape(state); err == nil && decodedURL != "" {
-				frontendURL = decodedURL
-			} else {
-				frontendURL = "http://localhost:3000"
-			}
-		} else {
-			frontendURL = "http://localhost:3000"
+	var frontendURL string
+	if state != "" {
+		if decodedURL, err := url.QueryUnescape(state); err == nil && decodedURL != "" {
+			frontendURL = decodedURL
 		}
+	}
+	if frontendURL == "" {
+		frontendURL = h.frontendURL
+	}
+	if frontendURL == "" {
+		frontendURL = "http://localhost:3000"
 	}
 
 	scheme := "http"
