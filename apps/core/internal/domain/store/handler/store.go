@@ -1,8 +1,11 @@
 package handler
 
 import (
+	"errors"
+	"io"
 	"net/http"
 
+	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/store/dto"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/store/service"
 	"github.com/gin-gonic/gin"
 )
@@ -76,7 +79,31 @@ func (h *StoreHandler) Hours(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Router /merchant/stores [post]
 func (h *StoreHandler) Create(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req dto.CreateStoreRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		if !errors.Is(err, io.EOF) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	store, err := h.svc.Create(c.Request.Context(), userID, req)
+	if err != nil {
+		if errors.Is(err, service.ErrMerchantNotFound) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create store"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"data": store})
 }
 
 // UpdateStore godoc
