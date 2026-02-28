@@ -270,6 +270,64 @@ definitions:
       visitDate:
         type: string
     type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.CreateStoreRequest:
+    properties:
+      address:
+        maxLength: 255
+        type: string
+      city:
+        maxLength: 100
+        type: string
+      country:
+        maxLength: 50
+        type: string
+      cover_image_url:
+        maxLength: 255
+        type: string
+      description:
+        maxLength: 2000
+        type: string
+      hours:
+        items:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.StoreHourRequest'
+        type: array
+      images:
+        items:
+          type: string
+        type: array
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        maxLength: 255
+        type: string
+      phone:
+        maxLength: 50
+        type: string
+      state:
+        maxLength: 100
+        type: string
+      website:
+        maxLength: 255
+        type: string
+      zip_code:
+        maxLength: 20
+        type: string
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.StoreHourRequest:
+    properties:
+      close_time:
+        maxLength: 10
+        type: string
+      day_of_week:
+        type: integer
+      is_closed:
+        type: boolean
+      open_time:
+        maxLength: 10
+        type: string
+    type: object
   github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem:
     properties:
       address:
@@ -1198,6 +1256,12 @@ paths:
       consumes:
       - application/json
       description: Creates a new store for the authenticated merchant
+      parameters:
+      - description: Create store request
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.CreateStoreRequest'
       produces:
       - application/json
       responses:
@@ -1206,12 +1270,26 @@ paths:
           schema:
             additionalProperties: true
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "401":
           description: Unauthorized
           schema:
             additionalProperties:
               type: string
             type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
       summary: Create a store
       tags:
       - store
@@ -1226,6 +1304,11 @@ paths:
         name: id
         required: true
         type: integer
+      - description: Update store request
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.CreateStoreRequest'
       produces:
       - application/json
       responses:
@@ -1234,12 +1317,32 @@ paths:
           schema:
             additionalProperties: true
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "401":
           description: Unauthorized
           schema:
             additionalProperties:
               type: string
             type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
       summary: Update a store
       tags:
       - store
@@ -1872,6 +1975,12 @@ paths:
           schema:
             additionalProperties: true
             type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: List stores
       tags:
       - store
@@ -1891,6 +2000,12 @@ paths:
           description: OK
           schema:
             additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "404":
           description: Not Found
@@ -1918,6 +2033,18 @@ paths:
           schema:
             additionalProperties: true
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Get store hours
       tags:
       - store
@@ -1937,6 +2064,18 @@ paths:
           description: OK
           schema:
             additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
             type: object
       summary: Get store reviews
       tags:

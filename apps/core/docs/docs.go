@@ -1096,6 +1096,11 @@ const docTemplate = `{
         },
         "/merchant/stores": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Creates a new store for the authenticated merchant",
                 "consumes": [
                     "application/json"
@@ -1107,6 +1112,16 @@ const docTemplate = `{
                     "store"
                 ],
                 "summary": "Create a store",
+                "parameters": [
+                    {
+                        "description": "Create store request",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.CreateStoreRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "201": {
                         "description": "Created",
@@ -1115,8 +1130,26 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1129,6 +1162,11 @@ const docTemplate = `{
         },
         "/merchant/stores/{id}": {
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Updates a store for the authenticated merchant",
                 "consumes": [
                     "application/json"
@@ -1147,6 +1185,14 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Update store request",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.CreateStoreRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -1157,8 +1203,35 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -2117,6 +2190,15 @@ const docTemplate = `{
                             "type": "object",
                             "additionalProperties": true
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
                     }
                 }
             }
@@ -2146,6 +2228,15 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "404": {
@@ -2186,6 +2277,24 @@ const docTemplate = `{
                             "type": "object",
                             "additionalProperties": true
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
                     }
                 }
             }
@@ -2215,6 +2324,24 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -4311,6 +4438,88 @@ const docTemplate = `{
                 },
                 "visitDate": {
                     "type": "string"
+                }
+            }
+        },
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.CreateStoreRequest": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "city": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "country": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "cover_image_url": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "hours": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.StoreHourRequest"
+                    }
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "phone": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "state": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "website": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "zip_code": {
+                    "type": "string",
+                    "maxLength": 20
+                }
+            }
+        },
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.StoreHourRequest": {
+            "type": "object",
+            "properties": {
+                "close_time": {
+                    "type": "string",
+                    "maxLength": 10
+                },
+                "day_of_week": {
+                    "type": "integer"
+                },
+                "is_closed": {
+                    "type": "boolean"
+                },
+                "open_time": {
+                    "type": "string",
+                    "maxLength": 10
                 }
             }
         },
