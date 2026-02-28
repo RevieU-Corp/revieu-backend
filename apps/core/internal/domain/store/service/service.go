@@ -17,7 +17,7 @@ type StoreService struct {
 	db *gorm.DB
 }
 
-var ErrMerchantNotFound = errors.New("merchant not found")
+var ErrUserNotFound = errors.New("user not found")
 
 func NewStoreService(db *gorm.DB) *StoreService {
 	if db == nil {
@@ -27,12 +27,27 @@ func NewStoreService(db *gorm.DB) *StoreService {
 }
 
 func (s *StoreService) Create(ctx context.Context, userID int64, req dto.CreateStoreRequest) (*model.Store, error) {
-	var merchant model.Merchant
-	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&merchant).Error; err != nil {
+	var user model.User
+	if err := s.db.WithContext(ctx).First(&user, userID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrMerchantNotFound
+			return nil, ErrUserNotFound
 		}
 		return nil, err
+	}
+
+	var merchant model.Merchant
+	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&merchant).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+		merchant = model.Merchant{
+			UserID:             &userID,
+			Name:               fmt.Sprintf("merchant-%d", userID),
+			VerificationStatus: "unverified",
+		}
+		if err := s.db.WithContext(ctx).Create(&merchant).Error; err != nil {
+			return nil, err
+		}
 	}
 
 	imagesRaw, err := json.Marshal(req.Images)
@@ -71,6 +86,21 @@ func (s *StoreService) Create(ctx context.Context, userID int64, req dto.CreateS
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(&store).Error; err != nil {
 			return err
+		}
+		if len(req.Hours) > 0 {
+			hours := make([]model.StoreHour, 0, len(req.Hours))
+			for _, h := range req.Hours {
+				hours = append(hours, model.StoreHour{
+					StoreID:   store.ID,
+					DayOfWeek: h.DayOfWeek,
+					OpenTime:  h.OpenTime,
+					CloseTime: h.CloseTime,
+					IsClosed:  h.IsClosed,
+				})
+			}
+			if err := tx.Create(&hours).Error; err != nil {
+				return err
+			}
 		}
 		return tx.Model(&model.Merchant{}).
 			Clauses(clause.Locking{Strength: "UPDATE"}).

@@ -95,7 +95,7 @@ func (h *StoreHandler) Create(c *gin.Context) {
 
 	store, err := h.svc.Create(c.Request.Context(), userID, req)
 	if err != nil {
-		if errors.Is(err, service.ErrMerchantNotFound) {
+		if errors.Is(err, service.ErrUserNotFound) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			return
 		}
