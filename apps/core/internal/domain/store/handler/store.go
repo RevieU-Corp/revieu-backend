@@ -27,6 +27,7 @@ func NewStoreHandler(svc *service.StoreService) *StoreHandler {
 // @Tags store
 // @Produce json
 // @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]string
 // @Router /stores [get]
 func (h *StoreHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
@@ -39,6 +40,7 @@ func (h *StoreHandler) List(c *gin.Context) {
 // @Produce json
 // @Param id path int true "Store ID"
 // @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Router /stores/{id} [get]
 func (h *StoreHandler) Detail(c *gin.Context) {
@@ -52,6 +54,8 @@ func (h *StoreHandler) Detail(c *gin.Context) {
 // @Produce json
 // @Param id path int true "Store ID"
 // @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
 // @Router /stores/{id}/reviews [get]
 func (h *StoreHandler) Reviews(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
@@ -64,6 +68,8 @@ func (h *StoreHandler) Reviews(c *gin.Context) {
 // @Produce json
 // @Param id path int true "Store ID"
 // @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
 // @Router /stores/{id}/hours [get]
 func (h *StoreHandler) Hours(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
@@ -75,8 +81,12 @@ func (h *StoreHandler) Hours(c *gin.Context) {
 // @Tags store
 // @Accept json
 // @Produce json
+// @Param request body dto.CreateStoreRequest false "Create store request"
 // @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
 // @Router /merchant/stores [post]
 func (h *StoreHandler) Create(c *gin.Context) {
 	userID := c.GetInt64("user_id")
@@ -113,8 +123,13 @@ func (h *StoreHandler) Create(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Store ID"
+// @Param request body dto.CreateStoreRequest false "Update store request"
 // @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
 // @Router /merchant/stores/{id} [patch]
 func (h *StoreHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
