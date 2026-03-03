@@ -1,23 +1,5 @@
 basePath: /api/v1
 definitions:
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_service.SuggestionsRequest:
-    properties:
-      businessCategory:
-        type: string
-      currentText:
-        type: string
-      merchantName:
-        type: string
-      overallRating:
-        type: number
-    type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_service.SuggestionsResponse:
-    properties:
-      suggestions:
-        items:
-          type: string
-        type: array
-    type: object
   github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteItem:
     properties:
       created_at:
@@ -328,6 +310,51 @@ definitions:
         maxLength: 10
         type: string
     type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.UpdateStoreRequest:
+    properties:
+      address:
+        maxLength: 255
+        type: string
+      city:
+        maxLength: 100
+        type: string
+      country:
+        maxLength: 50
+        type: string
+      cover_image_url:
+        maxLength: 255
+        type: string
+      description:
+        maxLength: 2000
+        type: string
+      hours:
+        items:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.StoreHourRequest'
+        type: array
+      images:
+        items:
+          type: string
+        type: array
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        maxLength: 255
+        type: string
+      phone:
+        maxLength: 50
+        type: string
+      state:
+        maxLength: 100
+        type: string
+      website:
+        maxLength: 255
+        type: string
+      zip_code:
+        maxLength: 20
+        type: string
+    type: object
   github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem:
     properties:
       address:
@@ -449,6 +476,24 @@ definitions:
         type: string
       userId:
         type: string
+    type: object
+  internal_domain_ai_handler.SuggestionsRequest:
+    properties:
+      businessCategory:
+        type: string
+      currentText:
+        type: string
+      merchantName:
+        type: string
+      overallRating:
+        type: number
+    type: object
+  internal_domain_ai_handler.SuggestionsResponse:
+    properties:
+      suggestions:
+        items:
+          type: string
+        type: array
     type: object
   internal_domain_auth.ForgotPasswordRequest:
     properties:
@@ -651,14 +696,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_service.SuggestionsRequest'
+          $ref: '#/definitions/internal_domain_ai_handler.SuggestionsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_service.SuggestionsResponse'
+            $ref: '#/definitions/internal_domain_ai_handler.SuggestionsResponse'
         "400":
           description: Bad Request
           schema:
@@ -1308,7 +1353,7 @@ paths:
         in: body
         name: request
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.CreateStoreRequest'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.UpdateStoreRequest'
       produces:
       - application/json
       responses:
@@ -1325,6 +1370,12 @@ paths:
             type: object
         "401":
           description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
           schema:
             additionalProperties:
               type: string

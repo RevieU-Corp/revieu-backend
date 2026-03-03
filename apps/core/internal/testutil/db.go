@@ -24,6 +24,8 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 		&model.EmailVerification{},
 		&model.RefreshToken{},
 		&model.Merchant{},
+		&model.Store{},
+		&model.StoreHour{},
 		&model.Tag{},
 		&model.Post{},
 		&model.Review{},
