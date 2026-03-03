@@ -61,9 +61,6 @@ func (s *ReviewService) Create(ctx context.Context, userID int64, req dto.Review
 	if err != nil {
 		return model.Review{}, err
 	}
-	if storeID != nil {
-		// Validation is completed inside transaction to keep a single, consistent read/write unit.
-	}
 
 	visitDate, err := req.VisitDateValue()
 	if err != nil {
