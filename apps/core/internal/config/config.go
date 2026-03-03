@@ -158,5 +158,9 @@ func Load() (*Config, error) {
 		cfg.R2.PublicURL = os.Getenv(envVar)
 	}
 
+	if strings.TrimSpace(cfg.JWT.Secret) == "" {
+		return nil, fmt.Errorf("jwt.secret is empty: set JWT_SECRET before starting server")
+	}
+
 	return &cfg, nil
 }
