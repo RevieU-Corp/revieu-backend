@@ -4716,6 +4716,12 @@
                     "type": "string",
                     "maxLength": 255
                 },
+                "category_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "city": {
                     "type": "string",
                     "maxLength": 100
@@ -4797,6 +4803,12 @@
                 "address": {
                     "type": "string",
                     "maxLength": 255
+                },
+                "category_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "city": {
                     "type": "string",

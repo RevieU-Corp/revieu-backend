@@ -70,7 +70,7 @@ func TestMerchantsList(t *testing.T) {
 	r, _ := setupAPITest(t)
 
 	db := database.DB
-	_ = db.Create(&model.Merchant{Name: "Cafe", Category: "food"}).Error
+	_ = db.Create(&model.Merchant{Name: "Cafe", Category: "food", VerificationStatus: "verified", Status: 0}).Error
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/api/v1/merchants", nil)
@@ -85,7 +85,7 @@ func TestMerchantDetail(t *testing.T) {
 	r, _ := setupAPITest(t)
 
 	db := database.DB
-	m := model.Merchant{Name: "Shop"}
+	m := model.Merchant{Name: "Shop", VerificationStatus: "verified", Status: 0}
 	_ = db.Create(&m).Error
 
 	w := httptest.NewRecorder()
@@ -103,7 +103,7 @@ func TestMerchantReviews(t *testing.T) {
 	db := database.DB
 	user := model.User{Role: "user", Status: 0}
 	_ = db.Create(&user).Error
-	m := model.Merchant{Name: "Shop"}
+	m := model.Merchant{Name: "Shop", VerificationStatus: "verified", Status: 0}
 	_ = db.Create(&m).Error
 	_ = db.Create(&model.Review{UserID: user.ID, MerchantID: m.ID, Rating: 4, Content: "nice"}).Error
 
@@ -113,6 +113,95 @@ func TestMerchantReviews(t *testing.T) {
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
+	}
+}
+
+func TestMerchantsListOnlyShowsPublicMerchants(t *testing.T) {
+	r, _ := setupAPITest(t)
+
+	db := database.DB
+	if err := db.Create(&model.Merchant{Name: "Public", VerificationStatus: "verified", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create public merchant: %v", err)
+	}
+	if err := db.Create(&model.Merchant{Name: "Unverified", VerificationStatus: "unverified", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create unverified merchant: %v", err)
+	}
+	if err := db.Create(&model.Merchant{Name: "Inactive", VerificationStatus: "verified", Status: 1}).Error; err != nil {
+		t.Fatalf("failed to create inactive merchant: %v", err)
+	}
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/merchants", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	var resp struct {
+		Data []map[string]interface{} `json:"data"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("failed to decode merchant list response: %v", err)
+	}
+	if len(resp.Data) != 1 {
+		t.Fatalf("expected 1 public merchant, got %d", len(resp.Data))
+	}
+	name, _ := resp.Data[0]["name"].(string)
+	if name != "Public" {
+		t.Fatalf("unexpected merchant returned: %s", name)
+	}
+}
+
+func TestMerchantDetailReturnsNotFoundWhenNotPublic(t *testing.T) {
+	r, _ := setupAPITest(t)
+
+	db := database.DB
+	publicMerchant := model.Merchant{Name: "Public", VerificationStatus: "verified", Status: 0}
+	if err := db.Create(&publicMerchant).Error; err != nil {
+		t.Fatalf("failed to create public merchant: %v", err)
+	}
+	hiddenMerchant := model.Merchant{Name: "Hidden", VerificationStatus: "unverified", Status: 0}
+	if err := db.Create(&hiddenMerchant).Error; err != nil {
+		t.Fatalf("failed to create hidden merchant: %v", err)
+	}
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/merchants/%d", publicMerchant.ID), nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected public merchant detail 200, got %d", w.Code)
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/merchants/%d", hiddenMerchant.ID), nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected hidden merchant detail 404, got %d", w.Code)
+	}
+}
+
+func TestMerchantReviewsReturnsNotFoundWhenMerchantMissingOrNotPublic(t *testing.T) {
+	r, _ := setupAPITest(t)
+
+	db := database.DB
+	hidden := model.Merchant{Name: "Hidden", VerificationStatus: "unverified", Status: 0}
+	if err := db.Create(&hidden).Error; err != nil {
+		t.Fatalf("failed to create hidden merchant: %v", err)
+	}
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/merchants/99999/reviews", nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected missing merchant reviews 404, got %d", w.Code)
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/merchants/%d/reviews", hidden.ID), nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected hidden merchant reviews 404, got %d", w.Code)
 	}
 }
 
@@ -192,6 +281,109 @@ func TestStoreCreateActivateAndPublicVisibility(t *testing.T) {
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("expected detail 404 after deactivate, got %d", w.Code)
+	}
+}
+
+func TestStoreCreateWithCategoriesReflectedInCategoryFilter(t *testing.T) {
+	r, tok := setupAPITest(t)
+	db := database.DB
+
+	category := model.Category{Name: "Cafe"}
+	if err := db.Create(&category).Error; err != nil {
+		t.Fatalf("failed to create category: %v", err)
+	}
+
+	createBody := strings.NewReader(fmt.Sprintf(`{"name":"Categorized Store","address":"Austin","category_ids":[%d]}`, category.ID))
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/merchant/stores", createBody)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected create 201, got %d", w.Code)
+	}
+
+	var created struct {
+		Data model.Store `json:"data"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &created); err != nil {
+		t.Fatalf("failed to decode create response: %v", err)
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/merchant/stores/%d/activate", created.Data.ID), nil)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected activate 200, got %d", w.Code)
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/stores?category=%d", category.ID), nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected category list 200, got %d", w.Code)
+	}
+
+	var listed struct {
+		Data []model.Store `json:"data"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &listed); err != nil {
+		t.Fatalf("failed to decode category list response: %v", err)
+	}
+	found := false
+	for _, s := range listed.Data {
+		if s.ID == created.Data.ID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected created categorized store to appear in category filter result")
+	}
+}
+
+func TestStoreCreateReturnsBadRequestWhenCategoryInvalid(t *testing.T) {
+	r, tok := setupAPITest(t)
+
+	createBody := strings.NewReader(`{"name":"Broken Category Store","category_ids":[99999]}`)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/merchant/stores", createBody)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected create 400 for invalid categories, got %d", w.Code)
+	}
+}
+
+func TestStoreUpdateReturnsBadRequestWhenCategoryInvalid(t *testing.T) {
+	r, tok := setupAPITest(t)
+	db := database.DB
+
+	var ownerAuth model.UserAuth
+	if err := db.Where("identifier = ?", "user@example.com").First(&ownerAuth).Error; err != nil {
+		t.Fatalf("failed to load owner auth: %v", err)
+	}
+	ownerMerchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerAuth.UserID}
+	if err := db.Create(&ownerMerchant).Error; err != nil {
+		t.Fatalf("failed to create owner merchant: %v", err)
+	}
+	store := model.Store{MerchantID: ownerMerchant.ID, Name: "Category Update Store"}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	body := strings.NewReader(`{"category_ids":[99999]}`)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPatch, fmt.Sprintf("/api/v1/merchant/stores/%d", store.ID), body)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected update 400 for invalid categories, got %d", w.Code)
 	}
 }
 

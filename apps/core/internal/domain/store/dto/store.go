@@ -16,6 +16,7 @@ type CreateStoreRequest struct {
 	CoverImageURL string             `json:"cover_image_url" binding:"max=255"`
 	Images        []string           `json:"images"`
 	Hours         []StoreHourRequest `json:"hours"`
+	CategoryIDs   []int64            `json:"category_ids"`
 }
 
 // UpdateStoreRequest is the request payload for partially updating a store.
@@ -34,6 +35,7 @@ type UpdateStoreRequest struct {
 	CoverImageURL *string             `json:"cover_image_url" binding:"omitempty,max=255"`
 	Images        *[]string           `json:"images"`
 	Hours         *[]StoreHourRequest `json:"hours"`
+	CategoryIDs   *[]int64            `json:"category_ids"`
 }
 
 type StoreHourRequest struct {

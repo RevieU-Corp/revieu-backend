@@ -257,6 +257,10 @@ definitions:
       address:
         maxLength: 255
         type: string
+      category_ids:
+        items:
+          type: integer
+        type: array
       city:
         maxLength: 100
         type: string
@@ -315,6 +319,10 @@ definitions:
       address:
         maxLength: 255
         type: string
+      category_ids:
+        items:
+          type: integer
+        type: array
       city:
         maxLength: 100
         type: string
