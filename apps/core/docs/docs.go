@@ -188,7 +188,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.SuggestionsRequest"
+                            "$ref": "#/definitions/internal_domain_ai_handler.SuggestionsRequest"
                         }
                     }
                 ],
@@ -196,7 +196,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.SuggestionsResponse"
+                            "$ref": "#/definitions/internal_domain_ai_handler.SuggestionsResponse"
                         }
                     },
                     "400": {
@@ -4750,7 +4750,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.SuggestionsRequest": {
+        "internal_domain_ai_handler.SuggestionsRequest": {
             "type": "object",
             "properties": {
                 "businessCategory": {
@@ -4767,7 +4767,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.SuggestionsResponse": {
+        "internal_domain_ai_handler.SuggestionsResponse": {
             "type": "object",
             "properties": {
                 "suggestions": {

@@ -477,7 +477,7 @@ definitions:
       userId:
         type: string
     type: object
-  handler.SuggestionsRequest:
+  internal_domain_ai_handler.SuggestionsRequest:
     properties:
       businessCategory:
         type: string
@@ -488,7 +488,7 @@ definitions:
       overallRating:
         type: number
     type: object
-  handler.SuggestionsResponse:
+  internal_domain_ai_handler.SuggestionsResponse:
     properties:
       suggestions:
         items:
@@ -696,14 +696,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.SuggestionsRequest'
+          $ref: '#/definitions/internal_domain_ai_handler.SuggestionsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.SuggestionsResponse'
+            $ref: '#/definitions/internal_domain_ai_handler.SuggestionsResponse'
         "400":
           description: Bad Request
           schema:

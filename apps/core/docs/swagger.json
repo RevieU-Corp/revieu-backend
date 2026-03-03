@@ -186,7 +186,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.SuggestionsRequest"
+                            "$ref": "#/definitions/internal_domain_ai_handler.SuggestionsRequest"
                         }
                     }
                 ],
@@ -194,7 +194,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.SuggestionsResponse"
+                            "$ref": "#/definitions/internal_domain_ai_handler.SuggestionsResponse"
                         }
                     },
                     "400": {
@@ -4748,7 +4748,7 @@
                 }
             }
         },
-        "handler.SuggestionsRequest": {
+        "internal_domain_ai_handler.SuggestionsRequest": {
             "type": "object",
             "properties": {
                 "businessCategory": {
@@ -4765,7 +4765,7 @@
                 }
             }
         },
-        "handler.SuggestionsResponse": {
+        "internal_domain_ai_handler.SuggestionsResponse": {
             "type": "object",
             "properties": {
                 "suggestions": {
