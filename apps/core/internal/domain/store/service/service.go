@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/store/dto"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
@@ -21,6 +23,12 @@ const (
 	StoreStatusDraft     int16 = 0
 	StoreStatusPublished int16 = 1
 	StoreStatusHidden    int16 = 2
+
+	defaultPublicListLimit   = 20
+	defaultReviewsListLimit  = 20
+	maxPublicListLimit       = 100
+	maxStoreReviewsListLimit = 100
+	defaultRadiusKM          = 20.0
 )
 
 var ErrUserNotFound = errors.New("user not found")
@@ -133,6 +141,59 @@ func (s *StoreService) ListPublished(ctx context.Context) ([]model.Store, error)
 	return stores, nil
 }
 
+func (s *StoreService) ListPublishedFiltered(ctx context.Context, query dto.StoreListQuery) ([]model.Store, *int64, error) {
+	limit := sanitizeLimit(query.Limit, defaultPublicListLimit, maxPublicListLimit)
+
+	dbQuery := s.db.WithContext(ctx).
+		Model(&model.Store{}).
+		Where("stores.status = ?", StoreStatusPublished)
+
+	if query.Category != nil && strings.TrimSpace(*query.Category) != "" {
+		dbQuery = dbQuery.
+			Joins("JOIN store_categories sc ON sc.store_id = stores.id").
+			Joins("JOIN categories c ON c.id = sc.category_id")
+
+		category := strings.TrimSpace(*query.Category)
+		if categoryID, err := strconv.ParseInt(category, 10, 64); err == nil {
+			dbQuery = dbQuery.Where("c.id = ?", categoryID)
+		} else {
+			dbQuery = dbQuery.Where("LOWER(c.name) = LOWER(?)", category)
+		}
+	}
+
+	if query.Rating != nil {
+		dbQuery = dbQuery.Where("stores.avg_rating >= ?", *query.Rating)
+	}
+
+	if query.Lat != nil && query.Lng != nil {
+		radiusKM := defaultRadiusKM
+		if query.RadiusKM != nil && *query.RadiusKM > 0 {
+			radiusKM = *query.RadiusKM
+		}
+		latDelta := radiusKM / 111.0
+		lngDelta := radiusKM / 111.0
+		dbQuery = dbQuery.
+			Where("stores.latitude BETWEEN ? AND ?", *query.Lat-latDelta, *query.Lat+latDelta).
+			Where("stores.longitude BETWEEN ? AND ?", *query.Lng-lngDelta, *query.Lng+lngDelta)
+	}
+
+	if query.Cursor != nil {
+		dbQuery = dbQuery.Where("stores.id < ?", *query.Cursor)
+	}
+
+	var stores []model.Store
+	if err := dbQuery.
+		Distinct("stores.*").
+		Order("stores.id desc").
+		Limit(limit + 1).
+		Find(&stores).Error; err != nil {
+		return nil, nil, err
+	}
+
+	pageItems, cursor := sliceStorePage(stores, limit)
+	return pageItems, cursor, nil
+}
+
 func (s *StoreService) DetailPublished(ctx context.Context, storeID int64) (*model.Store, error) {
 	var store model.Store
 	if err := s.db.WithContext(ctx).
@@ -160,6 +221,34 @@ func (s *StoreService) ReviewsPublished(ctx context.Context, storeID int64) ([]m
 		return nil, err
 	}
 	return reviews, nil
+}
+
+func (s *StoreService) ReviewsPublishedPaginated(ctx context.Context, storeID int64, query dto.StoreReviewListQuery) ([]model.Review, *int64, error) {
+	if _, err := s.DetailPublished(ctx, storeID); err != nil {
+		return nil, nil, err
+	}
+
+	limit := sanitizeLimit(query.Limit, defaultReviewsListLimit, maxStoreReviewsListLimit)
+
+	dbQuery := s.db.WithContext(ctx).
+		Model(&model.Review{}).
+		Preload("User").
+		Preload("User.Profile").
+		Where("store_id = ?", storeID)
+
+	if query.Cursor != nil {
+		dbQuery = dbQuery.Where("reviews.id < ?", *query.Cursor)
+	}
+
+	var reviews []model.Review
+	if err := dbQuery.
+		Order("reviews.id desc").
+		Limit(limit + 1).
+		Find(&reviews).Error; err != nil {
+		return nil, nil, err
+	}
+	pageItems, cursor := sliceReviewPage(reviews, limit)
+	return pageItems, cursor, nil
 }
 
 func (s *StoreService) HoursPublished(ctx context.Context, storeID int64) ([]model.StoreHour, error) {
@@ -333,4 +422,38 @@ func (s *StoreService) Update(ctx context.Context, userID, storeID int64, req dt
 		return nil, err
 	}
 	return &updated, nil
+}
+
+func sanitizeLimit(raw *int, defaultLimit, maxLimit int) int {
+	if raw == nil || *raw <= 0 {
+		return defaultLimit
+	}
+	if *raw > maxLimit {
+		return maxLimit
+	}
+	return *raw
+}
+
+func sliceStorePage(items []model.Store, limit int) ([]model.Store, *int64) {
+	if len(items) <= limit {
+		return items, nil
+	}
+	items = items[:limit]
+	if len(items) == 0 {
+		return items, nil
+	}
+	lastID := items[len(items)-1].ID
+	return items, &lastID
+}
+
+func sliceReviewPage(items []model.Review, limit int) ([]model.Review, *int64) {
+	if len(items) <= limit {
+		return items, nil
+	}
+	items = items[:limit]
+	if len(items) == 0 {
+		return items, nil
+	}
+	lastID := items[len(items)-1].ID
+	return items, &lastID
 }

@@ -42,3 +42,20 @@ type StoreHourRequest struct {
 	CloseTime string `json:"close_time" binding:"max=10"`
 	IsClosed  bool   `json:"is_closed"`
 }
+
+// StoreListQuery controls public store list filters.
+type StoreListQuery struct {
+	Category *string  // category name or id
+	Lat      *float64 // latitude for proximity filter
+	Lng      *float64 // longitude for proximity filter
+	Rating   *float32 // min average rating
+	RadiusKM *float64 // optional radius in KM for location filter
+	Cursor   *int64   // id cursor for pagination (id < cursor)
+	Limit    *int     // max rows
+}
+
+// StoreReviewListQuery controls public store reviews pagination.
+type StoreReviewListQuery struct {
+	Cursor *int64 // id cursor for pagination (id < cursor)
+	Limit  *int   // max rows
+}

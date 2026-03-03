@@ -27,16 +27,30 @@ func NewStoreHandler(svc *service.StoreService) *StoreHandler {
 // @Description Returns a list of stores
 // @Tags store
 // @Produce json
+// @Param category query string false "Category name or ID"
+// @Param lat query number false "Latitude"
+// @Param lng query number false "Longitude"
+// @Param rating query number false "Minimum average rating"
+// @Param radius_km query number false "Search radius in KM (default 20)"
+// @Param cursor query int false "Cursor for pagination (store id)"
+// @Param limit query int false "Page size (max 100)"
 // @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /stores [get]
 func (h *StoreHandler) List(c *gin.Context) {
-	stores, err := h.svc.ListPublished(c.Request.Context())
+	query, err := parseStoreListQuery(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	stores, cursor, err := h.svc.ListPublishedFiltered(c.Request.Context(), query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list stores"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": stores})
+	c.JSON(http.StatusOK, gin.H{"data": stores, "cursor": cursor})
 }
 
 // StoreDetail godoc
@@ -73,6 +87,8 @@ func (h *StoreHandler) Detail(c *gin.Context) {
 // @Tags store
 // @Produce json
 // @Param id path int true "Store ID"
+// @Param cursor query int false "Cursor for pagination (review id)"
+// @Param limit query int false "Page size (max 100)"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
@@ -83,7 +99,13 @@ func (h *StoreHandler) Reviews(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid store id"})
 		return
 	}
-	reviews, err := h.svc.ReviewsPublished(c.Request.Context(), id)
+	query, err := parseStoreReviewListQuery(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	reviews, cursor, err := h.svc.ReviewsPublishedPaginated(c.Request.Context(), id, query)
 	if err != nil {
 		if errors.Is(err, service.ErrStoreNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
@@ -92,7 +114,7 @@ func (h *StoreHandler) Reviews(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load reviews"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": reviews})
+	c.JSON(http.StatusOK, gin.H{"data": reviews, "cursor": cursor})
 }
 
 // StoreHours godoc
@@ -317,4 +339,134 @@ func (h *StoreHandler) Deactivate(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+func parseStoreListQuery(c *gin.Context) (dto.StoreListQuery, error) {
+	var q dto.StoreListQuery
+
+	if category := c.Query("category"); category != "" {
+		q.Category = &category
+	}
+
+	lat, hasLat, err := parseFloat64Query(c, "lat")
+	if err != nil {
+		return q, err
+	}
+	lng, hasLng, err := parseFloat64Query(c, "lng")
+	if err != nil {
+		return q, err
+	}
+	if hasLat != hasLng {
+		return q, errors.New("lat and lng must be provided together")
+	}
+	if hasLat {
+		q.Lat = &lat
+		q.Lng = &lng
+	}
+
+	rating, hasRating, err := parseFloat32Query(c, "rating")
+	if err != nil {
+		return q, err
+	}
+	if hasRating {
+		q.Rating = &rating
+	}
+
+	radiusKM, hasRadiusKM, err := parseFloat64Query(c, "radius_km")
+	if err != nil {
+		return q, err
+	}
+	if hasRadiusKM {
+		if radiusKM <= 0 {
+			return q, errors.New("radius_km must be greater than 0")
+		}
+		q.RadiusKM = &radiusKM
+	}
+
+	cursor, hasCursor, err := parseInt64Query(c, "cursor")
+	if err != nil {
+		return q, err
+	}
+	if hasCursor {
+		q.Cursor = &cursor
+	}
+
+	limit, hasLimit, err := parseIntQuery(c, "limit")
+	if err != nil {
+		return q, err
+	}
+	if hasLimit {
+		q.Limit = &limit
+	}
+
+	return q, nil
+}
+
+func parseStoreReviewListQuery(c *gin.Context) (dto.StoreReviewListQuery, error) {
+	var q dto.StoreReviewListQuery
+
+	cursor, hasCursor, err := parseInt64Query(c, "cursor")
+	if err != nil {
+		return q, err
+	}
+	if hasCursor {
+		q.Cursor = &cursor
+	}
+
+	limit, hasLimit, err := parseIntQuery(c, "limit")
+	if err != nil {
+		return q, err
+	}
+	if hasLimit {
+		q.Limit = &limit
+	}
+	return q, nil
+}
+
+func parseIntQuery(c *gin.Context, key string) (int, bool, error) {
+	raw := c.Query(key)
+	if raw == "" {
+		return 0, false, nil
+	}
+	parsed, err := strconv.Atoi(raw)
+	if err != nil {
+		return 0, false, errors.New("invalid " + key)
+	}
+	return parsed, true, nil
+}
+
+func parseInt64Query(c *gin.Context, key string) (int64, bool, error) {
+	raw := c.Query(key)
+	if raw == "" {
+		return 0, false, nil
+	}
+	parsed, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil {
+		return 0, false, errors.New("invalid " + key)
+	}
+	return parsed, true, nil
+}
+
+func parseFloat64Query(c *gin.Context, key string) (float64, bool, error) {
+	raw := c.Query(key)
+	if raw == "" {
+		return 0, false, nil
+	}
+	parsed, err := strconv.ParseFloat(raw, 64)
+	if err != nil {
+		return 0, false, errors.New("invalid " + key)
+	}
+	return parsed, true, nil
+}
+
+func parseFloat32Query(c *gin.Context, key string) (float32, bool, error) {
+	raw := c.Query(key)
+	if raw == "" {
+		return 0, false, nil
+	}
+	parsed, err := strconv.ParseFloat(raw, 32)
+	if err != nil {
+		return 0, false, errors.New("invalid " + key)
+	}
+	return float32(parsed), true, nil
 }
