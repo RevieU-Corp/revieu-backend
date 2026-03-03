@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/review/dto"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
@@ -13,6 +14,10 @@ import (
 type ReviewService struct {
 	db *gorm.DB
 }
+
+var ErrMerchantNotFound = errors.New("merchant not found")
+var ErrStoreNotFound = errors.New("store not found")
+var ErrStoreMerchantMismatch = errors.New("store does not belong to merchant")
 
 func NewReviewService(db *gorm.DB) *ReviewService {
 	if db == nil {
@@ -31,7 +36,7 @@ func (s *ReviewService) ListByUser(ctx context.Context, userID int64) ([]model.R
 
 func (s *ReviewService) Detail(ctx context.Context, id int64) (*model.Review, error) {
 	var review model.Review
-	if err := s.db.WithContext(ctx).First(&review, id).Error; err != nil {
+	if err := s.db.WithContext(ctx).Preload("Merchant").Preload("Store").First(&review, id).Error; err != nil {
 		return nil, err
 	}
 	return &review, nil
@@ -42,6 +47,15 @@ func (s *ReviewService) Create(ctx context.Context, userID int64, req dto.Review
 	if err != nil {
 		return model.Review{}, err
 	}
+
+	var merchant model.Merchant
+	if err := s.db.WithContext(ctx).Select("id").First(&merchant, merchantID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return model.Review{}, ErrMerchantNotFound
+		}
+		return model.Review{}, err
+	}
+
 	venueID := merchantID
 	if req.VenueID != "" {
 		venueID, err = req.VenueIDValue()
@@ -52,6 +66,18 @@ func (s *ReviewService) Create(ctx context.Context, userID int64, req dto.Review
 	storeID, err := req.StoreIDValue()
 	if err != nil {
 		return model.Review{}, err
+	}
+	if storeID != nil {
+		var store model.Store
+		if err := s.db.WithContext(ctx).Select("id", "merchant_id").First(&store, *storeID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return model.Review{}, ErrStoreNotFound
+			}
+			return model.Review{}, err
+		}
+		if store.MerchantID != merchantID {
+			return model.Review{}, ErrStoreMerchantMismatch
+		}
 	}
 	visitDate, err := req.VisitDateValue()
 	if err != nil {

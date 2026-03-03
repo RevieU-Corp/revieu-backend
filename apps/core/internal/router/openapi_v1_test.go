@@ -1,6 +1,7 @@
 package router
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -136,6 +137,108 @@ func TestReviewsCreateAndDetail(t *testing.T) {
 
 	if w.Code != http.StatusCreated {
 		t.Fatalf("expected 201, got %d", w.Code)
+	}
+}
+
+func TestReviewsCreateReturnsNotFoundWhenMerchantMissing(t *testing.T) {
+	r, tok := setupAPITest(t)
+
+	body := strings.NewReader(`{"merchantId":"99999","rating":4.5,"text":"nice"}`)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/reviews", body)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", w.Code)
+	}
+}
+
+func TestReviewsCreateReturnsNotFoundWhenStoreMissing(t *testing.T) {
+	r, tok := setupAPITest(t)
+	db := database.DB
+
+	merchant := model.Merchant{Name: "Cafe"}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+
+	body := strings.NewReader(fmt.Sprintf(`{"merchantId":"%d","storeId":"99999","rating":4.5,"text":"nice"}`, merchant.ID))
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/reviews", body)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", w.Code)
+	}
+}
+
+func TestReviewsCreateReturnsUnprocessableWhenStoreMerchantMismatch(t *testing.T) {
+	r, tok := setupAPITest(t)
+	db := database.DB
+
+	merchantA := model.Merchant{Name: "A"}
+	if err := db.Create(&merchantA).Error; err != nil {
+		t.Fatalf("failed to create merchantA: %v", err)
+	}
+	merchantB := model.Merchant{Name: "B"}
+	if err := db.Create(&merchantB).Error; err != nil {
+		t.Fatalf("failed to create merchantB: %v", err)
+	}
+	store := model.Store{MerchantID: merchantB.ID, Name: "B-Store"}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	body := strings.NewReader(fmt.Sprintf(`{"merchantId":"%d","storeId":"%d","rating":4.5,"text":"nice"}`, merchantA.ID, store.ID))
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/reviews", body)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("expected 422, got %d", w.Code)
+	}
+}
+
+func TestReviewDetailIncludesMerchantFields(t *testing.T) {
+	r, _ := setupAPITest(t)
+	db := database.DB
+
+	u := model.User{Role: "user", Status: 0}
+	if err := db.Create(&u).Error; err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+	m := model.Merchant{Name: "Cafe", BusinessName: "Cafe Business", Address: "San Francisco"}
+	if err := db.Create(&m).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	review := model.Review{UserID: u.ID, MerchantID: m.ID, VenueID: m.ID, Rating: 4.5, Content: "ok"}
+	if err := db.Create(&review).Error; err != nil {
+		t.Fatalf("failed to create review: %v", err)
+	}
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/reviews/%d", review.ID), nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	var resp map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("failed to parse response: %v", err)
+	}
+	if resp["businessName"] != "Cafe Business" {
+		t.Fatalf("expected businessName Cafe Business, got %v", resp["businessName"])
+	}
+	if resp["location"] != "San Francisco" {
+		t.Fatalf("expected location San Francisco, got %v", resp["location"])
 	}
 }
 
