@@ -20,6 +20,16 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 		coupons.POST("/:id/redeem", middleware.JWTAuth(cfg.JWT), h.Redeem)
 	}
 
+	stores := r.Group("/stores")
+	{
+		stores.GET("/:id/coupons", h.ListStoreCoupons)
+	}
+
+	merchantStores := r.Group("/merchant/stores", middleware.JWTAuth(cfg.JWT))
+	{
+		merchantStores.POST("/:id/coupons", h.CreateStoreCoupon)
+	}
+
 	packages := r.Group("/packages")
 	{
 		packages.GET("", h.ListPackages)
