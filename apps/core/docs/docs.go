@@ -188,7 +188,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_service.SuggestionsRequest"
+                            "$ref": "#/definitions/handler.SuggestionsRequest"
                         }
                     }
                 ],
@@ -196,7 +196,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_service.SuggestionsResponse"
+                            "$ref": "#/definitions/handler.SuggestionsResponse"
                         }
                     },
                     "400": {
@@ -1191,7 +1191,7 @@ const docTemplate = `{
                         "name": "request",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.CreateStoreRequest"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.UpdateStoreRequest"
                         }
                     }
                 ],
@@ -1214,6 +1214,15 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -4027,34 +4036,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_service.SuggestionsRequest": {
-            "type": "object",
-            "properties": {
-                "businessCategory": {
-                    "type": "string"
-                },
-                "currentText": {
-                    "type": "string"
-                },
-                "merchantName": {
-                    "type": "string"
-                },
-                "overallRating": {
-                    "type": "number"
-                }
-            }
-        },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_service.SuggestionsResponse": {
-            "type": "object",
-            "properties": {
-                "suggestions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteItem": {
             "type": "object",
             "properties": {
@@ -4523,6 +4504,69 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.UpdateStoreRequest": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "city": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "country": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "cover_image_url": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "hours": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.StoreHourRequest"
+                    }
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "phone": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "state": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "website": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "zip_code": {
+                    "type": "string",
+                    "maxLength": 20
+                }
+            }
+        },
         "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem": {
             "type": "object",
             "properties": {
@@ -4703,6 +4747,34 @@ const docTemplate = `{
                 },
                 "userId": {
                     "type": "string"
+                }
+            }
+        },
+        "handler.SuggestionsRequest": {
+            "type": "object",
+            "properties": {
+                "businessCategory": {
+                    "type": "string"
+                },
+                "currentText": {
+                    "type": "string"
+                },
+                "merchantName": {
+                    "type": "string"
+                },
+                "overallRating": {
+                    "type": "number"
+                }
+            }
+        },
+        "handler.SuggestionsResponse": {
+            "type": "object",
+            "properties": {
+                "suggestions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

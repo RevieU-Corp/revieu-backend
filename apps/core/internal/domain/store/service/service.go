@@ -18,6 +18,8 @@ type StoreService struct {
 }
 
 var ErrUserNotFound = errors.New("user not found")
+var ErrStoreNotFound = errors.New("store not found")
+var ErrStoreForbidden = errors.New("store forbidden")
 
 func NewStoreService(db *gorm.DB) *StoreService {
 	if db == nil {
@@ -111,4 +113,114 @@ func (s *StoreService) Create(ctx context.Context, userID int64, req dto.CreateS
 	}
 
 	return &store, nil
+}
+
+func (s *StoreService) Update(ctx context.Context, userID, storeID int64, req dto.UpdateStoreRequest) (*model.Store, error) {
+	var store model.Store
+	if err := s.db.WithContext(ctx).First(&store, storeID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrStoreNotFound
+		}
+		return nil, err
+	}
+
+	var merchant model.Merchant
+	if err := s.db.WithContext(ctx).First(&merchant, store.MerchantID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrStoreNotFound
+		}
+		return nil, err
+	}
+	if merchant.UserID == nil || *merchant.UserID != userID {
+		return nil, ErrStoreForbidden
+	}
+
+	updates := map[string]interface{}{}
+	if req.Name != nil {
+		updates["name"] = *req.Name
+	}
+	if req.Description != nil {
+		updates["description"] = *req.Description
+	}
+	if req.Address != nil {
+		updates["address"] = *req.Address
+	}
+	if req.City != nil {
+		updates["city"] = *req.City
+	}
+	if req.State != nil {
+		updates["state"] = *req.State
+	}
+	if req.ZipCode != nil {
+		updates["zip_code"] = *req.ZipCode
+	}
+	if req.Country != nil {
+		updates["country"] = *req.Country
+	}
+	if req.Phone != nil {
+		updates["phone"] = *req.Phone
+	}
+	if req.Website != nil {
+		updates["website"] = *req.Website
+	}
+	if req.Latitude != nil {
+		updates["latitude"] = *req.Latitude
+	}
+	if req.Longitude != nil {
+		updates["longitude"] = *req.Longitude
+	}
+	if req.CoverImageURL != nil {
+		updates["cover_image_url"] = *req.CoverImageURL
+	}
+	if req.Images != nil {
+		imagesRaw, err := json.Marshal(*req.Images)
+		if err != nil {
+			return nil, err
+		}
+		updates["images"] = string(imagesRaw)
+	}
+
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if len(updates) > 0 {
+			if err := tx.Model(&model.Store{}).
+				Where("id = ?", storeID).
+				Updates(updates).Error; err != nil {
+				return err
+			}
+		}
+
+		if req.Hours != nil {
+			if err := tx.Where("store_id = ?", storeID).Delete(&model.StoreHour{}).Error; err != nil {
+				return err
+			}
+			if len(*req.Hours) > 0 {
+				hours := make([]model.StoreHour, 0, len(*req.Hours))
+				for _, h := range *req.Hours {
+					hours = append(hours, model.StoreHour{
+						StoreID:   storeID,
+						DayOfWeek: h.DayOfWeek,
+						OpenTime:  h.OpenTime,
+						CloseTime: h.CloseTime,
+						IsClosed:  h.IsClosed,
+					})
+				}
+				if err := tx.Create(&hours).Error; err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	var updated model.Store
+	if err := s.db.WithContext(ctx).Preload("Hours").First(&updated, storeID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrStoreNotFound
+		}
+		return nil, err
+	}
+	return &updated, nil
 }

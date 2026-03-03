@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/store/dto"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/store/service"
@@ -123,14 +124,48 @@ func (h *StoreHandler) Create(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Store ID"
-// @Param request body dto.CreateStoreRequest false "Update store request"
+// @Param request body dto.UpdateStoreRequest false "Update store request"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Security BearerAuth
 // @Router /merchant/stores/{id} [patch]
 func (h *StoreHandler) Update(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	storeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid store id"})
+		return
+	}
+
+	var req dto.UpdateStoreRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		if !errors.Is(err, io.EOF) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	store, err := h.svc.Update(c.Request.Context(), userID, storeID, req)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrStoreNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		case errors.Is(err, service.ErrStoreForbidden):
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update store"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": store})
 }

@@ -270,3 +270,128 @@ func TestAuthForgotPassword(t *testing.T) {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
 }
+
+func TestStoreUpdateOwnStore(t *testing.T) {
+	r, tok := setupAPITest(t)
+	db := database.DB
+
+	var ownerAuth model.UserAuth
+	if err := db.Where("identifier = ?", "user@example.com").First(&ownerAuth).Error; err != nil {
+		t.Fatalf("failed to load owner auth: %v", err)
+	}
+	ownerID := ownerAuth.UserID
+
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Old Store", City: "Old City"}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	body := strings.NewReader(`{"name":"Updated Store","city":"San Francisco"}`)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPatch, fmt.Sprintf("/api/v1/merchant/stores/%d", store.ID), body)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	var refreshed model.Store
+	if err := db.First(&refreshed, store.ID).Error; err != nil {
+		t.Fatalf("failed to load updated store: %v", err)
+	}
+	if refreshed.Name != "Updated Store" {
+		t.Fatalf("unexpected updated name: got %q", refreshed.Name)
+	}
+	if refreshed.City != "San Francisco" {
+		t.Fatalf("unexpected updated city: got %q", refreshed.City)
+	}
+}
+
+func TestStoreUpdateForbiddenForNonOwner(t *testing.T) {
+	r, _ := setupAPITest(t)
+	db := database.DB
+
+	var ownerAuth model.UserAuth
+	if err := db.Where("identifier = ?", "user@example.com").First(&ownerAuth).Error; err != nil {
+		t.Fatalf("failed to load owner auth: %v", err)
+	}
+	ownerID := ownerAuth.UserID
+
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Protected Store"}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	other := model.User{Role: "user", Status: 0}
+	if err := db.Create(&other).Error; err != nil {
+		t.Fatalf("failed to create other user: %v", err)
+	}
+	otherAuth := model.UserAuth{UserID: other.ID, IdentityType: "email", Identifier: "other@example.com"}
+	if err := db.Create(&otherAuth).Error; err != nil {
+		t.Fatalf("failed to create other auth: %v", err)
+	}
+	otherToken, err := token.New(config.JWTConfig{Secret: "test-secret", ExpireHour: 24}).GenerateToken(&other, &otherAuth)
+	if err != nil {
+		t.Fatalf("failed to generate token for other user: %v", err)
+	}
+
+	body := strings.NewReader(`{"name":"Hijacked Name"}`)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPatch, fmt.Sprintf("/api/v1/merchant/stores/%d", store.ID), body)
+	req.Header.Set("Authorization", "Bearer "+otherToken)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d", w.Code)
+	}
+
+	var refreshed model.Store
+	if err := db.First(&refreshed, store.ID).Error; err != nil {
+		t.Fatalf("failed to load store: %v", err)
+	}
+	if refreshed.Name != "Protected Store" {
+		t.Fatalf("store should not be updated by non-owner, got %q", refreshed.Name)
+	}
+
+}
+
+func TestStoreUpdateUnauthorizedWithoutJWT(t *testing.T) {
+	r, _ := setupAPITest(t)
+	db := database.DB
+
+	var ownerAuth model.UserAuth
+	if err := db.Where("identifier = ?", "user@example.com").First(&ownerAuth).Error; err != nil {
+		t.Fatalf("failed to load owner auth: %v", err)
+	}
+	ownerID := ownerAuth.UserID
+
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Protected Store"}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	body := strings.NewReader(`{"name":"No Auth Update"}`)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPatch, fmt.Sprintf("/api/v1/merchant/stores/%d", store.ID), body)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", w.Code)
+	}
+}
