@@ -95,7 +95,27 @@ export DEV_DSN="postgres://postgres:${DB_PASSWORD}@10.0.0.4:5432/revieu?sslmode=
 export PRD_DSN="postgres://postgres:${DB_PASSWORD}@10.0.0.1:5432/revieu?sslmode=disable"
 ```
 
-### 2. Standard release flow
+### 2. Add a new schema change (when fields/tables change)
+
+```bash
+cd apps/core
+
+# create a new migration file template (does not change DB)
+make migrate-create name=add_coupon_scope_fields
+
+# edit the generated file in apps/core/migrations:
+# - write SQL under -- +goose Up
+# - write rollback SQL under -- +goose Down
+
+# apply migration to dev DB (this step changes DB schema)
+make migrate-up GOOSE="$GOOSE" DB_DSN="$DEV_DSN"
+```
+
+Notes:
+- `make migrate-create` only creates a SQL file template.
+- Database schema changes happen when `make migrate-up` runs.
+
+### 3. Standard release flow
 
 ```bash
 cd apps/core
@@ -111,7 +131,7 @@ make migrate-up GOOSE="$GOOSE" DB_DSN="$DEV_DSN"
 make migrate-up GOOSE="$GOOSE" DB_DSN="$PRD_DSN"
 ```
 
-### 3. Baseline rule for existing environments
+### 4. Baseline rule for existing environments
 
 如果环境已经有历史表，不能直接执行 `00001_init_schema.sql` 的 `up`。先做 baseline（只写 Goose 元数据，不改业务表）：
 
@@ -129,7 +149,7 @@ PGPASSWORD="$DB_PASSWORD" psql -h 10.0.0.1 -p 5432 -U postgres -d revieu -v ON_E
 make migrate-status GOOSE="$GOOSE" DB_DSN="$PRD_DSN"
 ```
 
-### 4. Safety notes
+### 5. Safety notes
 
 - 生产只执行 `migrate-up`，不要自动 `migrate-down`。
 - 顺序固定：`dev` -> `prd`。

@@ -833,28 +833,207 @@ func TestReviewLikeAndComment(t *testing.T) {
 	}
 }
 
-func TestCouponValidateAndRedeem(t *testing.T) {
+func TestStoreCouponCreateListAndValidate(t *testing.T) {
 	r, tok := setupAPITest(t)
 
 	db := database.DB
-	m := model.Merchant{Name: "Shop"}
-	_ = db.Create(&m).Error
-	coupon := model.Coupon{MerchantID: m.ID, Title: "Free", Type: "free"}
-	_ = db.Create(&coupon).Error
+	var ownerAuth model.UserAuth
+	if err := db.Where("identifier = ?", "user@example.com").First(&ownerAuth).Error; err != nil {
+		t.Fatalf("failed to load owner auth: %v", err)
+	}
+	ownerID := ownerAuth.UserID
 
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Owner Store", Status: 1}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	createBody := strings.NewReader(`{"title":"Coffee Deal","description":"10% off","type":"discount","price":9.9,"total_quantity":5,"max_per_user":2}`)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/coupons/%d/validate", coupon.ID), nil)
+	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/merchant/stores/%d/coupons", store.ID), createBody)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	req.Header.Set("Content-Type", "application/json")
 	r.ServeHTTP(w, req)
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", w.Code)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d", w.Code)
+	}
+
+	var created struct {
+		Data model.Coupon `json:"data"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &created); err != nil {
+		t.Fatalf("failed to decode create coupon response: %v", err)
+	}
+	if created.Data.StoreID == nil || *created.Data.StoreID != store.ID {
+		t.Fatalf("expected coupon store_id %d, got %+v", store.ID, created.Data.StoreID)
+	}
+	if created.Data.MerchantID != merchant.ID {
+		t.Fatalf("expected coupon merchant_id %d, got %d", merchant.ID, created.Data.MerchantID)
 	}
 
 	w = httptest.NewRecorder()
-	req, _ = http.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/coupons/%d/redeem", coupon.ID), nil)
-	req.Header.Set("Authorization", "Bearer "+tok)
+	req, _ = http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/stores/%d/coupons", store.ID), nil)
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", w.Code)
+		t.Fatalf("expected list 200, got %d", w.Code)
+	}
+	var listed struct {
+		Data []model.Coupon `json:"data"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &listed); err != nil {
+		t.Fatalf("failed to decode list coupons response: %v", err)
+	}
+	if len(listed.Data) != 1 || listed.Data[0].ID != created.Data.ID {
+		t.Fatalf("expected listed coupon %d, got %+v", created.Data.ID, listed.Data)
+	}
+
+	validateBody := strings.NewReader(`{"quantity":1}`)
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/coupons/%d/validate", created.Data.ID), validateBody)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected validate 200, got %d", w.Code)
+	}
+}
+
+func TestCouponOrderPayAndMerchantRedeemFlow(t *testing.T) {
+	r, ownerTok := setupAPITest(t)
+
+	db := database.DB
+	var ownerAuth model.UserAuth
+	if err := db.Where("identifier = ?", "user@example.com").First(&ownerAuth).Error; err != nil {
+		t.Fatalf("failed to load owner auth: %v", err)
+	}
+	ownerID := ownerAuth.UserID
+
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Owner Store", Status: 1}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	coupon := model.Coupon{
+		MerchantID:    merchant.ID,
+		StoreID:       &store.ID,
+		Title:         "Lunch Deal",
+		Type:          "discount",
+		Price:         12.5,
+		TotalQuantity: 3,
+		MaxPerUser:    2,
+		Status:        "active",
+	}
+	if err := db.Create(&coupon).Error; err != nil {
+		t.Fatalf("failed to create coupon: %v", err)
+	}
+
+	buyer := model.User{Role: "user", Status: 0}
+	if err := db.Create(&buyer).Error; err != nil {
+		t.Fatalf("failed to create buyer: %v", err)
+	}
+	buyerTok := issueAPITestToken(t, buyer, "buyer@example.com")
+
+	createOrderBody := strings.NewReader(fmt.Sprintf(`{"coupon_id":%d,"quantity":2}`, coupon.ID))
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/orders", createOrderBody)
+	req.Header.Set("Authorization", "Bearer "+buyerTok)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected create order 201, got %d", w.Code)
+	}
+	var orderResp struct {
+		Data model.Order `json:"data"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &orderResp); err != nil {
+		t.Fatalf("failed to decode create order response: %v", err)
+	}
+	if orderResp.Data.Status != "pending" {
+		t.Fatalf("expected pending order status, got %s", orderResp.Data.Status)
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/orders/%d/pay", orderResp.Data.ID), nil)
+	req.Header.Set("Authorization", "Bearer "+buyerTok)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected pay 200, got %d", w.Code)
+	}
+
+	var paidOrder model.Order
+	if err := db.First(&paidOrder, orderResp.Data.ID).Error; err != nil {
+		t.Fatalf("failed to load paid order: %v", err)
+	}
+	if paidOrder.Status != "paid" {
+		t.Fatalf("expected paid order status, got %s", paidOrder.Status)
+	}
+
+	var couponAfterPay model.Coupon
+	if err := db.First(&couponAfterPay, coupon.ID).Error; err != nil {
+		t.Fatalf("failed to load coupon: %v", err)
+	}
+	if couponAfterPay.ClaimedCount != 2 {
+		t.Fatalf("expected claimed_count 2, got %d", couponAfterPay.ClaimedCount)
+	}
+
+	var vouchers []model.Voucher
+	if err := db.Where("order_id = ?", paidOrder.ID).Order("id asc").Find(&vouchers).Error; err != nil {
+		t.Fatalf("failed to load vouchers: %v", err)
+	}
+	if len(vouchers) != 2 {
+		t.Fatalf("expected 2 vouchers, got %d", len(vouchers))
+	}
+
+	var payments []model.Payment
+	if err := db.Where("order_id = ?", paidOrder.ID).Find(&payments).Error; err != nil {
+		t.Fatalf("failed to load payments: %v", err)
+	}
+	if len(payments) != 1 || payments[0].Status != "success" {
+		t.Fatalf("expected 1 success payment, got %+v", payments)
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/orders/%d/pay", paidOrder.ID), nil)
+	req.Header.Set("Authorization", "Bearer "+buyerTok)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected idempotent pay 200, got %d", w.Code)
+	}
+	if err := db.Where("order_id = ?", paidOrder.ID).Find(&vouchers).Error; err != nil {
+		t.Fatalf("failed to reload vouchers: %v", err)
+	}
+	if len(vouchers) != 2 {
+		t.Fatalf("expected still 2 vouchers after idempotent pay, got %d", len(vouchers))
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/merchant/vouchers/%d/redeem", vouchers[0].ID), nil)
+	req.Header.Set("Authorization", "Bearer "+buyerTok)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected redeem forbidden 403, got %d", w.Code)
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/merchant/vouchers/%d/redeem", vouchers[0].ID), nil)
+	req.Header.Set("Authorization", "Bearer "+ownerTok)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected owner redeem 200, got %d", w.Code)
+	}
+
+	var redeemed model.Voucher
+	if err := db.First(&redeemed, vouchers[0].ID).Error; err != nil {
+		t.Fatalf("failed to load redeemed voucher: %v", err)
+	}
+	if redeemed.Status != "used" {
+		t.Fatalf("expected voucher used, got %s", redeemed.Status)
 	}
 }
 

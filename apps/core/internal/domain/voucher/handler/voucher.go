@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -172,3 +173,45 @@ func (h *VoucherHandler) ShareEmail(c *gin.Context) { c.JSON(http.StatusOK, gin.
 // @Failure 401 {object} map[string]string
 // @Router /vouchers/share/sms [post]
 func (h *VoucherHandler) ShareSMS(c *gin.Context) { c.JSON(http.StatusOK, gin.H{}) }
+
+// RedeemVoucherByMerchant godoc
+// @Summary Redeem voucher by merchant owner
+// @Description Redeems a voucher for merchant-owned store operations
+// @Tags voucher
+// @Produce json
+// @Param id path int true "Voucher ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /merchant/vouchers/{id}/redeem [post]
+func (h *VoucherHandler) RedeemByMerchant(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	if err := h.svc.RedeemByMerchant(c.Request.Context(), userID, id); err != nil {
+		switch {
+		case errors.Is(err, service.ErrVoucherNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		case errors.Is(err, service.ErrVoucherForbidden):
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		case errors.Is(err, service.ErrVoucherNotRedeemable):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "voucher not redeemable"})
+		case errors.Is(err, service.ErrVoucherExpired):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "voucher expired"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to redeem voucher"})
+		}
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}

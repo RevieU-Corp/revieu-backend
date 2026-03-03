@@ -24,4 +24,9 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 		vouchers.POST("/share/email", h.ShareEmail)
 		vouchers.POST("/share/sms", h.ShareSMS)
 	}
+
+	merchantVouchers := r.Group("/merchant/vouchers", middleware.JWTAuth(cfg.JWT))
+	{
+		merchantVouchers.POST("/:id/redeem", h.RedeemByMerchant)
+	}
 }
