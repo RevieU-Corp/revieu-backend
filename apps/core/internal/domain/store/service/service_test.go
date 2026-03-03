@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/store/dto"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
@@ -20,7 +21,16 @@ func setupStoreTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("failed to open test db: %v", err)
 	}
 
-	if err := db.AutoMigrate(&model.User{}, &model.Merchant{}, &model.Store{}, &model.StoreHour{}, &model.Category{}, &model.StoreCategory{}); err != nil {
+	if err := db.AutoMigrate(
+		&model.User{},
+		&model.UserProfile{},
+		&model.Merchant{},
+		&model.Store{},
+		&model.StoreHour{},
+		&model.Category{},
+		&model.StoreCategory{},
+		&model.Review{},
+	); err != nil {
 		t.Fatalf("failed to migrate test db: %v", err)
 	}
 
@@ -534,6 +544,192 @@ func TestStoreServiceDetailPublishedPreloadsHoursAndCategories(t *testing.T) {
 	if detail.Categories[0].Name != "Cafe" {
 		t.Fatalf("unexpected preloaded category: %q", detail.Categories[0].Name)
 	}
+}
+
+func TestStoreServiceListPublishedFilteredByCategoryRatingLocationAndCursor(t *testing.T) {
+	db := setupStoreTestDB(t)
+	svc := NewStoreService(db)
+
+	merchant := model.Merchant{Name: "Filter Merchant"}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+
+	cafe := model.Category{Name: "Cafe"}
+	bakery := model.Category{Name: "Bakery"}
+	if err := db.Create(&cafe).Error; err != nil {
+		t.Fatalf("failed to create cafe category: %v", err)
+	}
+	if err := db.Create(&bakery).Error; err != nil {
+		t.Fatalf("failed to create bakery category: %v", err)
+	}
+
+	createStore := func(name string, status int16, rating float32, lat, lng float64, categoryID int64) model.Store {
+		store := model.Store{
+			MerchantID: merchant.ID,
+			Name:       name,
+			Status:     status,
+			AvgRating:  rating,
+			Latitude:   lat,
+			Longitude:  lng,
+		}
+		if err := db.Create(&store).Error; err != nil {
+			t.Fatalf("failed to create store %s: %v", name, err)
+		}
+		if categoryID != 0 {
+			if err := db.Create(&model.StoreCategory{StoreID: store.ID, CategoryID: categoryID}).Error; err != nil {
+				t.Fatalf("failed to create store-category relation for %s: %v", name, err)
+			}
+		}
+		return store
+	}
+
+	matchOld := createStore("Match Old", StoreStatusPublished, 4.1, 37.7750, -122.4190, cafe.ID)
+	matchNew := createStore("Match New", StoreStatusPublished, 4.8, 37.7752, -122.4188, cafe.ID)
+	_ = createStore("Low Rating", StoreStatusPublished, 3.0, 37.7751, -122.4189, cafe.ID)
+	_ = createStore("Far Away", StoreStatusPublished, 4.9, 39.0000, -120.0000, cafe.ID)
+	_ = createStore("Other Category", StoreStatusPublished, 4.9, 37.7753, -122.4187, bakery.ID)
+	_ = createStore("Draft Hidden", StoreStatusDraft, 4.9, 37.7751, -122.4189, cafe.ID)
+
+	lat := 37.7750
+	lng := -122.4190
+	rating := float32(4.0)
+	limit := 1
+	radiusKm := 5.0
+	firstPage, cursor, err := svc.ListPublishedFiltered(context.Background(), dto.StoreListQuery{
+		Category: categoryNamePtr("Cafe"),
+		Lat:      &lat,
+		Lng:      &lng,
+		Rating:   &rating,
+		RadiusKM: &radiusKm,
+		Limit:    &limit,
+	})
+	if err != nil {
+		t.Fatalf("list filtered first page returned error: %v", err)
+	}
+	if len(firstPage) != 1 {
+		t.Fatalf("expected first page size 1, got %d", len(firstPage))
+	}
+	if firstPage[0].ID != matchNew.ID {
+		t.Fatalf("unexpected first-page store id: got %d, want %d", firstPage[0].ID, matchNew.ID)
+	}
+	if cursor == nil {
+		t.Fatalf("expected cursor for second page")
+	}
+
+	secondPage, nextCursor, err := svc.ListPublishedFiltered(context.Background(), dto.StoreListQuery{
+		Category: categoryNamePtr("Cafe"),
+		Lat:      &lat,
+		Lng:      &lng,
+		Rating:   &rating,
+		RadiusKM: &radiusKm,
+		Limit:    &limit,
+		Cursor:   cursor,
+	})
+	if err != nil {
+		t.Fatalf("list filtered second page returned error: %v", err)
+	}
+	if len(secondPage) != 1 {
+		t.Fatalf("expected second page size 1, got %d", len(secondPage))
+	}
+	if secondPage[0].ID != matchOld.ID {
+		t.Fatalf("unexpected second-page store id: got %d, want %d", secondPage[0].ID, matchOld.ID)
+	}
+	if nextCursor != nil {
+		t.Fatalf("expected no further cursor after second page, got %d", *nextCursor)
+	}
+}
+
+func TestStoreServiceReviewsPublishedPaginatedPreloadsUser(t *testing.T) {
+	db := setupStoreTestDB(t)
+	svc := NewStoreService(db)
+
+	merchant := model.Merchant{Name: "Review Merchant"}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Review Store", Status: StoreStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	makeUserWithProfile := func(nickname string) model.User {
+		user := model.User{Role: "user", Status: 0}
+		if err := db.Create(&user).Error; err != nil {
+			t.Fatalf("failed to create user %s: %v", nickname, err)
+		}
+		profile := model.UserProfile{UserID: user.ID, Nickname: nickname}
+		if err := db.Create(&profile).Error; err != nil {
+			t.Fatalf("failed to create profile %s: %v", nickname, err)
+		}
+		return user
+	}
+
+	u1 := makeUserWithProfile("u1")
+	u2 := makeUserWithProfile("u2")
+	u3 := makeUserWithProfile("u3")
+
+	addReview := func(userID int64, content string) model.Review {
+		storeID := store.ID
+		review := model.Review{
+			UserID:     userID,
+			MerchantID: merchant.ID,
+			VenueID:    merchant.ID,
+			StoreID:    &storeID,
+			Rating:     4.5,
+			Content:    content,
+			VisitDate:  time.Now().UTC(),
+		}
+		if err := db.Create(&review).Error; err != nil {
+			t.Fatalf("failed to create review %s: %v", content, err)
+		}
+		return review
+	}
+
+	oldest := addReview(u1.ID, "first")
+	_ = addReview(u2.ID, "second")
+	_ = addReview(u3.ID, "third")
+
+	limit := 2
+	firstPage, cursor, err := svc.ReviewsPublishedPaginated(context.Background(), store.ID, dto.StoreReviewListQuery{
+		Limit: &limit,
+	})
+	if err != nil {
+		t.Fatalf("reviews first page returned error: %v", err)
+	}
+	if len(firstPage) != 2 {
+		t.Fatalf("expected first page size 2, got %d", len(firstPage))
+	}
+	if cursor == nil {
+		t.Fatalf("expected cursor for second review page")
+	}
+	if firstPage[0].User == nil || firstPage[0].User.Profile == nil {
+		t.Fatalf("expected user/profile to be preloaded on first review page")
+	}
+
+	secondPage, nextCursor, err := svc.ReviewsPublishedPaginated(context.Background(), store.ID, dto.StoreReviewListQuery{
+		Limit:  &limit,
+		Cursor: cursor,
+	})
+	if err != nil {
+		t.Fatalf("reviews second page returned error: %v", err)
+	}
+	if len(secondPage) != 1 {
+		t.Fatalf("expected second page size 1, got %d", len(secondPage))
+	}
+	if secondPage[0].ID != oldest.ID {
+		t.Fatalf("unexpected second-page review id: got %d, want %d", secondPage[0].ID, oldest.ID)
+	}
+	if nextCursor != nil {
+		t.Fatalf("expected no further cursor after second page, got %d", *nextCursor)
+	}
+	if secondPage[0].User == nil || secondPage[0].User.Profile == nil {
+		t.Fatalf("expected user/profile to be preloaded on second review page")
+	}
+}
+
+func categoryNamePtr(v string) *string {
+	return &v
 }
 
 func strPtr(v string) *string {

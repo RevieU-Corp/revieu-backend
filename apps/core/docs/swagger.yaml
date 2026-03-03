@@ -2163,6 +2163,35 @@ paths:
   /stores:
     get:
       description: Returns a list of stores
+      parameters:
+      - description: Category name or ID
+        in: query
+        name: category
+        type: string
+      - description: Latitude
+        in: query
+        name: lat
+        type: number
+      - description: Longitude
+        in: query
+        name: lng
+        type: number
+      - description: Minimum average rating
+        in: query
+        name: rating
+        type: number
+      - description: Search radius in KM (default 20)
+        in: query
+        name: radius_km
+        type: number
+      - description: Cursor for pagination (store id)
+        in: query
+        name: cursor
+        type: integer
+      - description: Page size (max 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -2170,6 +2199,12 @@ paths:
           description: OK
           schema:
             additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "500":
           description: Internal Server Error
@@ -2252,6 +2287,14 @@ paths:
         in: path
         name: id
         required: true
+        type: integer
+      - description: Cursor for pagination (review id)
+        in: query
+        name: cursor
+        type: integer
+      - description: Page size (max 100)
+        in: query
+        name: limit
         type: integer
       produces:
       - application/json

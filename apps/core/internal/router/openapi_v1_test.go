@@ -277,6 +277,199 @@ func TestStoreDetailIncludesHoursAndCategories(t *testing.T) {
 	}
 }
 
+func TestStoreListSupportsFilteringAndCursorPagination(t *testing.T) {
+	r, _ := setupAPITest(t)
+	db := database.DB
+
+	merchant := model.Merchant{Name: "Filter Merchant"}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+
+	cafe := model.Category{Name: "Cafe"}
+	bakery := model.Category{Name: "Bakery"}
+	if err := db.Create(&cafe).Error; err != nil {
+		t.Fatalf("failed to create cafe category: %v", err)
+	}
+	if err := db.Create(&bakery).Error; err != nil {
+		t.Fatalf("failed to create bakery category: %v", err)
+	}
+
+	createStore := func(name string, status int16, rating float32, lat, lng float64, categoryID int64) model.Store {
+		store := model.Store{
+			MerchantID: merchant.ID,
+			Name:       name,
+			Status:     status,
+			AvgRating:  rating,
+			Latitude:   lat,
+			Longitude:  lng,
+		}
+		if err := db.Create(&store).Error; err != nil {
+			t.Fatalf("failed to create store %s: %v", name, err)
+		}
+		if err := db.Create(&model.StoreCategory{StoreID: store.ID, CategoryID: categoryID}).Error; err != nil {
+			t.Fatalf("failed to create store category relation for %s: %v", name, err)
+		}
+		return store
+	}
+
+	matchOld := createStore("Match Old", 1, 4.1, 37.7750, -122.4190, cafe.ID)
+	matchNew := createStore("Match New", 1, 4.8, 37.7752, -122.4188, cafe.ID)
+	_ = createStore("Low Rating", 1, 3.0, 37.7751, -122.4189, cafe.ID)
+	_ = createStore("Far Away", 1, 4.9, 39.0000, -120.0000, cafe.ID)
+	_ = createStore("Other Category", 1, 4.9, 37.7753, -122.4187, bakery.ID)
+	_ = createStore("Draft", 0, 4.9, 37.7751, -122.4189, cafe.ID)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/stores?category=Cafe&rating=4&lat=37.7750&lng=-122.4190&radius_km=5&limit=1", nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected first page 200, got %d", w.Code)
+	}
+
+	var firstPage struct {
+		Data   []model.Store `json:"data"`
+		Cursor *int64        `json:"cursor"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &firstPage); err != nil {
+		t.Fatalf("failed to decode first-page response: %v", err)
+	}
+	if len(firstPage.Data) != 1 {
+		t.Fatalf("expected first page size 1, got %d", len(firstPage.Data))
+	}
+	if firstPage.Data[0].ID != matchNew.ID {
+		t.Fatalf("unexpected first-page store id: got %d, want %d", firstPage.Data[0].ID, matchNew.ID)
+	}
+	if firstPage.Cursor == nil {
+		t.Fatalf("expected first page cursor")
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/stores?category=Cafe&rating=4&lat=37.7750&lng=-122.4190&radius_km=5&limit=1&cursor=%d", *firstPage.Cursor), nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected second page 200, got %d", w.Code)
+	}
+
+	var secondPage struct {
+		Data   []model.Store `json:"data"`
+		Cursor *int64        `json:"cursor"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &secondPage); err != nil {
+		t.Fatalf("failed to decode second-page response: %v", err)
+	}
+	if len(secondPage.Data) != 1 {
+		t.Fatalf("expected second page size 1, got %d", len(secondPage.Data))
+	}
+	if secondPage.Data[0].ID != matchOld.ID {
+		t.Fatalf("unexpected second-page store id: got %d, want %d", secondPage.Data[0].ID, matchOld.ID)
+	}
+	if secondPage.Cursor != nil {
+		t.Fatalf("expected second page cursor to be nil")
+	}
+}
+
+func TestStoreReviewsSupportsCursorPaginationAndUserPreload(t *testing.T) {
+	r, _ := setupAPITest(t)
+	db := database.DB
+
+	merchant := model.Merchant{Name: "Review Merchant"}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Published Store", Status: 1}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	makeUser := func(nickname string) model.User {
+		user := model.User{Role: "user", Status: 0}
+		if err := db.Create(&user).Error; err != nil {
+			t.Fatalf("failed to create user: %v", err)
+		}
+		profile := model.UserProfile{UserID: user.ID, Nickname: nickname}
+		if err := db.Create(&profile).Error; err != nil {
+			t.Fatalf("failed to create profile: %v", err)
+		}
+		return user
+	}
+
+	u1 := makeUser("u1")
+	u2 := makeUser("u2")
+	u3 := makeUser("u3")
+
+	addReview := func(userID int64, content string) model.Review {
+		storeID := store.ID
+		review := model.Review{
+			UserID:     userID,
+			MerchantID: merchant.ID,
+			VenueID:    merchant.ID,
+			StoreID:    &storeID,
+			Rating:     4.5,
+			Content:    content,
+		}
+		if err := db.Create(&review).Error; err != nil {
+			t.Fatalf("failed to create review: %v", err)
+		}
+		return review
+	}
+
+	oldest := addReview(u1.ID, "first")
+	_ = addReview(u2.ID, "second")
+	_ = addReview(u3.ID, "third")
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/stores/%d/reviews?limit=2", store.ID), nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected first page 200, got %d", w.Code)
+	}
+
+	var firstPage struct {
+		Data   []model.Review `json:"data"`
+		Cursor *int64         `json:"cursor"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &firstPage); err != nil {
+		t.Fatalf("failed to decode first-page reviews: %v", err)
+	}
+	if len(firstPage.Data) != 2 {
+		t.Fatalf("expected first page size 2, got %d", len(firstPage.Data))
+	}
+	if firstPage.Cursor == nil {
+		t.Fatalf("expected review cursor on first page")
+	}
+	if firstPage.Data[0].User == nil || firstPage.Data[0].User.Profile == nil {
+		t.Fatalf("expected user/profile preloaded on reviews")
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/stores/%d/reviews?limit=2&cursor=%d", store.ID, *firstPage.Cursor), nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected second page 200, got %d", w.Code)
+	}
+
+	var secondPage struct {
+		Data   []model.Review `json:"data"`
+		Cursor *int64         `json:"cursor"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &secondPage); err != nil {
+		t.Fatalf("failed to decode second-page reviews: %v", err)
+	}
+	if len(secondPage.Data) != 1 {
+		t.Fatalf("expected second page size 1, got %d", len(secondPage.Data))
+	}
+	if secondPage.Data[0].ID != oldest.ID {
+		t.Fatalf("unexpected second-page review id: got %d, want %d", secondPage.Data[0].ID, oldest.ID)
+	}
+	if secondPage.Data[0].User == nil || secondPage.Data[0].User.Profile == nil {
+		t.Fatalf("expected user/profile preloaded on second page")
+	}
+	if secondPage.Cursor != nil {
+		t.Fatalf("expected second page cursor to be nil")
+	}
+}
+
 func TestReviewsList(t *testing.T) {
 	r, tok := setupAPITest(t)
 
