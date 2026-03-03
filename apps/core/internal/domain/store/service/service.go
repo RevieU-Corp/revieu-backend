@@ -34,6 +34,7 @@ const (
 var ErrUserNotFound = errors.New("user not found")
 var ErrStoreNotFound = errors.New("store not found")
 var ErrStoreForbidden = errors.New("store forbidden")
+var ErrCategoryNotFound = errors.New("category not found")
 
 func NewStoreService(db *gorm.DB) *StoreService {
 	if db == nil {
@@ -100,6 +101,11 @@ func (s *StoreService) Create(ctx context.Context, userID int64, req dto.CreateS
 		Status:        StoreStatusDraft,
 	}
 
+	categoryIDs, err := sanitizeCategoryIDs(req.CategoryIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(&store).Error; err != nil {
 			return err
@@ -116,6 +122,18 @@ func (s *StoreService) Create(ctx context.Context, userID int64, req dto.CreateS
 				})
 			}
 			if err := tx.Create(&hours).Error; err != nil {
+				return err
+			}
+		}
+		if len(categoryIDs) > 0 {
+			if err := ensureCategoriesExist(tx, categoryIDs); err != nil {
+				return err
+			}
+			links := make([]model.StoreCategory, 0, len(categoryIDs))
+			for _, categoryID := range categoryIDs {
+				links = append(links, model.StoreCategory{StoreID: store.ID, CategoryID: categoryID})
+			}
+			if err := tx.Create(&links).Error; err != nil {
 				return err
 			}
 		}
@@ -380,6 +398,20 @@ func (s *StoreService) Update(ctx context.Context, userID, storeID int64, req dt
 	}
 
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var categoryIDs []int64
+		if req.CategoryIDs != nil {
+			normalized, err := sanitizeCategoryIDs(*req.CategoryIDs)
+			if err != nil {
+				return err
+			}
+			categoryIDs = normalized
+			if len(categoryIDs) > 0 {
+				if err := ensureCategoriesExist(tx, categoryIDs); err != nil {
+					return err
+				}
+			}
+		}
+
 		if len(updates) > 0 {
 			if err := tx.Model(&model.Store{}).
 				Where("id = ?", storeID).
@@ -409,13 +441,31 @@ func (s *StoreService) Update(ctx context.Context, userID, storeID int64, req dt
 			}
 		}
 
+		if req.CategoryIDs != nil {
+			if err := tx.Where("store_id = ?", storeID).Delete(&model.StoreCategory{}).Error; err != nil {
+				return err
+			}
+			if len(categoryIDs) > 0 {
+				links := make([]model.StoreCategory, 0, len(categoryIDs))
+				for _, categoryID := range categoryIDs {
+					links = append(links, model.StoreCategory{
+						StoreID:    storeID,
+						CategoryID: categoryID,
+					})
+				}
+				if err := tx.Create(&links).Error; err != nil {
+					return err
+				}
+			}
+		}
+
 		return nil
 	}); err != nil {
 		return nil, err
 	}
 
 	var updated model.Store
-	if err := s.db.WithContext(ctx).Preload("Hours").First(&updated, storeID).Error; err != nil {
+	if err := s.db.WithContext(ctx).Preload("Hours").Preload("Categories").First(&updated, storeID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrStoreNotFound
 		}
@@ -456,4 +506,37 @@ func sliceReviewPage(items []model.Review, limit int) ([]model.Review, *int64) {
 	}
 	lastID := items[len(items)-1].ID
 	return items, &lastID
+}
+
+func sanitizeCategoryIDs(raw []int64) ([]int64, error) {
+	if len(raw) == 0 {
+		return nil, nil
+	}
+	seen := make(map[int64]struct{}, len(raw))
+	normalized := make([]int64, 0, len(raw))
+	for _, id := range raw {
+		if id <= 0 {
+			return nil, ErrCategoryNotFound
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		normalized = append(normalized, id)
+	}
+	return normalized, nil
+}
+
+func ensureCategoriesExist(tx *gorm.DB, categoryIDs []int64) error {
+	if len(categoryIDs) == 0 {
+		return nil
+	}
+	var count int64
+	if err := tx.Model(&model.Category{}).Where("id IN ?", categoryIDs).Count(&count).Error; err != nil {
+		return err
+	}
+	if count != int64(len(categoryIDs)) {
+		return ErrCategoryNotFound
+	}
+	return nil
 }

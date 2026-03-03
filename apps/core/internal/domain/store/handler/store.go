@@ -203,6 +203,10 @@ func (h *StoreHandler) Create(c *gin.Context) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			return
 		}
+		if errors.Is(err, service.ErrCategoryNotFound) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid category ids"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create store"})
 		return
 	}
@@ -254,6 +258,8 @@ func (h *StoreHandler) Update(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		case errors.Is(err, service.ErrStoreForbidden):
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		case errors.Is(err, service.ErrCategoryNotFound):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid category ids"})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update store"})
 		}

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -62,6 +63,10 @@ func (h *MerchantHandler) Detail(c *gin.Context) {
 	}
 	merchant, err := h.svc.Detail(c.Request.Context(), id)
 	if err != nil {
+		if errors.Is(err, service.ErrMerchantNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+			return
+		}
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
 	}
@@ -86,6 +91,10 @@ func (h *MerchantHandler) Reviews(c *gin.Context) {
 	}
 	reviews, err := h.svc.Reviews(c.Request.Context(), id)
 	if err != nil {
+		if errors.Is(err, service.ErrMerchantNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+			return
+		}
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
 	}

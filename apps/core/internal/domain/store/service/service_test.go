@@ -166,6 +166,65 @@ func TestStoreServiceCreateDefaultName(t *testing.T) {
 	}
 }
 
+func TestStoreServiceCreateBindsCategories(t *testing.T) {
+	db := setupStoreTestDB(t)
+	svc := NewStoreService(db)
+
+	userID := int64(206)
+	if err := db.Create(&model.User{ID: userID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+	merchant := model.Merchant{Name: "Category Merchant", UserID: &userID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	category := model.Category{Name: "Cafe"}
+	if err := db.Create(&category).Error; err != nil {
+		t.Fatalf("failed to create category: %v", err)
+	}
+
+	store, err := svc.Create(context.Background(), userID, dto.CreateStoreRequest{
+		Name:        "Category Store",
+		CategoryIDs: []int64{category.ID},
+	})
+	if err != nil {
+		t.Fatalf("create returned error: %v", err)
+	}
+
+	var links []model.StoreCategory
+	if err := db.Where("store_id = ?", store.ID).Find(&links).Error; err != nil {
+		t.Fatalf("failed to query store categories: %v", err)
+	}
+	if len(links) != 1 {
+		t.Fatalf("expected 1 store category relation, got %d", len(links))
+	}
+	if links[0].CategoryID != category.ID {
+		t.Fatalf("unexpected category id: got %d want %d", links[0].CategoryID, category.ID)
+	}
+}
+
+func TestStoreServiceCreateWithInvalidCategoryReturnsNotFound(t *testing.T) {
+	db := setupStoreTestDB(t)
+	svc := NewStoreService(db)
+
+	userID := int64(207)
+	if err := db.Create(&model.User{ID: userID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+	merchant := model.Merchant{Name: "Category Merchant", UserID: &userID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+
+	_, err := svc.Create(context.Background(), userID, dto.CreateStoreRequest{
+		Name:        "Broken Category Store",
+		CategoryIDs: []int64{99999},
+	})
+	if !errors.Is(err, ErrCategoryNotFound) {
+		t.Fatalf("expected ErrCategoryNotFound, got %v", err)
+	}
+}
+
 func TestStoreServiceCreateUserNotFound(t *testing.T) {
 	db := setupStoreTestDB(t)
 	svc := NewStoreService(db)
@@ -296,6 +355,55 @@ func TestStoreServiceUpdateOwnStoreReplacesHours(t *testing.T) {
 	}
 	if hours[0].DayOfWeek != 5 || hours[0].OpenTime != "10:00" || hours[0].CloseTime != "20:00" || hours[0].IsClosed {
 		t.Fatalf("unexpected replaced hour row: %+v", hours[0])
+	}
+}
+
+func TestStoreServiceUpdateOwnStoreReplacesCategories(t *testing.T) {
+	db := setupStoreTestDB(t)
+	svc := NewStoreService(db)
+
+	ownerID := int64(406)
+	if err := db.Create(&model.User{ID: ownerID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create owner user: %v", err)
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+
+	store := model.Store{MerchantID: merchant.ID, Name: "Category Store"}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	c1 := model.Category{Name: "Cafe"}
+	c2 := model.Category{Name: "Bakery"}
+	if err := db.Create(&c1).Error; err != nil {
+		t.Fatalf("failed to create category c1: %v", err)
+	}
+	if err := db.Create(&c2).Error; err != nil {
+		t.Fatalf("failed to create category c2: %v", err)
+	}
+	if err := db.Create(&model.StoreCategory{StoreID: store.ID, CategoryID: c1.ID}).Error; err != nil {
+		t.Fatalf("failed to seed store category c1: %v", err)
+	}
+
+	_, err := svc.Update(context.Background(), ownerID, store.ID, dto.UpdateStoreRequest{
+		CategoryIDs: int64SlicePtr([]int64{c2.ID}),
+	})
+	if err != nil {
+		t.Fatalf("update returned error: %v", err)
+	}
+
+	var links []model.StoreCategory
+	if err := db.Where("store_id = ?", store.ID).Order("category_id asc").Find(&links).Error; err != nil {
+		t.Fatalf("failed to query store categories: %v", err)
+	}
+	if len(links) != 1 {
+		t.Fatalf("expected 1 store category relation after replace, got %d", len(links))
+	}
+	if links[0].CategoryID != c2.ID {
+		t.Fatalf("unexpected replaced category id: got %d want %d", links[0].CategoryID, c2.ID)
 	}
 }
 
@@ -733,5 +841,9 @@ func categoryNamePtr(v string) *string {
 }
 
 func strPtr(v string) *string {
+	return &v
+}
+
+func int64SlicePtr(v []int64) *[]int64 {
 	return &v
 }

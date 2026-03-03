@@ -4718,6 +4718,12 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255
                 },
+                "category_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "city": {
                     "type": "string",
                     "maxLength": 100
@@ -4799,6 +4805,12 @@ const docTemplate = `{
                 "address": {
                     "type": "string",
                     "maxLength": 255
+                },
+                "category_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "city": {
                     "type": "string",

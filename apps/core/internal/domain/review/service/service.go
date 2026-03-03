@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/review/dto"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ReviewService struct {
@@ -48,14 +50,6 @@ func (s *ReviewService) Create(ctx context.Context, userID int64, req dto.Review
 		return model.Review{}, err
 	}
 
-	var merchant model.Merchant
-	if err := s.db.WithContext(ctx).Select("id").First(&merchant, merchantID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return model.Review{}, ErrMerchantNotFound
-		}
-		return model.Review{}, err
-	}
-
 	venueID := merchantID
 	if req.VenueID != "" {
 		venueID, err = req.VenueIDValue()
@@ -68,21 +62,14 @@ func (s *ReviewService) Create(ctx context.Context, userID int64, req dto.Review
 		return model.Review{}, err
 	}
 	if storeID != nil {
-		var store model.Store
-		if err := s.db.WithContext(ctx).Select("id", "merchant_id").First(&store, *storeID).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return model.Review{}, ErrStoreNotFound
-			}
-			return model.Review{}, err
-		}
-		if store.MerchantID != merchantID {
-			return model.Review{}, ErrStoreMerchantMismatch
-		}
+		// Validation is completed inside transaction to keep a single, consistent read/write unit.
 	}
+
 	visitDate, err := req.VisitDateValue()
 	if err != nil {
 		return model.Review{}, err
 	}
+
 	imagesJSON, _ := json.Marshal(req.Images)
 	review := model.Review{
 		UserID:     userID,
@@ -94,31 +81,133 @@ func (s *ReviewService) Create(ctx context.Context, userID int64, req dto.Review
 		Images:     string(imagesJSON),
 		VisitDate:  visitDate,
 	}
-	if err := s.db.WithContext(ctx).Create(&review).Error; err != nil {
+
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var merchant model.Merchant
+		if err := tx.Select("id").First(&merchant, merchantID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrMerchantNotFound
+			}
+			return err
+		}
+
+		if storeID != nil {
+			var store model.Store
+			if err := tx.Select("id", "merchant_id").First(&store, *storeID).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return ErrStoreNotFound
+				}
+				return err
+			}
+			if store.MerchantID != merchantID {
+				return ErrStoreMerchantMismatch
+			}
+		}
+
+		if err := tx.Create(&review).Error; err != nil {
+			return err
+		}
+		if err := syncMerchantReviewAggregates(tx, merchantID); err != nil {
+			return err
+		}
+		if storeID != nil {
+			if err := syncStoreReviewAggregates(tx, *storeID); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
 		return model.Review{}, err
 	}
+
 	return review, nil
 }
 
 func (s *ReviewService) Like(ctx context.Context, userID, reviewID int64) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var review model.Review
-		if err := tx.First(&review, reviewID).Error; err != nil {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&review, reviewID).Error; err != nil {
 			return err
 		}
+
+		var existing model.Like
+		if err := tx.Where("user_id = ? AND target_type = ? AND target_id = ?", userID, "review", reviewID).
+			First(&existing).Error; err == nil {
+			return nil
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+
 		like := model.Like{UserID: userID, TargetType: "review", TargetID: reviewID}
-		if err := tx.FirstOrCreate(&like, like).Error; err != nil {
+		if err := tx.Create(&like).Error; err != nil {
+			// Concurrent duplicate like should remain idempotent.
+			if errors.Is(err, gorm.ErrDuplicatedKey) || isUniqueViolation(err) {
+				return nil
+			}
 			return err
 		}
+
 		return tx.Model(&review).UpdateColumn("like_count", gorm.Expr("like_count + 1")).Error
 	})
 }
 
 func (s *ReviewService) Comment(ctx context.Context, userID, reviewID int64, text string) error {
-	var review model.Review
-	if err := s.db.WithContext(ctx).First(&review, reviewID).Error; err != nil {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var review model.Review
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&review, reviewID).Error; err != nil {
+			return err
+		}
+		comment := model.ReviewComment{ReviewID: reviewID, UserID: userID, Content: text}
+		if err := tx.Create(&comment).Error; err != nil {
+			return err
+		}
+		return tx.Model(&review).UpdateColumn("comment_count", gorm.Expr("comment_count + 1")).Error
+	})
+}
+
+func syncMerchantReviewAggregates(tx *gorm.DB, merchantID int64) error {
+	type aggregate struct {
+		Count int64
+		Avg   float64
+	}
+	var agg aggregate
+	if err := tx.Model(&model.Review{}).
+		Select("COUNT(*) AS count, COALESCE(AVG(rating), 0) AS avg").
+		Where("merchant_id = ?", merchantID).
+		Scan(&agg).Error; err != nil {
 		return err
 	}
-	comment := model.ReviewComment{ReviewID: reviewID, UserID: userID, Content: text}
-	return s.db.WithContext(ctx).Create(&comment).Error
+	updates := map[string]interface{}{
+		"review_count":  int(agg.Count),
+		"total_reviews": int(agg.Count),
+		"avg_rating":    float32(agg.Avg),
+	}
+	return tx.Model(&model.Merchant{}).Where("id = ?", merchantID).Updates(updates).Error
+}
+
+func syncStoreReviewAggregates(tx *gorm.DB, storeID int64) error {
+	type aggregate struct {
+		Count int64
+		Avg   float64
+	}
+	var agg aggregate
+	if err := tx.Model(&model.Review{}).
+		Select("COUNT(*) AS count, COALESCE(AVG(rating), 0) AS avg").
+		Where("store_id = ?", storeID).
+		Scan(&agg).Error; err != nil {
+		return err
+	}
+	updates := map[string]interface{}{
+		"review_count": int(agg.Count),
+		"avg_rating":   float32(agg.Avg),
+	}
+	return tx.Model(&model.Store{}).Where("id = ?", storeID).Updates(updates).Error
+}
+
+func isUniqueViolation(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "duplicate key") || strings.Contains(msg, "UNIQUE constraint failed")
 }
