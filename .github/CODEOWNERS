@@ -1,16 +1,47 @@
-# Global fallback
-* @team-lead
+# Default fallback owners
+* @LosFurina @waynejune
+
+# Repository governance and CI
+/.github/ @LosFurina @waynejune
+/README.md @LosFurina @waynejune
+/lefthook.yml @LosFurina @waynejune
+/tools.go @LosFurina
+
+# Planning docs and scripts
+/docs/ @LosFurina @jasonpaul0727
+/scripts/ @LosFurina
+
+# Core platform
+/apps/core/cmd/ @LosFurina @jasonpaul0727
+/apps/core/configs/ @LosFurina @jasonpaul0727
+/apps/core/docs/ @LosFurina @jasonpaul0727 @linyuexing389-cloud
+/apps/core/internal/config/ @LosFurina @jasonpaul0727
+/apps/core/internal/model/ @LosFurina @jasonpaul0727
+/apps/core/internal/router/ @LosFurina @jasonpaul0727
+/apps/core/internal/token/ @LosFurina @jasonpaul0727
+/apps/core/internal/testutil/ @LosFurina @jasonpaul0727
+/apps/core/internal/middleware/ @LosFurina
+/apps/core/pkg/ @LosFurina
+/apps/core/migrations/ @LosFurina
 
 # Domain ownership
-apps/core/internal/domain/auth/ @auth-team
-apps/core/internal/domain/user/ @user-team
-apps/core/internal/domain/profile/ @profile-team
-apps/core/internal/domain/follow/ @social-team
-apps/core/internal/domain/content/ @content-team
-
-# Infrastructure
-apps/core/internal/config/ @platform-team
-apps/core/internal/middleware/ @platform-team
-apps/core/internal/model/ @platform-team
-apps/core/pkg/ @platform-team
-apps/core/internal/router/ @platform-team
+/apps/core/internal/domain/auth/ @LosFurina @jasonpaul0727
+/apps/core/internal/domain/store/ @LosFurina @linyuexing389-cloud
+/apps/core/internal/domain/review/ @LosFurina @jasonpaul0727
+/apps/core/internal/domain/user/ @LosFurina @jasonpaul0727
+/apps/core/internal/domain/media/ @LosFurina @jasonpaul0727
+/apps/core/internal/domain/admin/ @LosFurina
+/apps/core/internal/domain/ai/ @LosFurina
+/apps/core/internal/domain/category/ @LosFurina
+/apps/core/internal/domain/content/ @LosFurina
+/apps/core/internal/domain/conversation/ @LosFurina
+/apps/core/internal/domain/coupon/ @LosFurina
+/apps/core/internal/domain/feed/ @LosFurina
+/apps/core/internal/domain/follow/ @LosFurina
+/apps/core/internal/domain/merchant/ @LosFurina
+/apps/core/internal/domain/notification/ @LosFurina
+/apps/core/internal/domain/order/ @LosFurina
+/apps/core/internal/domain/payment/ @LosFurina
+/apps/core/internal/domain/profile/ @LosFurina
+/apps/core/internal/domain/verification/ @LosFurina
+/apps/core/internal/domain/voucher/ @LosFurina

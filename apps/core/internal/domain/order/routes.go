@@ -18,5 +18,6 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 		orders.POST("", h.Create)
 		orders.GET("", h.List)
 		orders.GET("/:id", h.Detail)
+		orders.POST("/:id/pay", h.Pay)
 	}
 }

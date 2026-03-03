@@ -1,152 +1,157 @@
 basePath: /api/v1
 definitions:
-  auth.ForgotPasswordRequest:
-    properties:
-      email:
-        type: string
-    required:
-    - email
-    type: object
-  auth.LoginRequest:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    required:
-    - email
-    - password
-    type: object
-  auth.LoginResponse:
-    properties:
-      token:
-        type: string
-      type:
-        type: string
-    type: object
-  auth.RegisterRequest:
-    properties:
-      email:
-        type: string
-      password:
-        minLength: 6
-        type: string
-      username:
-        type: string
-    required:
-    - email
-    - password
-    - username
-    type: object
-  auth.RegisterResponse:
-    properties:
-      message:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  auth.UserInfoResponse:
-    properties:
-      email: {}
-      message:
-        type: string
-      role: {}
-      user_id: {}
-    type: object
-  dto.AddressItem:
-    properties:
-      address:
-        type: string
-      city:
-        type: string
-      district:
-        type: string
-      id:
-        type: integer
-      is_default:
-        type: boolean
-      name:
-        type: string
-      phone:
-        type: string
-      postal_code:
-        type: string
-      province:
-        type: string
-    type: object
-  dto.AddressListResponse:
-    properties:
-      addresses:
-        items:
-          $ref: '#/definitions/dto.AddressItem'
-        type: array
-    type: object
-  dto.CommentRequest:
-    properties:
-      text:
-        type: string
-    required:
-    - text
-    type: object
-  dto.CreateAddressRequest:
-    properties:
-      address:
-        maxLength: 255
-        type: string
-      city:
-        maxLength: 50
-        type: string
-      district:
-        maxLength: 50
-        type: string
-      is_default:
-        type: boolean
-      name:
-        maxLength: 50
-        type: string
-      phone:
-        maxLength: 20
-        type: string
-      postal_code:
-        maxLength: 20
-        type: string
-      province:
-        maxLength: 50
-        type: string
-    required:
-    - address
-    - name
-    - phone
-    type: object
-  dto.FavoriteItem:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteItem:
     properties:
       created_at:
         type: string
       id:
         type: integer
       merchant:
-        $ref: '#/definitions/dto.MerchantBrief'
+        $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief'
       post:
-        $ref: '#/definitions/dto.PostItem'
+        $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostItem'
       review:
-        $ref: '#/definitions/dto.ReviewItem'
+        $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewItem'
       target_id:
         type: integer
       target_type:
         type: string
     type: object
-  dto.FavoriteListResponse:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteListResponse:
     properties:
       cursor:
         type: integer
       items:
         items:
-          $ref: '#/definitions/dto.FavoriteItem'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteItem'
         type: array
       total:
         type: integer
     type: object
-  dto.Merchant:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief:
+    properties:
+      category:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostItem:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      images:
+        items:
+          type: string
+        type: array
+      is_liked:
+        type: boolean
+      like_count:
+        type: integer
+      merchant:
+        $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief'
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      view_count:
+        type: integer
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostListResponse:
+    properties:
+      cursor:
+        type: integer
+      posts:
+        items:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostItem'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewItem:
+    properties:
+      avg_cost:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      images:
+        items:
+          type: string
+        type: array
+      is_liked:
+        type: boolean
+      like_count:
+        type: integer
+      merchant:
+        $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief'
+      rating:
+        type: number
+      rating_env:
+        type: number
+      rating_service:
+        type: number
+      rating_value:
+        type: number
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewListResponse:
+    properties:
+      cursor:
+        type: integer
+      reviews:
+        items:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewItem'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.FileRequest:
+    properties:
+      content_type:
+        type: string
+      filename:
+        type: string
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLRequest:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.FileRequest'
+        type: array
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLResponse:
+    properties:
+      uploads:
+        items:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.UploadInfo'
+        type: array
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.UploadInfo:
+    properties:
+      expires_at:
+        type: string
+      file_url:
+        type: string
+      id:
+        type: string
+      upload_url:
+        type: string
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_merchant_dto.Merchant:
     properties:
       businessName:
         type: string
@@ -169,79 +174,55 @@ definitions:
           type: string
         type: array
     type: object
-  dto.MerchantBrief:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_order_service.CreateOrderInput:
     properties:
-      category:
-        type: string
-      id:
+      coupon_id:
         type: integer
-      name:
-        type: string
-    type: object
-  dto.NotificationSettings:
-    properties:
-      email_enabled:
-        type: boolean
-      push_enabled:
-        type: boolean
-    type: object
-  dto.PostItem:
-    properties:
-      content:
-        type: string
-      created_at:
-        type: string
-      id:
-        type: integer
-      images:
-        items:
-          type: string
-        type: array
-      is_liked:
-        type: boolean
-      like_count:
-        type: integer
-      merchant:
-        $ref: '#/definitions/dto.MerchantBrief'
-      tags:
-        items:
-          type: string
-        type: array
-      title:
-        type: string
-      view_count:
+      quantity:
         type: integer
     type: object
-  dto.PostListResponse:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_payment_service.CreatePaymentRequest:
     properties:
-      cursor:
-        type: integer
-      posts:
-        items:
-          $ref: '#/definitions/dto.PostItem'
-        type: array
-      total:
-        type: integer
+      amount:
+        type: number
+      currency:
+        type: string
+      status:
+        type: string
     type: object
-  dto.PrivacySettings:
-    properties:
-      is_public:
-        type: boolean
-    type: object
-  dto.ProfileResponse:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_profile_service.PublicProfileResponse:
     properties:
       avatar_url:
         type: string
+      follower_count:
+        type: integer
+      following_count:
+        type: integer
       intro:
         type: string
+      is_following:
+        type: boolean
+      like_count:
+        type: integer
       location:
         type: string
       nickname:
         type: string
+      post_count:
+        type: integer
+      review_count:
+        type: integer
       user_id:
         type: integer
     type: object
-  dto.Review:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.CommentRequest:
+    properties:
+      text:
+        type: string
+    required:
+    - text
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.Review:
     properties:
       businessImage:
         type: string
@@ -278,51 +259,201 @@ definitions:
       visitDate:
         type: string
     type: object
-  dto.ReviewItem:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.CreateStoreRequest:
     properties:
-      avg_cost:
-        type: integer
-      content:
+      address:
+        maxLength: 255
         type: string
-      created_at:
+      category_ids:
+        items:
+          type: integer
+        type: array
+      city:
+        maxLength: 100
         type: string
-      id:
-        type: integer
+      country:
+        maxLength: 50
+        type: string
+      cover_image_url:
+        maxLength: 255
+        type: string
+      description:
+        maxLength: 2000
+        type: string
+      hours:
+        items:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.StoreHourRequest'
+        type: array
       images:
         items:
           type: string
         type: array
-      is_liked:
-        type: boolean
-      like_count:
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        maxLength: 255
+        type: string
+      phone:
+        maxLength: 50
+        type: string
+      state:
+        maxLength: 100
+        type: string
+      website:
+        maxLength: 255
+        type: string
+      zip_code:
+        maxLength: 20
+        type: string
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.StoreHourRequest:
+    properties:
+      close_time:
+        maxLength: 10
+        type: string
+      day_of_week:
         type: integer
-      merchant:
-        $ref: '#/definitions/dto.MerchantBrief'
-      rating:
-        type: number
-      rating_env:
-        type: number
-      rating_service:
-        type: number
-      rating_value:
-        type: number
-      tags:
+      is_closed:
+        type: boolean
+      open_time:
+        maxLength: 10
+        type: string
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.UpdateStoreRequest:
+    properties:
+      address:
+        maxLength: 255
+        type: string
+      category_ids:
+        items:
+          type: integer
+        type: array
+      city:
+        maxLength: 100
+        type: string
+      country:
+        maxLength: 50
+        type: string
+      cover_image_url:
+        maxLength: 255
+        type: string
+      description:
+        maxLength: 2000
+        type: string
+      hours:
+        items:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.StoreHourRequest'
+        type: array
+      images:
         items:
           type: string
         type: array
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        maxLength: 255
+        type: string
+      phone:
+        maxLength: 50
+        type: string
+      state:
+        maxLength: 100
+        type: string
+      website:
+        maxLength: 255
+        type: string
+      zip_code:
+        maxLength: 20
+        type: string
     type: object
-  dto.ReviewListResponse:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem:
     properties:
-      cursor:
+      address:
+        type: string
+      city:
+        type: string
+      district:
+        type: string
+      id:
         type: integer
-      reviews:
+      is_default:
+        type: boolean
+      name:
+        type: string
+      phone:
+        type: string
+      postal_code:
+        type: string
+      province:
+        type: string
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressListResponse:
+    properties:
+      addresses:
         items:
-          $ref: '#/definitions/dto.ReviewItem'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem'
         type: array
-      total:
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.CreateAddressRequest:
+    properties:
+      address:
+        maxLength: 255
+        type: string
+      city:
+        maxLength: 50
+        type: string
+      district:
+        maxLength: 50
+        type: string
+      is_default:
+        type: boolean
+      name:
+        maxLength: 50
+        type: string
+      phone:
+        maxLength: 20
+        type: string
+      postal_code:
+        maxLength: 20
+        type: string
+      province:
+        maxLength: 50
+        type: string
+    required:
+    - address
+    - name
+    - phone
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.NotificationSettings:
+    properties:
+      email_enabled:
+        type: boolean
+      push_enabled:
+        type: boolean
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.PrivacySettings:
+    properties:
+      is_public:
+        type: boolean
+    type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.ProfileResponse:
+    properties:
+      avatar_url:
+        type: string
+      intro:
+        type: string
+      location:
+        type: string
+      nickname:
+        type: string
+      user_id:
         type: integer
     type: object
-  dto.UpdateAddressRequest:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateAddressRequest:
     properties:
       address:
         type: string
@@ -341,7 +472,7 @@ definitions:
       province:
         type: string
     type: object
-  dto.UpdateProfileRequest:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateProfileRequest:
     properties:
       avatar_url:
         type: string
@@ -352,23 +483,7 @@ definitions:
       nickname:
         type: string
     type: object
-  handler.InitiatePaymentRequest:
-    properties:
-      userId:
-        type: string
-    required:
-    - userId
-    type: object
-  service.CreatePaymentRequest:
-    properties:
-      amount:
-        type: number
-      currency:
-        type: string
-      status:
-        type: string
-    type: object
-  service.CreateVoucherRequest:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_voucher_service.CreateVoucherRequest:
     properties:
       code:
         type: string
@@ -377,53 +492,7 @@ definitions:
       userId:
         type: string
     type: object
-  service.FileRequest:
-    properties:
-      content_type:
-        type: string
-      filename:
-        type: string
-    type: object
-  service.PresignedURLRequest:
-    properties:
-      files:
-        items:
-          $ref: '#/definitions/service.FileRequest'
-        type: array
-    type: object
-  service.PresignedURLResponse:
-    properties:
-      uploads:
-        items:
-          $ref: '#/definitions/service.UploadInfo'
-        type: array
-    type: object
-  service.PublicProfileResponse:
-    properties:
-      avatar_url:
-        type: string
-      follower_count:
-        type: integer
-      following_count:
-        type: integer
-      intro:
-        type: string
-      is_following:
-        type: boolean
-      like_count:
-        type: integer
-      location:
-        type: string
-      nickname:
-        type: string
-      post_count:
-        type: integer
-      review_count:
-        type: integer
-      user_id:
-        type: integer
-    type: object
-  service.SuggestionsRequest:
+  internal_domain_ai_handler.SuggestionsRequest:
     properties:
       businessCategory:
         type: string
@@ -434,23 +503,125 @@ definitions:
       overallRating:
         type: number
     type: object
-  service.SuggestionsResponse:
+  internal_domain_ai_handler.SuggestionsResponse:
     properties:
       suggestions:
         items:
           type: string
         type: array
     type: object
-  service.UploadInfo:
+  internal_domain_auth.ForgotPasswordRequest:
     properties:
-      expires_at:
+      email:
         type: string
-      file_url:
+    required:
+    - email
+    type: object
+  internal_domain_auth.LoginRequest:
+    properties:
+      email:
         type: string
-      id:
+      password:
         type: string
-      upload_url:
+    required:
+    - email
+    - password
+    type: object
+  internal_domain_auth.LoginResponse:
+    properties:
+      access_token:
         type: string
+      refresh_token:
+        type: string
+      token:
+        type: string
+      type:
+        type: string
+    type: object
+  internal_domain_auth.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  internal_domain_auth.RefreshResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      type:
+        type: string
+    type: object
+  internal_domain_auth.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  internal_domain_auth.RegisterResponse:
+    properties:
+      message:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  internal_domain_auth.UserInfoResponse:
+    properties:
+      email: {}
+      message:
+        type: string
+      role: {}
+      user_id: {}
+    type: object
+  internal_domain_coupon_handler.CreateStoreCouponRequest:
+    properties:
+      description:
+        type: string
+      max_per_user:
+        type: integer
+      price:
+        type: number
+      status:
+        type: string
+      terms:
+        type: string
+      title:
+        type: string
+      total_quantity:
+        type: integer
+      type:
+        type: string
+      valid_from:
+        type: string
+      valid_until:
+        type: string
+    required:
+    - max_per_user
+    - title
+    - total_quantity
+    - type
+    type: object
+  internal_domain_coupon_handler.InitiatePaymentRequest:
+    properties:
+      userId:
+        type: string
+    required:
+    - userId
+    type: object
+  internal_domain_coupon_handler.ValidateCouponRequest:
+    properties:
+      quantity:
+        type: integer
     type: object
 host: localhost:8080
 info:
@@ -573,14 +744,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/service.SuggestionsRequest'
+          $ref: '#/definitions/internal_domain_ai_handler.SuggestionsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.SuggestionsResponse'
+            $ref: '#/definitions/internal_domain_ai_handler.SuggestionsResponse'
         "400":
           description: Bad Request
           schema:
@@ -635,7 +806,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/auth.ForgotPasswordRequest'
+          $ref: '#/definitions/internal_domain_auth.ForgotPasswordRequest'
       produces:
       - application/json
       responses:
@@ -665,14 +836,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/auth.LoginRequest'
+          $ref: '#/definitions/internal_domain_auth.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.LoginResponse'
+            $ref: '#/definitions/internal_domain_auth.LoginResponse'
         "400":
           description: Bad Request
           schema:
@@ -706,7 +877,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.UserInfoResponse'
+            $ref: '#/definitions/internal_domain_auth.UserInfoResponse'
         "401":
           description: Unauthorized
           schema:
@@ -716,6 +887,40 @@ paths:
       security:
       - BearerAuth: []
       summary: Get current user info
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Rotates refresh token and returns a new access token pair
+      parameters:
+      - description: Refresh Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_auth.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_auth.RefreshResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Refresh access token
       tags:
       - auth
   /auth/register:
@@ -729,14 +934,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/auth.RegisterRequest'
+          $ref: '#/definitions/internal_domain_auth.RegisterRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/auth.RegisterResponse'
+            $ref: '#/definitions/internal_domain_auth.RegisterResponse'
         "400":
           description: Bad Request
           schema:
@@ -929,7 +1134,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.InitiatePaymentRequest'
+          $ref: '#/definitions/internal_domain_coupon_handler.InitiatePaymentRequest'
       produces:
       - application/json
       responses:
@@ -983,6 +1188,8 @@ paths:
       - coupon
   /coupons/{id}/validate:
     post:
+      consumes:
+      - application/json
       description: Validates a coupon by ID
       parameters:
       - description: Coupon ID
@@ -990,14 +1197,18 @@ paths:
         name: id
         required: true
         type: integer
+      - description: Validate coupon request
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/internal_domain_coupon_handler.ValidateCouponRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
         "400":
           description: Bad Request
@@ -1084,14 +1295,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/service.PresignedURLRequest'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.PresignedURLResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLResponse'
         "400":
           description: Bad Request
           schema:
@@ -1140,38 +1351,8 @@ paths:
       tags:
       - media
   /merchant/stores:
-    post:
-      consumes:
-      - application/json
-      description: Creates a new store for the authenticated merchant
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Create a store
-      tags:
-      - store
-  /merchant/stores/{id}:
-    patch:
-      consumes:
-      - application/json
-      description: Updates a store for the authenticated merchant
-      parameters:
-      - description: Store ID
-        in: path
-        name: id
-        required: true
-        type: integer
+    get:
+      description: Returns stores owned by the authenticated merchant user
       produces:
       - application/json
       responses:
@@ -1186,7 +1367,275 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List current merchant stores
+      tags:
+      - store
+    post:
+      consumes:
+      - application/json
+      description: Creates a new store for the authenticated merchant
+      parameters:
+      - description: Create store request
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.CreateStoreRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a store
+      tags:
+      - store
+  /merchant/stores/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Updates a store for the authenticated merchant
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update store request
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.UpdateStoreRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
       summary: Update a store
+      tags:
+      - store
+  /merchant/stores/{id}/activate:
+    post:
+      description: Marks a merchant-owned store as published
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Activate a store
+      tags:
+      - store
+  /merchant/stores/{id}/coupons:
+    post:
+      consumes:
+      - application/json
+      description: Creates a store-scoped coupon for an owned published store
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Create store coupon request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_coupon_handler.CreateStoreCouponRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create store coupon
+      tags:
+      - coupon
+  /merchant/stores/{id}/deactivate:
+    post:
+      description: Marks a merchant-owned store as hidden
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Deactivate a store
       tags:
       - store
   /merchant/verification:
@@ -1230,6 +1679,53 @@ paths:
       summary: Submit merchant verification
       tags:
       - verification
+  /merchant/vouchers/{id}/redeem:
+    post:
+      description: Redeems a voucher for merchant-owned store operations
+      parameters:
+      - description: Voucher ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Redeem voucher by merchant owner
+      tags:
+      - voucher
   /merchants:
     get:
       description: Returns merchants, optionally filtered by category
@@ -1270,7 +1766,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.Merchant'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_merchant_dto.Merchant'
         "400":
           description: Bad Request
           schema:
@@ -1474,6 +1970,12 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: List orders
       tags:
       - order
@@ -1481,6 +1983,13 @@ paths:
       consumes:
       - application/json
       description: Creates a new order for the authenticated user
+      parameters:
+      - description: Create order request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_order_service.CreateOrderInput'
       produces:
       - application/json
       responses:
@@ -1488,6 +1997,12 @@ paths:
           description: Created
           schema:
             additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "401":
           description: Unauthorized
@@ -1521,6 +2036,12 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "404":
           description: Not Found
           schema:
@@ -1528,6 +2049,50 @@ paths:
               type: string
             type: object
       summary: Get order detail
+      tags:
+      - order
+  /orders/{id}/pay:
+    post:
+      description: Simulates payment success for an order and issues vouchers
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Pay order
       tags:
       - order
   /packages:
@@ -1581,7 +2146,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/service.CreatePaymentRequest'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_payment_service.CreatePaymentRequest'
       produces:
       - application/json
       responses:
@@ -1679,14 +2244,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.Review'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.Review'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.Review'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.Review'
         "400":
           description: Bad Request
           schema:
@@ -1695,6 +2260,18 @@ paths:
             type: object
         "401":
           description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
           schema:
             additionalProperties:
               type: string
@@ -1717,7 +2294,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.Review'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.Review'
         "400":
           description: Bad Request
           schema:
@@ -1749,7 +2326,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.CommentRequest'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.CommentRequest'
       produces:
       - application/json
       responses:
@@ -1810,6 +2387,35 @@ paths:
   /stores:
     get:
       description: Returns a list of stores
+      parameters:
+      - description: Category name or ID
+        in: query
+        name: category
+        type: string
+      - description: Latitude
+        in: query
+        name: lat
+        type: number
+      - description: Longitude
+        in: query
+        name: lng
+        type: number
+      - description: Minimum average rating
+        in: query
+        name: rating
+        type: number
+      - description: Search radius in KM (default 20)
+        in: query
+        name: radius_km
+        type: number
+      - description: Cursor for pagination (store id)
+        in: query
+        name: cursor
+        type: integer
+      - description: Page size (max 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -1817,6 +2423,18 @@ paths:
           description: OK
           schema:
             additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
             type: object
       summary: List stores
       tags:
@@ -1838,6 +2456,12 @@ paths:
           schema:
             additionalProperties: true
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "404":
           description: Not Found
           schema:
@@ -1847,6 +2471,32 @@ paths:
       summary: Get store detail
       tags:
       - store
+  /stores/{id}/coupons:
+    get:
+      description: Lists published active coupons under a store
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List store coupons
+      tags:
+      - coupon
   /stores/{id}/hours:
     get:
       description: Returns operating hours for a store
@@ -1864,6 +2514,18 @@ paths:
           schema:
             additionalProperties: true
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Get store hours
       tags:
       - store
@@ -1876,6 +2538,14 @@ paths:
         name: id
         required: true
         type: integer
+      - description: Cursor for pagination (review id)
+        in: query
+        name: cursor
+        type: integer
+      - description: Page size (max 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -1883,6 +2553,18 @@ paths:
           description: OK
           schema:
             additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
             type: object
       summary: Get store reviews
       tags:
@@ -1954,7 +2636,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.AddressListResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressListResponse'
         "401":
           description: Unauthorized
           schema:
@@ -1980,14 +2662,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateAddressRequest'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.CreateAddressRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.AddressItem'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem'
         "400":
           description: Bad Request
           schema:
@@ -2057,7 +2739,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateAddressRequest'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateAddressRequest'
       produces:
       - application/json
       responses:
@@ -2149,7 +2831,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.FavoriteListResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteListResponse'
         "401":
           description: Unauthorized
           schema:
@@ -2314,7 +2996,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.NotificationSettings'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.NotificationSettings'
         "401":
           description: Unauthorized
           schema:
@@ -2340,7 +3022,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.NotificationSettings'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.NotificationSettings'
       produces:
       - application/json
       responses:
@@ -2389,7 +3071,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PostListResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostListResponse'
         "401":
           description: Unauthorized
           schema:
@@ -2414,7 +3096,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PrivacySettings'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.PrivacySettings'
         "401":
           description: Unauthorized
           schema:
@@ -2440,7 +3122,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.PrivacySettings'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.PrivacySettings'
       produces:
       - application/json
       responses:
@@ -2480,7 +3162,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.ProfileResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.ProfileResponse'
         "401":
           description: Unauthorized
           schema:
@@ -2506,7 +3188,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateProfileRequest'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateProfileRequest'
       produces:
       - application/json
       responses:
@@ -2555,7 +3237,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.ReviewListResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewListResponse'
         "401":
           description: Unauthorized
           schema:
@@ -2586,7 +3268,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.PublicProfileResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_profile_service.PublicProfileResponse'
         "400":
           description: Bad Request
           schema:
@@ -2702,7 +3384,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PostListResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostListResponse'
         "400":
           description: Bad Request
           schema:
@@ -2741,7 +3423,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.ReviewListResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewListResponse'
         "400":
           description: Bad Request
           schema:
@@ -2793,7 +3475,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/service.CreateVoucherRequest'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_voucher_service.CreateVoucherRequest'
       produces:
       - application/json
       responses:

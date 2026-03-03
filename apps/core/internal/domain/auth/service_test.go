@@ -7,6 +7,7 @@ import (
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/testutil"
+	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/token"
 )
 
 var testJWTConfig = config.JWTConfig{
@@ -86,12 +87,15 @@ func TestLogin(t *testing.T) {
 		t.Fatalf("Failed to verify email: %v", err)
 	}
 
-	token, err := authService.Login(ctx, email, password, "127.0.0.1")
+	tokens, err := authService.Login(ctx, email, password, "127.0.0.1")
 	if err != nil {
 		t.Errorf("Login failed: %v", err)
 	}
-	if token == "" {
-		t.Error("Expected JWT token, got empty string")
+	if tokens.AccessToken == "" {
+		t.Error("Expected JWT access token, got empty string")
+	}
+	if tokens.RefreshToken == "" {
+		t.Error("Expected refresh token, got empty string")
 	}
 
 	_, err = authService.Login(ctx, email, "wrongpass", "127.0.0.1")
@@ -198,5 +202,142 @@ func TestSettingsAndAddressModels(t *testing.T) {
 	address := model.UserAddress{UserID: user.ID, Name: "A", Phone: "1", Address: "Street"}
 	if err := db.Create(&address).Error; err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestLoginReturnsTokenPairAndPersistsRefreshToken(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	authService := NewService(db, testJWTConfig, testSMTPConfig)
+
+	ctx := context.Background()
+	email := "pair@example.com"
+	password := "securepass"
+	username := "pairuser"
+	baseURL := "http://localhost"
+
+	user, err := authService.Register(ctx, username, email, password, baseURL)
+	if err != nil {
+		t.Fatalf("Failed to create user: %v", err)
+	}
+
+	var verification model.EmailVerification
+	if err := db.Where("user_id = ?", user.ID).First(&verification).Error; err != nil {
+		t.Fatalf("Failed to find verification record: %v", err)
+	}
+	if err := authService.VerifyEmail(ctx, verification.Token); err != nil {
+		t.Fatalf("Failed to verify email: %v", err)
+	}
+
+	tokens, err := authService.Login(ctx, email, password, "127.0.0.1")
+	if err != nil {
+		t.Fatalf("Login failed: %v", err)
+	}
+	if tokens.AccessToken == "" {
+		t.Fatal("expected access token")
+	}
+	if tokens.RefreshToken == "" {
+		t.Fatal("expected refresh token")
+	}
+
+	var refresh model.RefreshToken
+	if err := db.Where("user_id = ? AND revoked_at IS NULL", user.ID).First(&refresh).Error; err != nil {
+		t.Fatalf("expected persisted refresh token record: %v", err)
+	}
+	if refresh.TokenHash != token.HashToken(tokens.RefreshToken) {
+		t.Fatal("expected persisted refresh token hash to match returned token")
+	}
+}
+
+func TestRefreshAccessTokenRotatesRefreshToken(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	authService := NewService(db, testJWTConfig, testSMTPConfig)
+
+	ctx := context.Background()
+	email := "rotate@example.com"
+	password := "securepass"
+	username := "rotateuser"
+	baseURL := "http://localhost"
+
+	user, err := authService.Register(ctx, username, email, password, baseURL)
+	if err != nil {
+		t.Fatalf("Failed to create user: %v", err)
+	}
+
+	var verification model.EmailVerification
+	if err := db.Where("user_id = ?", user.ID).First(&verification).Error; err != nil {
+		t.Fatalf("Failed to find verification record: %v", err)
+	}
+	if err := authService.VerifyEmail(ctx, verification.Token); err != nil {
+		t.Fatalf("Failed to verify email: %v", err)
+	}
+
+	initialTokens, err := authService.Login(ctx, email, password, "127.0.0.1")
+	if err != nil {
+		t.Fatalf("Login failed: %v", err)
+	}
+
+	refreshedTokens, err := authService.RefreshAccessToken(ctx, initialTokens.RefreshToken)
+	if err != nil {
+		t.Fatalf("RefreshAccessToken failed: %v", err)
+	}
+	if refreshedTokens.AccessToken == "" {
+		t.Fatal("expected access token")
+	}
+	if refreshedTokens.RefreshToken == "" {
+		t.Fatal("expected refresh token")
+	}
+	if refreshedTokens.RefreshToken == initialTokens.RefreshToken {
+		t.Fatal("expected refresh token to rotate")
+	}
+
+	var oldRefresh model.RefreshToken
+	oldHash := token.HashToken(initialTokens.RefreshToken)
+	if err := db.Where("token_hash = ?", oldHash).First(&oldRefresh).Error; err != nil {
+		t.Fatalf("expected old refresh token row: %v", err)
+	}
+	if oldRefresh.RevokedAt == nil {
+		t.Fatal("expected old refresh token to be revoked")
+	}
+
+	var newRefresh model.RefreshToken
+	newHash := token.HashToken(refreshedTokens.RefreshToken)
+	if err := db.Where("token_hash = ? AND revoked_at IS NULL", newHash).First(&newRefresh).Error; err != nil {
+		t.Fatalf("expected new active refresh token row: %v", err)
+	}
+}
+
+func TestRefreshAccessTokenRejectsRevokedToken(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	authService := NewService(db, testJWTConfig, testSMTPConfig)
+
+	ctx := context.Background()
+	email := "revoked@example.com"
+	password := "securepass"
+	username := "revokeduser"
+	baseURL := "http://localhost"
+
+	user, err := authService.Register(ctx, username, email, password, baseURL)
+	if err != nil {
+		t.Fatalf("Failed to create user: %v", err)
+	}
+
+	var verification model.EmailVerification
+	if err := db.Where("user_id = ?", user.ID).First(&verification).Error; err != nil {
+		t.Fatalf("Failed to find verification record: %v", err)
+	}
+	if err := authService.VerifyEmail(ctx, verification.Token); err != nil {
+		t.Fatalf("Failed to verify email: %v", err)
+	}
+
+	initialTokens, err := authService.Login(ctx, email, password, "127.0.0.1")
+	if err != nil {
+		t.Fatalf("Login failed: %v", err)
+	}
+
+	if _, err := authService.RefreshAccessToken(ctx, initialTokens.RefreshToken); err != nil {
+		t.Fatalf("first refresh should succeed: %v", err)
+	}
+	if _, err := authService.RefreshAccessToken(ctx, initialTokens.RefreshToken); err == nil {
+		t.Fatal("expected old refresh token to be rejected after rotation")
 	}
 }

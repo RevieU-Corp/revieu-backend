@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/router"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/logger"
@@ -66,62 +65,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Auto migrate database schema
-	if err := database.DB.AutoMigrate(
-		// User system
-		&model.User{},
-		&model.UserAuth{},
-		&model.UserProfile{},
-		&model.EmailVerification{},
-		// Social
-		&model.UserFollow{},
-		&model.MerchantFollow{},
-		&model.Like{},
-		&model.Favorite{},
-		// User settings
-		&model.UserAddress{},
-		&model.UserPrivacy{},
-		&model.UserNotification{},
-		&model.AccountDeletion{},
-		// Merchant & Store
-		&model.Merchant{},
-		&model.Category{},
-		&model.StoreCategory{},
-		&model.Store{},
-		&model.StoreHour{},
-		// Tags
-		&model.Tag{},
-		// Content
-		&model.Review{},
-		&model.ReviewMedia{},
-		&model.ReviewComment{},
-		&model.Post{},
-		&model.PostComment{},
-		// Commerce
-		&model.Package{},
-		&model.Coupon{},
-		&model.Order{},
-		&model.Voucher{},
-		&model.Payment{},
-		// Media
-		&model.MediaUpload{},
-		// Messaging
-		&model.Conversation{},
-		&model.ConversationParticipant{},
-		&model.Message{},
-		// Merchant verification
-		&model.MerchantVerification{},
-		// Marketing & Analytics
-		&model.MarketingPost{},
-		&model.MerchantAnalytics{},
-		// Notifications
-		&model.Notification{},
-		// Reports & Admin
-		&model.Report{},
-		&model.AdminAuditLog{},
-		// Browsing History
-		&model.BrowsingHistory{},
-	); err != nil {
+	if !cfg.Database.AutoMigrate {
+		logger.Info(ctx, "Database AutoMigrate is disabled; run SQL migrations before starting the service")
+	}
+
+	if err := runAutoMigrate(database.DB, cfg.Database.AutoMigrate); err != nil {
 		logger.Error(ctx, "Failed to migrate database", "error", err.Error())
 		os.Exit(1)
 	}

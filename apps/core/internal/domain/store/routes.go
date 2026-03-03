@@ -23,7 +23,10 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 
 	merchantStores := r.Group("/merchant/stores", middleware.JWTAuth(cfg.JWT))
 	{
+		merchantStores.GET("", h.ListMine)
 		merchantStores.POST("", h.Create)
+		merchantStores.POST("/:id/activate", h.Activate)
+		merchantStores.POST("/:id/deactivate", h.Deactivate)
 		merchantStores.PATCH("/:id", h.Update)
 	}
 }

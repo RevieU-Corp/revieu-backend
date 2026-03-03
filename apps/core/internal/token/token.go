@@ -1,6 +1,9 @@
 package token
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -11,15 +14,17 @@ import (
 
 // Service issues and validates JWTs.
 type Service struct {
-	secret     []byte
-	expireHour int
+	secret            []byte
+	expireHour        int
+	refreshExpireHour int
 }
 
 // New creates a JWT service.
 func New(cfg config.JWTConfig) *Service {
 	return &Service{
-		secret:     []byte(cfg.Secret),
-		expireHour: cfg.ExpireHour,
+		secret:            []byte(cfg.Secret),
+		expireHour:        cfg.ExpireHour,
+		refreshExpireHour: cfg.RefreshExpireHour,
 	}
 }
 
@@ -54,4 +59,30 @@ func (s *Service) ValidateToken(tokenString string) (jwt.MapClaims, error) {
 	}
 
 	return nil, fmt.Errorf("invalid token")
+}
+
+// HashToken returns a deterministic hash representation of a token.
+func HashToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
+}
+
+// GenerateRefreshToken creates a random token and its hash for DB persistence.
+func (s *Service) GenerateRefreshToken() (string, string, error) {
+	raw := make([]byte, 32)
+	if _, err := rand.Read(raw); err != nil {
+		return "", "", err
+	}
+
+	token := hex.EncodeToString(raw)
+	return token, HashToken(token), nil
+}
+
+// RefreshTokenTTL returns configured refresh token time-to-live.
+func (s *Service) RefreshTokenTTL() time.Duration {
+	hours := s.refreshExpireHour
+	if hours <= 0 {
+		hours = 24 * 7
+	}
+	return time.Hour * time.Duration(hours)
 }

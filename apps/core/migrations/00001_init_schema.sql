@@ -1,55 +1,9 @@
+-- +goose Up
+
 -- =============================================
 -- RevieU Database Initialization Script (v2)
--- Platform: PostgreSQL 14+ with PostGIS
--- NOTE: Legacy bootstrap script. Use apps/core/migrations with Goose as source of truth.
+-- Platform: PostgreSQL 14+
 -- =============================================
-
--- 1. Extensions
-CREATE EXTENSION IF NOT EXISTS postgis;
-
--- 2. Drop all tables (dev only)
-DROP TABLE IF EXISTS browsing_histories CASCADE;
-DROP TABLE IF EXISTS admin_audit_logs CASCADE;
-DROP TABLE IF EXISTS reports CASCADE;
-DROP TABLE IF EXISTS notifications CASCADE;
-DROP TABLE IF EXISTS merchant_analytics CASCADE;
-DROP TABLE IF EXISTS marketing_posts CASCADE;
-DROP TABLE IF EXISTS messages CASCADE;
-DROP TABLE IF EXISTS conversation_participants CASCADE;
-DROP TABLE IF EXISTS conversations CASCADE;
-DROP TABLE IF EXISTS merchant_verifications CASCADE;
-DROP TABLE IF EXISTS review_votes CASCADE;
-DROP TABLE IF EXISTS review_comments CASCADE;
-DROP TABLE IF EXISTS review_media CASCADE;
-DROP TABLE IF EXISTS post_comments CASCADE;
-DROP TABLE IF EXISTS review_tags CASCADE;
-DROP TABLE IF EXISTS post_tags CASCADE;
-DROP TABLE IF EXISTS reviews CASCADE;
-DROP TABLE IF EXISTS posts CASCADE;
-DROP TABLE IF EXISTS tags CASCADE;
-DROP TABLE IF EXISTS vouchers CASCADE;
-DROP TABLE IF EXISTS payments CASCADE;
-DROP TABLE IF EXISTS orders CASCADE;
-DROP TABLE IF EXISTS coupons CASCADE;
-DROP TABLE IF EXISTS packages CASCADE;
-DROP TABLE IF EXISTS store_categories CASCADE;
-DROP TABLE IF EXISTS store_hours CASCADE;
-DROP TABLE IF EXISTS stores CASCADE;
-DROP TABLE IF EXISTS categories CASCADE;
-DROP TABLE IF EXISTS merchants CASCADE;
-DROP TABLE IF EXISTS media_uploads CASCADE;
-DROP TABLE IF EXISTS account_deletions CASCADE;
-DROP TABLE IF EXISTS user_notifications CASCADE;
-DROP TABLE IF EXISTS user_privacies CASCADE;
-DROP TABLE IF EXISTS user_addresses CASCADE;
-DROP TABLE IF EXISTS favorites CASCADE;
-DROP TABLE IF EXISTS likes CASCADE;
-DROP TABLE IF EXISTS merchant_follows CASCADE;
-DROP TABLE IF EXISTS user_follows CASCADE;
-DROP TABLE IF EXISTS email_verifications CASCADE;
-DROP TABLE IF EXISTS user_profiles CASCADE;
-DROP TABLE IF EXISTS user_auths CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
 
 -- =============================================
 -- A. User System
@@ -94,6 +48,17 @@ CREATE TABLE email_verifications (
     token VARCHAR(255) NOT NULL UNIQUE,
     expires_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE refresh_tokens (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash CHAR(64) NOT NULL UNIQUE,
+    expires_at TIMESTAMPTZ NOT NULL,
+    revoked_at TIMESTAMPTZ,
+    last_used_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- =============================================
@@ -141,12 +106,13 @@ CREATE TABLE favorites (
 CREATE TABLE user_addresses (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    label VARCHAR(50),
-    address_line VARCHAR(255) NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    province VARCHAR(50),
     city VARCHAR(100),
-    state VARCHAR(100),
-    zip_code VARCHAR(20),
-    country VARCHAR(50),
+    district VARCHAR(50),
+    address VARCHAR(255) NOT NULL,
+    postal_code VARCHAR(20),
     is_default BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -224,7 +190,6 @@ CREATE TABLE stores (
     website VARCHAR(255),
     latitude DOUBLE PRECISION,
     longitude DOUBLE PRECISION,
-    location GEOGRAPHY(POINT, 4326),
     cover_image_url VARCHAR(255),
     images JSONB DEFAULT '[]',
     avg_rating DECIMAL(3, 2) DEFAULT 0.00,
@@ -234,6 +199,10 @@ CREATE TABLE stores (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE merchant_follows
+    ADD CONSTRAINT fk_merchant_follows_merchant
+    FOREIGN KEY (merchant_id) REFERENCES merchants(id) ON DELETE CASCADE;
 
 CREATE TABLE store_categories (
     store_id BIGINT REFERENCES stores(id) ON DELETE CASCADE,
@@ -640,12 +609,14 @@ CREATE TABLE browsing_histories (
 -- Users
 CREATE INDEX idx_email_verifications_token ON email_verifications(token);
 CREATE INDEX idx_email_verifications_user ON email_verifications(user_id);
+CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
+CREATE INDEX idx_refresh_tokens_expires ON refresh_tokens(expires_at);
+CREATE INDEX idx_refresh_tokens_revoked ON refresh_tokens(revoked_at);
 CREATE INDEX idx_users_email ON user_auths(identifier) WHERE identity_type = 'email';
 CREATE INDEX idx_users_role ON users(role);
 
 -- Stores
 CREATE INDEX idx_stores_merchant ON stores(merchant_id);
-CREATE INDEX idx_stores_location ON stores USING GIST (location);
 CREATE INDEX idx_stores_name ON stores(name);
 CREATE INDEX idx_store_hours_store ON store_hours(store_id);
 CREATE INDEX idx_store_cats_store ON store_categories(store_id);
@@ -692,3 +663,49 @@ CREATE INDEX idx_analytics_merchant_date ON merchant_analytics(merchant_id, date
 
 -- Browsing History
 CREATE INDEX idx_browsing_user ON browsing_histories(user_id);
+
+-- +goose Down
+
+DROP TABLE IF EXISTS browsing_histories CASCADE;
+DROP TABLE IF EXISTS admin_audit_logs CASCADE;
+DROP TABLE IF EXISTS reports CASCADE;
+DROP TABLE IF EXISTS notifications CASCADE;
+DROP TABLE IF EXISTS merchant_analytics CASCADE;
+DROP TABLE IF EXISTS marketing_posts CASCADE;
+DROP TABLE IF EXISTS merchant_verifications CASCADE;
+DROP TABLE IF EXISTS messages CASCADE;
+DROP TABLE IF EXISTS conversation_participants CASCADE;
+DROP TABLE IF EXISTS conversations CASCADE;
+DROP TABLE IF EXISTS media_uploads CASCADE;
+DROP TABLE IF EXISTS payments CASCADE;
+DROP TABLE IF EXISTS vouchers CASCADE;
+DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS coupons CASCADE;
+DROP TABLE IF EXISTS packages CASCADE;
+DROP TABLE IF EXISTS post_comments CASCADE;
+DROP TABLE IF EXISTS post_tags CASCADE;
+DROP TABLE IF EXISTS posts CASCADE;
+DROP TABLE IF EXISTS review_votes CASCADE;
+DROP TABLE IF EXISTS review_comments CASCADE;
+DROP TABLE IF EXISTS review_media CASCADE;
+DROP TABLE IF EXISTS review_tags CASCADE;
+DROP TABLE IF EXISTS reviews CASCADE;
+DROP TABLE IF EXISTS tags CASCADE;
+DROP TABLE IF EXISTS store_hours CASCADE;
+DROP TABLE IF EXISTS store_categories CASCADE;
+DROP TABLE IF EXISTS stores CASCADE;
+DROP TABLE IF EXISTS categories CASCADE;
+DROP TABLE IF EXISTS merchant_follows CASCADE;
+DROP TABLE IF EXISTS user_follows CASCADE;
+DROP TABLE IF EXISTS likes CASCADE;
+DROP TABLE IF EXISTS favorites CASCADE;
+DROP TABLE IF EXISTS account_deletions CASCADE;
+DROP TABLE IF EXISTS user_notifications CASCADE;
+DROP TABLE IF EXISTS user_privacies CASCADE;
+DROP TABLE IF EXISTS user_addresses CASCADE;
+DROP TABLE IF EXISTS refresh_tokens CASCADE;
+DROP TABLE IF EXISTS email_verifications CASCADE;
+DROP TABLE IF EXISTS user_profiles CASCADE;
+DROP TABLE IF EXISTS user_auths CASCADE;
+DROP TABLE IF EXISTS merchants CASCADE;
+DROP TABLE IF EXISTS users CASCADE;

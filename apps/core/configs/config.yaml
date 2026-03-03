@@ -11,6 +11,7 @@ database:
   database: "revieu"
   username: "postgres"
   password: "${DB_PASSWORD}"
+  auto_migrate: false # Keep false in production; run SQL migrations separately
 
 logger:
   level: "info" # debug, info, warn, error
@@ -19,6 +20,7 @@ logger:
 jwt:
   secret: "${JWT_SECRET}" # Set via environment variable
   expire_hour: 24
+  refresh_expire_hour: 168
 
 oauth:
   google:

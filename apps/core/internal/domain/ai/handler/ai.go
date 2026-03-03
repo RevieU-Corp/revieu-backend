@@ -11,6 +11,12 @@ type AIHandler struct {
 	svc *service.AIService
 }
 
+// SuggestionsRequest is a local alias for Swagger schema generation.
+type SuggestionsRequest = service.SuggestionsRequest
+
+// SuggestionsResponse is a local alias for Swagger schema generation.
+type SuggestionsResponse = service.SuggestionsResponse
+
 func NewAIHandler(svc *service.AIService) *AIHandler {
 	return &AIHandler{svc: svc}
 }
@@ -21,8 +27,8 @@ func NewAIHandler(svc *service.AIService) *AIHandler {
 // @Tags ai
 // @Accept json
 // @Produce json
-// @Param request body service.SuggestionsRequest true "Suggestions request"
-// @Success 200 {object} service.SuggestionsResponse
+// @Param request body SuggestionsRequest true "Suggestions request"
+// @Success 200 {object} SuggestionsResponse
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Router /ai/reviews/suggestions [post]

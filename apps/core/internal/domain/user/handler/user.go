@@ -445,10 +445,6 @@ func (h *UserHandler) RequestAccountDeletion(c *gin.Context) {
 	c.JSON(http.StatusAccepted, gin.H{"status": "deletion_scheduled"})
 }
 
-func parseIDParam(c *gin.Context, name string) (int64, error) {
-	return strconv.ParseInt(c.Param(name), 10, 64)
-}
-
 func parseCursorLimit(c *gin.Context) (*int64, int) {
 	limit := 20
 	if v := c.Query("limit"); v != "" {

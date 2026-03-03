@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -49,6 +50,8 @@ func (h *ReviewHandler) ListMyReviews(c *gin.Context) {
 // @Success 201 {object} dto.Review
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 422 {object} map[string]string
 // @Router /reviews [post]
 func (h *ReviewHandler) Create(c *gin.Context) {
 	userID := c.GetInt64("user_id")
@@ -59,7 +62,14 @@ func (h *ReviewHandler) Create(c *gin.Context) {
 	}
 	created, err := h.svc.Create(c.Request.Context(), userID, req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		switch {
+		case errors.Is(err, service.ErrMerchantNotFound), errors.Is(err, service.ErrStoreNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		case errors.Is(err, service.ErrStoreMerchantMismatch):
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		default:
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
 		return
 	}
 	c.JSON(http.StatusCreated, dto.FromModel(created))

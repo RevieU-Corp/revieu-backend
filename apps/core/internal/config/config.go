@@ -52,8 +52,9 @@ type GoogleOAuthConfig struct {
 
 // JWTConfig holds JWT configuration
 type JWTConfig struct {
-	Secret     string `yaml:"secret"`
-	ExpireHour int    `yaml:"expire_hour"`
+	Secret            string `yaml:"secret"`
+	ExpireHour        int    `yaml:"expire_hour"`
+	RefreshExpireHour int    `yaml:"refresh_expire_hour"`
 }
 
 // ServerConfig holds server configuration
@@ -72,6 +73,8 @@ type DatabaseConfig struct {
 	Database string `yaml:"database"`
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
+	// AutoMigrate should stay false in production; prefer explicit SQL migrations.
+	AutoMigrate bool `yaml:"auto_migrate"`
 }
 
 // LoggerConfig holds logger configuration
@@ -153,6 +156,10 @@ func Load() (*Config, error) {
 	if strings.HasPrefix(cfg.R2.PublicURL, "${") && strings.HasSuffix(cfg.R2.PublicURL, "}") {
 		envVar := cfg.R2.PublicURL[2 : len(cfg.R2.PublicURL)-1]
 		cfg.R2.PublicURL = os.Getenv(envVar)
+	}
+
+	if strings.TrimSpace(cfg.JWT.Secret) == "" {
+		return nil, fmt.Errorf("jwt.secret is empty: set JWT_SECRET before starting server")
 	}
 
 	return &cfg, nil
