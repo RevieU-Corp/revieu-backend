@@ -17,6 +17,12 @@ type StoreService struct {
 	db *gorm.DB
 }
 
+const (
+	StoreStatusDraft     int16 = 0
+	StoreStatusPublished int16 = 1
+	StoreStatusHidden    int16 = 2
+)
+
 var ErrUserNotFound = errors.New("user not found")
 var ErrStoreNotFound = errors.New("store not found")
 var ErrStoreForbidden = errors.New("store forbidden")
@@ -83,6 +89,7 @@ func (s *StoreService) Create(ctx context.Context, userID int64, req dto.CreateS
 		Longitude:     req.Longitude,
 		CoverImageURL: req.CoverImageURL,
 		Images:        string(imagesRaw),
+		Status:        StoreStatusDraft,
 	}
 
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -113,6 +120,109 @@ func (s *StoreService) Create(ctx context.Context, userID int64, req dto.CreateS
 	}
 
 	return &store, nil
+}
+
+func (s *StoreService) ListPublished(ctx context.Context) ([]model.Store, error) {
+	var stores []model.Store
+	if err := s.db.WithContext(ctx).
+		Where("status = ?", StoreStatusPublished).
+		Order("id desc").
+		Find(&stores).Error; err != nil {
+		return nil, err
+	}
+	return stores, nil
+}
+
+func (s *StoreService) DetailPublished(ctx context.Context, storeID int64) (*model.Store, error) {
+	var store model.Store
+	if err := s.db.WithContext(ctx).
+		Preload("Hours").
+		Preload("Categories").
+		Where("id = ? AND status = ?", storeID, StoreStatusPublished).
+		First(&store).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrStoreNotFound
+		}
+		return nil, err
+	}
+	return &store, nil
+}
+
+func (s *StoreService) ReviewsPublished(ctx context.Context, storeID int64) ([]model.Review, error) {
+	if _, err := s.DetailPublished(ctx, storeID); err != nil {
+		return nil, err
+	}
+	var reviews []model.Review
+	if err := s.db.WithContext(ctx).
+		Where("store_id = ?", storeID).
+		Order("id desc").
+		Find(&reviews).Error; err != nil {
+		return nil, err
+	}
+	return reviews, nil
+}
+
+func (s *StoreService) HoursPublished(ctx context.Context, storeID int64) ([]model.StoreHour, error) {
+	if _, err := s.DetailPublished(ctx, storeID); err != nil {
+		return nil, err
+	}
+	var hours []model.StoreHour
+	if err := s.db.WithContext(ctx).
+		Where("store_id = ?", storeID).
+		Order("day_of_week asc").
+		Find(&hours).Error; err != nil {
+		return nil, err
+	}
+	return hours, nil
+}
+
+func (s *StoreService) ListMine(ctx context.Context, userID int64) ([]model.Store, error) {
+	var stores []model.Store
+	if err := s.db.WithContext(ctx).
+		Model(&model.Store{}).
+		Joins("JOIN merchants ON merchants.id = stores.merchant_id").
+		Where("merchants.user_id = ?", userID).
+		Order("stores.id desc").
+		Find(&stores).Error; err != nil {
+		return nil, err
+	}
+	return stores, nil
+}
+
+func (s *StoreService) Activate(ctx context.Context, userID, storeID int64) error {
+	return s.updateStatusOwned(ctx, userID, storeID, StoreStatusPublished)
+}
+
+func (s *StoreService) Deactivate(ctx context.Context, userID, storeID int64) error {
+	return s.updateStatusOwned(ctx, userID, storeID, StoreStatusHidden)
+}
+
+func (s *StoreService) updateStatusOwned(ctx context.Context, userID, storeID int64, toStatus int16) error {
+	var merchant model.Merchant
+	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&merchant).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrStoreForbidden
+		}
+		return err
+	}
+
+	var store model.Store
+	if err := s.db.WithContext(ctx).First(&store, storeID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrStoreNotFound
+		}
+		return err
+	}
+	if store.MerchantID != merchant.ID {
+		return ErrStoreForbidden
+	}
+	if store.Status == toStatus {
+		return nil
+	}
+	return s.db.WithContext(ctx).
+		Model(&model.Store{}).
+		Where("id = ?", storeID).
+		UpdateColumn("status", toStatus).Error
 }
 
 func (s *StoreService) Update(ctx context.Context, userID, storeID int64, req dto.UpdateStoreRequest) (*model.Store, error) {
