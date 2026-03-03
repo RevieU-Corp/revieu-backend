@@ -68,6 +68,9 @@ func TestStoreServiceCreate(t *testing.T) {
 	if store.MerchantID != merchant.ID {
 		t.Fatalf("unexpected merchant id: got %d, want %d", store.MerchantID, merchant.ID)
 	}
+	if store.Status != StoreStatusDraft {
+		t.Fatalf("unexpected store status: got %d, want %d", store.Status, StoreStatusDraft)
+	}
 	if store.Images != "[\"https://img.example/1.jpg\",\"https://img.example/2.jpg\"]" {
 		t.Fatalf("unexpected images json: %s", store.Images)
 	}
@@ -159,5 +162,162 @@ func TestStoreServiceCreateUserNotFound(t *testing.T) {
 	_, err := svc.Create(context.Background(), 9999, dto.CreateStoreRequest{Name: "Missing User"})
 	if !errors.Is(err, ErrUserNotFound) {
 		t.Fatalf("expected ErrUserNotFound, got %v", err)
+	}
+}
+
+func TestStoreServiceActivateOwnStore(t *testing.T) {
+	db := setupStoreTestDB(t)
+	svc := NewStoreService(db)
+
+	userID := int64(1001)
+	if err := db.Create(&model.User{ID: userID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &userID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Draft Store", Status: StoreStatusDraft}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	if err := svc.Activate(context.Background(), userID, store.ID); err != nil {
+		t.Fatalf("activate returned error: %v", err)
+	}
+
+	var refreshed model.Store
+	if err := db.First(&refreshed, store.ID).Error; err != nil {
+		t.Fatalf("failed to reload store: %v", err)
+	}
+	if refreshed.Status != StoreStatusPublished {
+		t.Fatalf("unexpected status after activation: got %d, want %d", refreshed.Status, StoreStatusPublished)
+	}
+}
+
+func TestStoreServiceActivateNonOwnerForbidden(t *testing.T) {
+	db := setupStoreTestDB(t)
+	svc := NewStoreService(db)
+
+	ownerID := int64(2001)
+	otherID := int64(2002)
+	for _, id := range []int64{ownerID, otherID} {
+		if err := db.Create(&model.User{ID: id, Role: "user", Status: 0}).Error; err != nil {
+			t.Fatalf("failed to create user %d: %v", id, err)
+		}
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Draft Store", Status: StoreStatusDraft}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	err := svc.Activate(context.Background(), otherID, store.ID)
+	if !errors.Is(err, ErrStoreForbidden) {
+		t.Fatalf("expected ErrStoreForbidden, got %v", err)
+	}
+}
+
+func TestStoreServiceDeactivateOwnStore(t *testing.T) {
+	db := setupStoreTestDB(t)
+	svc := NewStoreService(db)
+
+	userID := int64(3001)
+	if err := db.Create(&model.User{ID: userID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &userID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Published Store", Status: StoreStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	if err := svc.Deactivate(context.Background(), userID, store.ID); err != nil {
+		t.Fatalf("deactivate returned error: %v", err)
+	}
+
+	var refreshed model.Store
+	if err := db.First(&refreshed, store.ID).Error; err != nil {
+		t.Fatalf("failed to reload store: %v", err)
+	}
+	if refreshed.Status != StoreStatusHidden {
+		t.Fatalf("unexpected status after deactivation: got %d, want %d", refreshed.Status, StoreStatusHidden)
+	}
+}
+
+func TestStoreServiceListPublished(t *testing.T) {
+	db := setupStoreTestDB(t)
+	svc := NewStoreService(db)
+
+	merchant := model.Merchant{Name: "Demo"}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	draft := model.Store{MerchantID: merchant.ID, Name: "Draft", Status: StoreStatusDraft}
+	published := model.Store{MerchantID: merchant.ID, Name: "Published", Status: StoreStatusPublished}
+	if err := db.Create(&draft).Error; err != nil {
+		t.Fatalf("failed to create draft store: %v", err)
+	}
+	if err := db.Create(&published).Error; err != nil {
+		t.Fatalf("failed to create published store: %v", err)
+	}
+
+	stores, err := svc.ListPublished(context.Background())
+	if err != nil {
+		t.Fatalf("list published returned error: %v", err)
+	}
+	if len(stores) != 1 {
+		t.Fatalf("unexpected published stores count: got %d, want 1", len(stores))
+	}
+	if stores[0].ID != published.ID {
+		t.Fatalf("unexpected published store id: got %d, want %d", stores[0].ID, published.ID)
+	}
+}
+
+func TestStoreServiceListMine(t *testing.T) {
+	db := setupStoreTestDB(t)
+	svc := NewStoreService(db)
+
+	userID := int64(4001)
+	otherID := int64(4002)
+	for _, id := range []int64{userID, otherID} {
+		if err := db.Create(&model.User{ID: id, Role: "user", Status: 0}).Error; err != nil {
+			t.Fatalf("failed to create user %d: %v", id, err)
+		}
+	}
+
+	myMerchant := model.Merchant{Name: "Mine", UserID: &userID}
+	otherMerchant := model.Merchant{Name: "Other", UserID: &otherID}
+	if err := db.Create(&myMerchant).Error; err != nil {
+		t.Fatalf("failed to create my merchant: %v", err)
+	}
+	if err := db.Create(&otherMerchant).Error; err != nil {
+		t.Fatalf("failed to create other merchant: %v", err)
+	}
+
+	myStore := model.Store{MerchantID: myMerchant.ID, Name: "My Store", Status: StoreStatusDraft}
+	otherStore := model.Store{MerchantID: otherMerchant.ID, Name: "Other Store", Status: StoreStatusPublished}
+	if err := db.Create(&myStore).Error; err != nil {
+		t.Fatalf("failed to create my store: %v", err)
+	}
+	if err := db.Create(&otherStore).Error; err != nil {
+		t.Fatalf("failed to create other store: %v", err)
+	}
+
+	stores, err := svc.ListMine(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("list mine returned error: %v", err)
+	}
+	if len(stores) != 1 {
+		t.Fatalf("unexpected mine stores count: got %d, want 1", len(stores))
+	}
+	if stores[0].ID != myStore.ID {
+		t.Fatalf("unexpected mine store id: got %d, want %d", stores[0].ID, myStore.ID)
 	}
 }

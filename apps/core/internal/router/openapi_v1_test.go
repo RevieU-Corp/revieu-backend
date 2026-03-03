@@ -1,6 +1,7 @@
 package router
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -15,6 +16,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const testJWTSecret = "test-secret"
+
 func setupAPITest(t *testing.T) (*gin.Engine, string) {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
@@ -24,7 +27,7 @@ func setupAPITest(t *testing.T) (*gin.Engine, string) {
 
 	cfg := &config.Config{
 		Server: config.ServerConfig{APIBasePath: "/api/v1"},
-		JWT:    config.JWTConfig{Secret: "test-secret", ExpireHour: 24},
+		JWT:    config.JWTConfig{Secret: testJWTSecret, ExpireHour: 24},
 	}
 
 	r := gin.New()
@@ -37,6 +40,19 @@ func setupAPITest(t *testing.T) (*gin.Engine, string) {
 	tok, _ := token.New(cfg.JWT).GenerateToken(&user, &auth)
 
 	return r, tok
+}
+
+func issueAPITestToken(t *testing.T, user model.User, email string) string {
+	t.Helper()
+	auth := model.UserAuth{UserID: user.ID, IdentityType: "email", Identifier: email}
+	if err := database.DB.Create(&auth).Error; err != nil {
+		t.Fatalf("failed to create auth: %v", err)
+	}
+	tok, err := token.New(config.JWTConfig{Secret: testJWTSecret, ExpireHour: 24}).GenerateToken(&user, &auth)
+	if err != nil {
+		t.Fatalf("failed to issue token: %v", err)
+	}
+	return tok
 }
 
 func TestFeedHome(t *testing.T) {
@@ -97,6 +113,120 @@ func TestMerchantReviews(t *testing.T) {
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
+	}
+}
+
+func TestStoreCreateActivateAndPublicVisibility(t *testing.T) {
+	r, tok := setupAPITest(t)
+
+	createBody := strings.NewReader(`{"name":"Draft Store","address":"Austin"}`)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/merchant/stores", createBody)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected create 201, got %d", w.Code)
+	}
+
+	var created struct {
+		Data model.Store `json:"data"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &created); err != nil {
+		t.Fatalf("failed to decode create response: %v", err)
+	}
+	if created.Data.Status != 0 {
+		t.Fatalf("expected created store status 0(draft), got %d", created.Data.Status)
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodGet, "/api/v1/stores", nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected list 200, got %d", w.Code)
+	}
+	var listed struct {
+		Data []model.Store `json:"data"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &listed); err != nil {
+		t.Fatalf("failed to decode stores list response: %v", err)
+	}
+	if len(listed.Data) != 0 {
+		t.Fatalf("expected no public stores before activation, got %d", len(listed.Data))
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/merchant/stores/%d/activate", created.Data.ID), nil)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected activate 200, got %d", w.Code)
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodGet, "/api/v1/stores", nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected list 200 after activate, got %d", w.Code)
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &listed); err != nil {
+		t.Fatalf("failed to decode stores list response after activate: %v", err)
+	}
+	if len(listed.Data) != 1 {
+		t.Fatalf("expected one public store after activation, got %d", len(listed.Data))
+	}
+	if listed.Data[0].ID != created.Data.ID {
+		t.Fatalf("unexpected public store id: got %d, want %d", listed.Data[0].ID, created.Data.ID)
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/merchant/stores/%d/deactivate", created.Data.ID), nil)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected deactivate 200, got %d", w.Code)
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/stores/%d", created.Data.ID), nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected detail 404 after deactivate, got %d", w.Code)
+	}
+}
+
+func TestStoreActivateForbiddenForNonOwner(t *testing.T) {
+	r, ownerToken := setupAPITest(t)
+
+	createBody := strings.NewReader(`{"name":"Owner Store","address":"Austin"}`)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/merchant/stores", createBody)
+	req.Header.Set("Authorization", "Bearer "+ownerToken)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected create 201, got %d", w.Code)
+	}
+	var created struct {
+		Data model.Store `json:"data"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &created); err != nil {
+		t.Fatalf("failed to decode create response: %v", err)
+	}
+
+	db := database.DB
+	other := model.User{Role: "user", Status: 0}
+	if err := db.Create(&other).Error; err != nil {
+		t.Fatalf("failed to create other user: %v", err)
+	}
+	otherToken := issueAPITestToken(t, other, "other@example.com")
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/merchant/stores/%d/activate", created.Data.ID), nil)
+	req.Header.Set("Authorization", "Bearer "+otherToken)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected forbidden activate for non-owner, got %d", w.Code)
 	}
 }
 

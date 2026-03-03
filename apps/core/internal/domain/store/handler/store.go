@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/store/dto"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/store/service"
@@ -30,7 +31,12 @@ func NewStoreHandler(svc *service.StoreService) *StoreHandler {
 // @Failure 500 {object} map[string]string
 // @Router /stores [get]
 func (h *StoreHandler) List(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+	stores, err := h.svc.ListPublished(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list stores"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": stores})
 }
 
 // StoreDetail godoc
@@ -44,7 +50,21 @@ func (h *StoreHandler) List(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Router /stores/{id} [get]
 func (h *StoreHandler) Detail(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid store id"})
+		return
+	}
+	store, err := h.svc.DetailPublished(c.Request.Context(), id)
+	if err != nil {
+		if errors.Is(err, service.ErrStoreNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load store"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": store})
 }
 
 // StoreReviews godoc
@@ -58,7 +78,21 @@ func (h *StoreHandler) Detail(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Router /stores/{id}/reviews [get]
 func (h *StoreHandler) Reviews(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid store id"})
+		return
+	}
+	reviews, err := h.svc.ReviewsPublished(c.Request.Context(), id)
+	if err != nil {
+		if errors.Is(err, service.ErrStoreNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load reviews"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": reviews})
 }
 
 // StoreHours godoc
@@ -72,7 +106,45 @@ func (h *StoreHandler) Reviews(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Router /stores/{id}/hours [get]
 func (h *StoreHandler) Hours(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid store id"})
+		return
+	}
+	hours, err := h.svc.HoursPublished(c.Request.Context(), id)
+	if err != nil {
+		if errors.Is(err, service.ErrStoreNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load hours"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": hours})
+}
+
+// ListMerchantStores godoc
+// @Summary List current merchant stores
+// @Description Returns stores owned by the authenticated merchant user
+// @Tags store
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /merchant/stores [get]
+func (h *StoreHandler) ListMine(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	stores, err := h.svc.ListMine(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list stores"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": stores})
 }
 
 // CreateStore godoc
@@ -133,4 +205,82 @@ func (h *StoreHandler) Create(c *gin.Context) {
 // @Router /merchant/stores/{id} [patch]
 func (h *StoreHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+}
+
+// ActivateStore godoc
+// @Summary Activate a store
+// @Description Marks a merchant-owned store as published
+// @Tags store
+// @Produce json
+// @Param id path int true "Store ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /merchant/stores/{id}/activate [post]
+func (h *StoreHandler) Activate(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	storeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid store id"})
+		return
+	}
+	if err := h.svc.Activate(c.Request.Context(), userID, storeID); err != nil {
+		switch {
+		case errors.Is(err, service.ErrStoreNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		case errors.Is(err, service.ErrStoreForbidden):
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to activate store"})
+		}
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+// DeactivateStore godoc
+// @Summary Deactivate a store
+// @Description Marks a merchant-owned store as hidden
+// @Tags store
+// @Produce json
+// @Param id path int true "Store ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /merchant/stores/{id}/deactivate [post]
+func (h *StoreHandler) Deactivate(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	storeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid store id"})
+		return
+	}
+	if err := h.svc.Deactivate(c.Request.Context(), userID, storeID); err != nil {
+		switch {
+		case errors.Is(err, service.ErrStoreNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		case errors.Is(err, service.ErrStoreForbidden):
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to deactivate store"})
+		}
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
