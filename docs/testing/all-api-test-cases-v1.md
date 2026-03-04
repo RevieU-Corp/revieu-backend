@@ -5085,3 +5085,62 @@ PATCH /api/v1/vouchers/1/use
 
 ---
 
+## 实测补充记录（2026-03-04）
+
+- 执行人：Codex（本地服务联调）
+- 环境 API：`http://127.0.0.1:8080/api/v1`
+- 环境 DB：`10.0.0.1:5432/revieu`
+- 测试账号：`ethanlee0302@proton.me`
+- 测试目标：验证 `store/coupon` 删除链路与软删除落库状态，补充验证 `user` 删除时的级联行为
+
+### 1) Store/Coupon 删除链路（实测）
+
+| 步骤 | API | 输入摘要 | HTTP | 关键输出 |
+|---|---|---|---|---|
+| 1 | `POST /auth/login` | email/password 登录 | `200` | 获取 `access_token` |
+| 2 | `POST /merchant/stores` | 创建测试门店 | `201` | `store_id=233` |
+| 3 | `POST /merchant/stores/233/activate` | 激活门店 | `200` | `{"status":"ok"}` |
+| 4 | `POST /merchant/stores/233/coupons` | 创建券 | `201` | `coupon_id=5` |
+| 5 | `POST /coupons/5/validate` | `{"quantity":1}` | `400` | `{"error":"coupon inactive"}` |
+| 6 | `DELETE /merchant/stores/233/coupons/5` | 删除券 | `200` | `{"status":"ok"}` |
+| 7 | `POST /coupons/5/validate` | `{"quantity":1}` | `404` | `{"error":"not found"}` |
+| 8 | `POST /merchant/stores/233/coupons` | 再创建券 | `201` | `coupon_id=6` |
+| 9 | `DELETE /merchant/stores/233` | 删除门店 | `200` | `{"status":"ok"}` |
+| 10 | `POST /coupons/6/validate` | `{"quantity":1}` | `404` | `{"error":"not found"}` |
+| 11 | `GET /stores/233/coupons` | 读取门店券列表 | `404` | `{"error":"not found"}` |
+
+### 2) 数据库结果核验（实测）
+
+执行 SQL（关键检查）：
+
+```sql
+SELECT id, (deleted_at IS NOT NULL) AS soft_deleted FROM stores WHERE id IN (233);
+SELECT id, store_id, (deleted_at IS NOT NULL) AS soft_deleted FROM coupons WHERE id IN (5,6) ORDER BY id;
+SELECT id, user_id, (deleted_at IS NOT NULL) AS soft_deleted FROM merchants WHERE id IN (203);
+```
+
+结果：
+
+- `stores.id=233` -> `soft_deleted=true`
+- `coupons.id=5` -> `soft_deleted=true`
+- `coupons.id=6` -> `soft_deleted=true`
+- `merchants.id=203` -> `soft_deleted=false`
+
+结论：
+
+- `DELETE /merchant/stores/:id` 会对该门店和其关联券执行软删除（符合当前实现）。
+- `DELETE /merchant/stores/:id/coupons/:couponId` 可独立软删除单券（符合当前实现）。
+
+### 3) User 删除级联验证（事务回滚，不污染数据）
+
+验证方式：在单个事务里临时创建 `user -> merchant -> store -> coupon`，删除 `user` 后观察，再 `ROLLBACK`。
+
+关键观察：
+
+- 删除 `user` 后，`merchants.user_id` 变为 `NULL`。
+- 该 `merchant` 下 `stores/coupons` 记录仍保留（不会自动删除）。
+
+结论：
+
+- 当前数据库约束是 `merchants.user_id -> users.id ON DELETE SET NULL`。
+- 当前行为不是 `user` 级联删除商家链路，需要通过业务逻辑补齐“用户删除时的 merchant/store/coupon 软删除”。

@@ -141,6 +141,43 @@ func (s *CouponService) CreateForStore(ctx context.Context, userID, storeID int6
 	return &coupon, nil
 }
 
+func (s *CouponService) DeleteForStore(ctx context.Context, userID, storeID, couponID int64) error {
+	var merchant model.Merchant
+	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&merchant).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrStoreForbidden
+		}
+		return err
+	}
+
+	var store model.Store
+	if err := s.db.WithContext(ctx).First(&store, storeID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrStoreNotFound
+		}
+		return err
+	}
+	if store.MerchantID != merchant.ID {
+		return ErrStoreForbidden
+	}
+
+	var coupon model.Coupon
+	if err := s.db.WithContext(ctx).Unscoped().First(&coupon, couponID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrCouponNotFound
+		}
+		return err
+	}
+	if coupon.StoreID == nil || *coupon.StoreID != storeID || coupon.MerchantID != merchant.ID {
+		return ErrCouponNotFound
+	}
+	if coupon.DeletedAt.Valid {
+		return nil
+	}
+
+	return s.db.WithContext(ctx).Where("id = ?", couponID).Delete(&model.Coupon{}).Error
+}
+
 func (s *CouponService) ListPublishedByStore(ctx context.Context, storeID int64) ([]model.Coupon, error) {
 	if _, err := s.ensurePublishedStore(ctx, storeID); err != nil {
 		if errors.Is(err, ErrStoreNotPublished) {

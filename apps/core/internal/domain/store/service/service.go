@@ -304,6 +304,43 @@ func (s *StoreService) Deactivate(ctx context.Context, userID, storeID int64) er
 	return s.updateStatusOwned(ctx, userID, storeID, StoreStatusHidden)
 }
 
+func (s *StoreService) Delete(ctx context.Context, userID, storeID int64) error {
+	var merchant model.Merchant
+	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&merchant).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrStoreForbidden
+		}
+		return err
+	}
+
+	var store model.Store
+	if err := s.db.WithContext(ctx).Unscoped().First(&store, storeID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrStoreNotFound
+		}
+		return err
+	}
+	if store.MerchantID != merchant.ID {
+		return ErrStoreForbidden
+	}
+	if store.DeletedAt.Valid {
+		return nil
+	}
+
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("store_id = ?", storeID).Delete(&model.Coupon{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("id = ?", storeID).Delete(&model.Store{}).Error; err != nil {
+			return err
+		}
+		return tx.Model(&model.Merchant{}).
+			Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("id = ?", merchant.ID).
+			UpdateColumn("total_stores", gorm.Expr("CASE WHEN total_stores > 0 THEN total_stores - 1 ELSE 0 END")).Error
+	})
+}
+
 func (s *StoreService) updateStatusOwned(ctx context.Context, userID, storeID int64, toStatus int16) error {
 	var merchant model.Merchant
 	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&merchant).Error; err != nil {

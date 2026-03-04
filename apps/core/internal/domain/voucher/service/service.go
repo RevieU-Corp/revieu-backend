@@ -102,7 +102,7 @@ func (s *VoucherService) RedeemByMerchant(ctx context.Context, userID, voucherID
 		}
 
 		var coupon model.Coupon
-		if err := tx.First(&coupon, voucher.CouponID).Error; err != nil {
+		if err := tx.Unscoped().First(&coupon, voucher.CouponID).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return ErrVoucherNotFound
 			}
@@ -133,7 +133,7 @@ func (s *VoucherService) RedeemByMerchant(ctx context.Context, userID, voucherID
 			return err
 		}
 
-		return tx.Model(&model.Coupon{}).
+		return tx.Unscoped().Model(&model.Coupon{}).
 			Where("id = ?", coupon.ID).
 			UpdateColumn("redeemed_count", gorm.Expr("redeemed_count + 1")).Error
 	})

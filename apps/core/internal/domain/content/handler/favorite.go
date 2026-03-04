@@ -29,7 +29,7 @@ func NewFavoriteHandler(svc *service.ContentService) *FavoriteHandler {
 // @Param type query string false "Target type (post|review|merchant)"
 // @Param cursor query int false "Cursor"
 // @Param limit query int false "Limit"
-// @Success 200 {object} dto.FavoriteListResponse
+// @Success 200 {object} map[string]interface{}
 // @Failure 401 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /user/favorites [get]
