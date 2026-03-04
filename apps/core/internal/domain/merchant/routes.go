@@ -4,11 +4,12 @@ import (
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/merchant/handler"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/merchant/service"
+	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registers merchant routes.
-func RegisterRoutes(r *gin.RouterGroup, _ *config.Config) {
+func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	svc := service.NewMerchantService(nil)
 	h := handler.NewMerchantHandler(svc)
 
@@ -17,5 +18,10 @@ func RegisterRoutes(r *gin.RouterGroup, _ *config.Config) {
 		merchants.GET("", h.List)
 		merchants.GET("/:id", h.Detail)
 		merchants.GET("/:id/reviews", h.Reviews)
+	}
+
+	merchantPrivate := r.Group("/merchant", middleware.JWTAuth(cfg.JWT))
+	{
+		merchantPrivate.DELETE("/me", h.DeleteMe)
 	}
 }

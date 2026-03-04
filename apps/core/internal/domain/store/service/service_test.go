@@ -30,6 +30,7 @@ func setupStoreTestDB(t *testing.T) *gorm.DB {
 		&model.Category{},
 		&model.StoreCategory{},
 		&model.Review{},
+		&model.Coupon{},
 	); err != nil {
 		t.Fatalf("failed to migrate test db: %v", err)
 	}
@@ -532,6 +533,120 @@ func TestStoreServiceDeactivateOwnStore(t *testing.T) {
 	}
 	if refreshed.Status != StoreStatusHidden {
 		t.Fatalf("unexpected status after deactivation: got %d, want %d", refreshed.Status, StoreStatusHidden)
+	}
+}
+
+func TestStoreServiceDeleteOwnStoreSoftDeletesStoreAndCoupons(t *testing.T) {
+	db := setupStoreTestDB(t)
+	svc := NewStoreService(db)
+
+	userID := int64(3002)
+	if err := db.Create(&model.User{ID: userID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &userID, TotalStores: 2}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Store To Delete", Status: StoreStatusPublished}
+	otherStore := model.Store{MerchantID: merchant.ID, Name: "Store To Keep", Status: StoreStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	if err := db.Create(&otherStore).Error; err != nil {
+		t.Fatalf("failed to create other store: %v", err)
+	}
+	couponStoreID := store.ID
+	otherCouponStoreID := otherStore.ID
+	storeCoupon := model.Coupon{
+		MerchantID:    merchant.ID,
+		StoreID:       &couponStoreID,
+		Title:         "Delete Me",
+		Type:          "cash",
+		TotalQuantity: 10,
+		MaxPerUser:    1,
+		Status:        "active",
+	}
+	otherCoupon := model.Coupon{
+		MerchantID:    merchant.ID,
+		StoreID:       &otherCouponStoreID,
+		Title:         "Keep Me",
+		Type:          "cash",
+		TotalQuantity: 10,
+		MaxPerUser:    1,
+		Status:        "active",
+	}
+	if err := db.Create(&storeCoupon).Error; err != nil {
+		t.Fatalf("failed to create store coupon: %v", err)
+	}
+	if err := db.Create(&otherCoupon).Error; err != nil {
+		t.Fatalf("failed to create other coupon: %v", err)
+	}
+
+	if err := svc.Delete(context.Background(), userID, store.ID); err != nil {
+		t.Fatalf("delete returned error: %v", err)
+	}
+
+	var liveStore model.Store
+	if err := db.First(&liveStore, store.ID).Error; !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatalf("expected deleted store to be hidden from scoped query, got err=%v", err)
+	}
+	var deletedStore model.Store
+	if err := db.Unscoped().First(&deletedStore, store.ID).Error; err != nil {
+		t.Fatalf("failed to query deleted store unscoped: %v", err)
+	}
+	if !deletedStore.DeletedAt.Valid {
+		t.Fatalf("expected deleted store to have deleted_at set")
+	}
+
+	var liveCoupon model.Coupon
+	if err := db.First(&liveCoupon, storeCoupon.ID).Error; !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatalf("expected scoped coupon query to hide deleted coupon, got err=%v", err)
+	}
+	var deletedCoupon model.Coupon
+	if err := db.Unscoped().First(&deletedCoupon, storeCoupon.ID).Error; err != nil {
+		t.Fatalf("failed to query deleted coupon unscoped: %v", err)
+	}
+	if !deletedCoupon.DeletedAt.Valid {
+		t.Fatalf("expected deleted coupon to have deleted_at set")
+	}
+
+	if err := db.First(&liveCoupon, otherCoupon.ID).Error; err != nil {
+		t.Fatalf("expected coupon under another store to remain active, got err=%v", err)
+	}
+
+	var refreshedMerchant model.Merchant
+	if err := db.First(&refreshedMerchant, merchant.ID).Error; err != nil {
+		t.Fatalf("failed to reload merchant: %v", err)
+	}
+	if refreshedMerchant.TotalStores != 1 {
+		t.Fatalf("expected total_stores decremented to 1, got %d", refreshedMerchant.TotalStores)
+	}
+}
+
+func TestStoreServiceDeleteNonOwnerForbidden(t *testing.T) {
+	db := setupStoreTestDB(t)
+	svc := NewStoreService(db)
+
+	ownerID := int64(3003)
+	otherID := int64(3004)
+	for _, id := range []int64{ownerID, otherID} {
+		if err := db.Create(&model.User{ID: id, Role: "user", Status: 0}).Error; err != nil {
+			t.Fatalf("failed to create user %d: %v", id, err)
+		}
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Protected Store", Status: StoreStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	err := svc.Delete(context.Background(), otherID, store.ID)
+	if !errors.Is(err, ErrStoreForbidden) {
+		t.Fatalf("expected ErrStoreForbidden, got %v", err)
 	}
 }
 

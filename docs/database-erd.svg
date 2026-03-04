@@ -1,0 +1,664 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2660" height="3108" viewBox="0 0 2660 3108">
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748b" /></marker></defs>
+<rect x="0" y="0" width="2660" height="3108" fill="#f8fafc" />
+<text x="40" y="40" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#0f172a">RevieU Database ERD (public schema)</text>
+<text x="40" y="66" font-family="Arial, sans-serif" font-size="13" fill="#334155">Tables: 44 | FK relationships: 79 | PK/FK markers shown per column</text>
+<text x="40" y="88" font-family="Arial, sans-serif" font-size="12" fill="#334155">Legend: [PK] primary key, [FK] foreign key, "?" nullable column</text>
+<path d="M 255.0 284.0 C 255.0 1548.0, 255.0 1548.0, 255.0 2812.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>account_deletions.user_id -&gt; users.id (account_deletions_user_id_fkey)</title></path>
+<path d="M 544.0 203.0 C 544.0 1531.0, 396.0 1531.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>admin_audit_logs.admin_id -&gt; users.id (admin_audit_logs_admin_id_fkey)</title></path>
+<path d="M 974.0 251.0 C 974.0 987.0, 409.0 987.0, 409.0 1723.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>browsing_histories.post_id -&gt; posts.id (browsing_histories_post_id_fkey)</title></path>
+<path d="M 974.0 235.0 C 974.0 1159.0, 839.0 1159.0, 839.0 2083.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>browsing_histories.review_id -&gt; reviews.id (browsing_histories_review_id_fkey)</title></path>
+<path d="M 1256.0 219.0 C 1256.0 1139.0, 1820.0 1139.0, 1820.0 2059.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>browsing_histories.store_id -&gt; stores.id (browsing_histories_store_id_fkey)</title></path>
+<path d="M 974.0 203.0 C 974.0 1531.0, 396.0 1531.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>browsing_histories.user_id -&gt; users.id (browsing_histories_user_id_fkey)</title></path>
+<path d="M 1545.0 164.0 C 1545.0 220.0, 1545.0 220.0, 1545.0 276.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>categories.parent_id -&gt; categories.id (categories_parent_id_fkey)</title></path>
+<path d="M 2157.0 203.0 C 2210.5 203.0, 2210.5 203.0, 2264.0 203.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>conversation_participants.conversation_id -&gt; conversations.id (conversation_participants_conversation_id_fkey)</title></path>
+<path d="M 1793.0 219.0 C 1793.0 1539.0, 396.0 1539.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>conversation_participants.user_id -&gt; users.id (conversation_participants_user_id_fkey)</title></path>
+<path d="M 409.0 395.0 C 1111.0 395.0, 1111.0 875.0, 1813.0 875.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>coupons.merchant_id -&gt; merchants.id (coupons_merchant_id_fkey)</title></path>
+<path d="M 409.0 427.0 C 409.0 899.0, 960.0 899.0, 960.0 1371.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>coupons.package_id -&gt; packages.id (coupons_package_id_fkey)</title></path>
+<path d="M 409.0 411.0 C 409.0 1235.0, 1820.0 1235.0, 1820.0 2059.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>coupons.store_id -&gt; stores.id (coupons_store_id_fkey)</title></path>
+<path d="M 544.0 555.0 C 544.0 1707.0, 396.0 1707.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>email_verifications.user_id -&gt; users.id (email_verifications_user_id_fkey)</title></path>
+<path d="M 2250.0 579.0 C 1329.5 579.0, 1329.5 379.0, 409.0 379.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>marketing_posts.coupon_id -&gt; coupons.id (marketing_posts_coupon_id_fkey)</title></path>
+<path d="M 2250.0 483.0 C 2250.0 679.0, 2136.0 679.0, 2136.0 875.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>marketing_posts.merchant_id -&gt; merchants.id (marketing_posts_merchant_id_fkey)</title></path>
+<path d="M 2250.0 499.0 C 2250.0 1279.0, 2129.0 1279.0, 2129.0 2059.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>marketing_posts.store_id -&gt; stores.id (marketing_posts_store_id_fkey)</title></path>
+<path d="M 255.0 1172.0 C 255.0 1992.0, 255.0 1992.0, 255.0 2812.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>media_uploads.user_id -&gt; users.id (media_uploads_user_id_fkey)</title></path>
+<path d="M 839.0 1011.0 C 1326.0 1011.0, 1326.0 875.0, 1813.0 875.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>merchant_analytics.merchant_id -&gt; merchants.id (merchant_analytics_merchant_id_fkey)</title></path>
+<path d="M 839.0 1027.0 C 839.0 1543.0, 1820.0 1543.0, 1820.0 2059.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>merchant_analytics.store_id -&gt; stores.id (merchant_analytics_store_id_fkey)</title></path>
+<path d="M 1269.0 1083.0 C 1541.0 1083.0, 1541.0 875.0, 1813.0 875.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>merchant_follows.merchant_id -&gt; merchants.id (fk_merchant_follows_merchant)</title></path>
+<path d="M 960.0 1067.0 C 960.0 1963.0, 396.0 1963.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>merchant_follows.user_id -&gt; users.id (merchant_follows_user_id_fkey)</title></path>
+<path d="M 1813.0 891.0 C 1813.0 1875.0, 396.0 1875.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>merchants.user_id -&gt; users.id (merchants_user_id_fkey)</title></path>
+<path d="M 1699.0 1011.0 C 1699.0 943.0, 1813.0 943.0, 1813.0 875.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>merchant_verifications.merchant_id -&gt; merchants.id (merchant_verifications_merchant_id_fkey)</title></path>
+<path d="M 1390.0 1091.0 C 1390.0 1975.0, 396.0 1975.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>merchant_verifications.reviewed_by -&gt; users.id (merchant_verifications_reviewed_by_fkey)</title></path>
+<path d="M 2405.0 972.0 C 2405.0 628.0, 2405.0 628.0, 2405.0 284.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>messages.conversation_id -&gt; conversations.id (messages_conversation_id_fkey)</title></path>
+<path d="M 2223.0 1051.0 C 1309.5 1051.0, 1309.5 2859.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>messages.sender_id -&gt; users.id (messages_sender_id_fkey)</title></path>
+<path d="M 255.0 1580.0 C 255.0 2196.0, 255.0 2196.0, 255.0 2812.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>notifications.user_id -&gt; users.id (notifications_user_id_fkey)</title></path>
+<path d="M 530.0 1443.0 C 530.0 911.0, 409.0 911.0, 409.0 379.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>orders.coupon_id -&gt; coupons.id (orders_coupon_id_fkey)</title></path>
+<path d="M 839.0 1475.0 C 1326.0 1475.0, 1326.0 875.0, 1813.0 875.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>orders.merchant_id -&gt; merchants.id (orders_merchant_id_fkey)</title></path>
+<path d="M 839.0 1459.0 C 899.5 1459.0, 899.5 1371.0, 960.0 1371.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>orders.package_id -&gt; packages.id (orders_package_id_fkey)</title></path>
+<path d="M 839.0 1491.0 C 1329.5 1491.0, 1329.5 2059.0, 1820.0 2059.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>orders.store_id -&gt; stores.id (orders_store_id_fkey)</title></path>
+<path d="M 530.0 1427.0 C 530.0 2143.0, 396.0 2143.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>orders.user_id -&gt; users.id (orders_user_id_fkey)</title></path>
+<path d="M 1269.0 1387.0 C 1541.0 1387.0, 1541.0 875.0, 1813.0 875.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>packages.merchant_id -&gt; merchants.id (packages_merchant_id_fkey)</title></path>
+<path d="M 1269.0 1403.0 C 1269.0 1731.0, 1820.0 1731.0, 1820.0 2059.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>packages.store_id -&gt; stores.id (packages_store_id_fkey)</title></path>
+<path d="M 1383.0 1467.0 C 1383.0 923.0, 409.0 923.0, 409.0 379.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>payments.coupon_id -&gt; coupons.id (payments_coupon_id_fkey)</title></path>
+<path d="M 1706.0 1483.0 C 1706.0 1179.0, 1813.0 1179.0, 1813.0 875.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>payments.merchant_id -&gt; merchants.id (payments_merchant_id_fkey)</title></path>
+<path d="M 1383.0 1499.0 C 1111.0 1499.0, 1111.0 1411.0, 839.0 1411.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>payments.order_id -&gt; orders.id (payments_order_id_fkey)</title></path>
+<path d="M 1383.0 1515.0 C 1383.0 2187.0, 396.0 2187.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>payments.user_id -&gt; users.id (payments_user_id_fkey)</title></path>
+<path d="M 1974.0 1388.0 C 1974.0 1484.0, 1974.0 1484.0, 1974.0 1580.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>post_comments.parent_comment_id -&gt; post_comments.id (post_comments_parent_comment_id_fkey)</title></path>
+<path d="M 1786.0 1451.0 C 1097.5 1451.0, 1097.5 1723.0, 409.0 1723.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>post_comments.post_id -&gt; posts.id (post_comments_post_id_fkey)</title></path>
+<path d="M 1786.0 1467.0 C 1786.0 2163.0, 396.0 2163.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>post_comments.user_id -&gt; users.id (post_comments_user_id_fkey)</title></path>
+<path d="M 409.0 1755.0 C 1111.0 1755.0, 1111.0 875.0, 1813.0 875.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>posts.merchant_id -&gt; merchants.id (posts_merchant_id_fkey)</title></path>
+<path d="M 409.0 1771.0 C 409.0 1927.0, 530.0 1927.0, 530.0 2083.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>posts.review_id -&gt; reviews.id (posts_review_id_fkey)</title></path>
+<path d="M 409.0 1739.0 C 409.0 2299.0, 114.0 2299.0, 114.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>posts.user_id -&gt; users.id (posts_user_id_fkey)</title></path>
+<path d="M 2267.0 1491.0 C 1338.0 1491.0, 1338.0 1723.0, 409.0 1723.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>post_tags.post_id -&gt; posts.id (post_tags_post_id_fkey)</title></path>
+<path d="M 2542.0 1507.0 C 2542.0 1847.0, 2264.0 1847.0, 2264.0 2187.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>post_tags.tag_id -&gt; tags.id (post_tags_tag_id_fkey)</title></path>
+<path d="M 537.0 1803.0 C 537.0 2331.0, 396.0 2331.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>refresh_tokens.user_id -&gt; users.id (refresh_tokens_user_id_fkey)</title></path>
+<path d="M 970.0 1771.0 C 970.0 2315.0, 396.0 2315.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>reports.reporter_id -&gt; users.id (reports_reporter_id_fkey)</title></path>
+<path d="M 970.0 1867.0 C 970.0 2363.0, 396.0 2363.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>reports.reviewed_by -&gt; users.id (reports_reviewed_by_fkey)</title></path>
+<path d="M 1544.0 1732.0 C 1544.0 1828.0, 1544.0 1828.0, 1544.0 1924.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>review_comments.parent_comment_id -&gt; review_comments.id (review_comments_parent_comment_id_fkey)</title></path>
+<path d="M 1349.0 1795.0 C 1094.0 1795.0, 1094.0 2083.0, 839.0 2083.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>review_comments.review_id -&gt; reviews.id (review_comments_review_id_fkey)</title></path>
+<path d="M 1349.0 1811.0 C 1349.0 2335.0, 396.0 2335.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>review_comments.user_id -&gt; users.id (review_comments_user_id_fkey)</title></path>
+<path d="M 1834.0 1819.0 C 1336.5 1819.0, 1336.5 2083.0, 839.0 2083.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>review_media.review_id -&gt; reviews.id (review_media_review_id_fkey)</title></path>
+<path d="M 839.0 2131.0 C 839.0 1503.0, 1813.0 1503.0, 1813.0 875.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>reviews.merchant_id -&gt; merchants.id (reviews_merchant_id_fkey)</title></path>
+<path d="M 839.0 2147.0 C 1329.5 2147.0, 1329.5 2059.0, 1820.0 2059.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>reviews.store_id -&gt; stores.id (reviews_store_id_fkey)</title></path>
+<path d="M 530.0 2099.0 C 530.0 2479.0, 396.0 2479.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>reviews.user_id -&gt; users.id (reviews_user_id_fkey)</title></path>
+<path d="M 2254.0 1835.0 C 1546.5 1835.0, 1546.5 2083.0, 839.0 2083.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>review_tags.review_id -&gt; reviews.id (review_tags_review_id_fkey)</title></path>
+<path d="M 2405.0 1868.0 C 2405.0 2004.0, 2405.0 2004.0, 2405.0 2140.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>review_tags.tag_id -&gt; tags.id (review_tags_tag_id_fkey)</title></path>
+<path d="M 396.0 2211.0 C 463.0 2211.0, 463.0 2083.0, 530.0 2083.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>review_votes.review_id -&gt; reviews.id (review_votes_review_id_fkey)</title></path>
+<path d="M 255.0 2276.0 C 255.0 2544.0, 255.0 2544.0, 255.0 2812.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>review_votes.user_id -&gt; users.id (review_votes_user_id_fkey)</title></path>
+<path d="M 1283.0 2235.0 C 1283.0 1223.0, 1394.0 1223.0, 1394.0 211.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>store_categories.category_id -&gt; categories.id (store_categories_category_id_fkey)</title></path>
+<path d="M 1283.0 2219.0 C 1551.5 2219.0, 1551.5 2059.0, 1820.0 2059.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>store_categories.store_id -&gt; stores.id (store_categories_store_id_fkey)</title></path>
+<path d="M 1679.0 2203.0 C 1679.0 2131.0, 1820.0 2131.0, 1820.0 2059.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>store_hours.store_id -&gt; stores.id (store_hours_store_id_fkey)</title></path>
+<path d="M 1974.0 2012.0 C 1974.0 1652.0, 1974.0 1652.0, 1974.0 1292.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>stores.merchant_id -&gt; merchants.id (stores_merchant_id_fkey)</title></path>
+<path d="M 255.0 2684.0 C 255.0 2748.0, 255.0 2748.0, 255.0 2812.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>user_addresses.user_id -&gt; users.id (user_addresses_user_id_fkey)</title></path>
+<path d="M 523.0 2555.0 C 523.0 2707.0, 396.0 2707.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>user_auths.user_id -&gt; users.id (fk_users_auths)</title></path>
+<path d="M 523.0 2555.0 C 523.0 2707.0, 396.0 2707.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>user_auths.user_id -&gt; users.id (user_auths_user_id_fkey)</title></path>
+<path d="M 970.0 2571.0 C 683.0 2571.0, 683.0 2859.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>user_follows.follower_id -&gt; users.id (user_follows_follower_id_fkey)</title></path>
+<path d="M 970.0 2587.0 C 683.0 2587.0, 683.0 2859.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>user_follows.following_id -&gt; users.id (user_follows_following_id_fkey)</title></path>
+<path d="M 1407.0 2563.0 C 901.5 2563.0, 901.5 2859.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>user_notifications.user_id -&gt; users.id (user_notifications_user_id_fkey)</title></path>
+<path d="M 1837.0 2571.0 C 1116.5 2571.0, 1116.5 2859.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>user_privacies.user_id -&gt; users.id (user_privacies_user_id_fkey)</title></path>
+<path d="M 2233.0 2499.0 C 1314.5 2499.0, 1314.5 2859.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>user_profiles.user_id -&gt; users.id (fk_users_profile)</title></path>
+<path d="M 2233.0 2499.0 C 1314.5 2499.0, 1314.5 2859.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>user_profiles.user_id -&gt; users.id (user_profiles_user_id_fkey)</title></path>
+<path d="M 530.0 2795.0 C 530.0 1587.0, 409.0 1587.0, 409.0 379.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>vouchers.coupon_id -&gt; coupons.id (vouchers_coupon_id_fkey)</title></path>
+<path d="M 839.0 2859.0 C 839.0 1867.0, 1813.0 1867.0, 1813.0 875.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>vouchers.merchant_id -&gt; merchants.id (vouchers_merchant_id_fkey)</title></path>
+<path d="M 684.0 2716.0 C 684.0 2160.0, 684.0 2160.0, 684.0 1604.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>vouchers.order_id -&gt; orders.id (vouchers_order_id_fkey)</title></path>
+<path d="M 839.0 2827.0 C 839.0 2099.0, 960.0 2099.0, 960.0 1371.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>vouchers.package_id -&gt; packages.id (vouchers_package_id_fkey)</title></path>
+<path d="M 530.0 2955.0 C 463.0 2955.0, 463.0 2859.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>vouchers.redeemed_by -&gt; users.id (vouchers_redeemed_by_fkey)</title></path>
+<path d="M 530.0 2811.0 C 463.0 2811.0, 463.0 2859.0, 396.0 2859.0" stroke="#64748b" stroke-opacity="0.45" stroke-width="1.1" fill="none" marker-end="url(#arrow)"><title>vouchers.user_id -&gt; users.id (vouchers_user_id_fkey)</title></path>
+<rect x="107" y="156" width="296" height="128" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="107" y="156" width="296" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="117" y="176" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">account_deletions</text>
+<line x1="107" y1="188" x2="403" y2="188" stroke="#94a3b8" stroke-width="1" />
+<text x="117" y="210" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="117" y="226" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="117" y="242" font-family="Courier New, monospace" font-size="11" fill="#0f172a">reason: character varying(255) ?</text>
+<text x="117" y="258" font-family="Courier New, monospace" font-size="11" fill="#0f172a">scheduled_at: timestamp with time zone ?</text>
+<text x="117" y="274" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<rect x="544" y="140" width="282" height="160" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="544" y="140" width="282" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="554" y="160" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">admin_audit_logs</text>
+<line x1="544" y1="172" x2="826" y2="172" stroke="#94a3b8" stroke-width="1" />
+<text x="554" y="194" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="554" y="210" font-family="Courier New, monospace" font-size="11" fill="#0f172a">admin_id: bigint ? [FK] -&gt; users.id</text>
+<text x="554" y="226" font-family="Courier New, monospace" font-size="11" fill="#0f172a">action: character varying(50) ?</text>
+<text x="554" y="242" font-family="Courier New, monospace" font-size="11" fill="#0f172a">target_type: character varying(20) ?</text>
+<text x="554" y="258" font-family="Courier New, monospace" font-size="11" fill="#0f172a">target_id: bigint ?</text>
+<text x="554" y="274" font-family="Courier New, monospace" font-size="11" fill="#0f172a">details: jsonb ?</text>
+<text x="554" y="290" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<rect x="974" y="140" width="282" height="160" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="974" y="140" width="282" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="984" y="160" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">browsing_histories</text>
+<line x1="974" y1="172" x2="1256" y2="172" stroke="#94a3b8" stroke-width="1" />
+<text x="984" y="194" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="984" y="210" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="984" y="226" font-family="Courier New, monospace" font-size="11" fill="#0f172a">store_id: bigint ? [FK] -&gt; stores.id</text>
+<text x="984" y="242" font-family="Courier New, monospace" font-size="11" fill="#0f172a">review_id: bigint ? [FK] -&gt; reviews.id</text>
+<text x="984" y="258" font-family="Courier New, monospace" font-size="11" fill="#0f172a">post_id: bigint ? [FK] -&gt; posts.id</text>
+<text x="984" y="274" font-family="Courier New, monospace" font-size="11" fill="#0f172a">viewed_at: timestamp with time zone ?</text>
+<text x="984" y="290" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<rect x="1394" y="164" width="302" height="112" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="1394" y="164" width="302" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="1404" y="184" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">categories</text>
+<line x1="1394" y1="196" x2="1696" y2="196" stroke="#94a3b8" stroke-width="1" />
+<text x="1404" y="218" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="1404" y="234" font-family="Courier New, monospace" font-size="11" fill="#0f172a">name: character varying(50) ?</text>
+<text x="1404" y="250" font-family="Courier New, monospace" font-size="11" fill="#0f172a">parent_id: bigint ? [FK] -&gt; categories.id</text>
+<text x="1404" y="266" font-family="Courier New, monospace" font-size="11" fill="#0f172a">icon_url: character varying(255) ?</text>
+<rect x="1793" y="140" width="364" height="160" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="1793" y="140" width="364" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="1803" y="160" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">conversation_participants</text>
+<line x1="1793" y1="172" x2="2157" y2="172" stroke="#94a3b8" stroke-width="1" />
+<text x="1803" y="194" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="1803" y="210" font-family="Courier New, monospace" font-size="11" fill="#0f172a">conversation_id: bigint ? [FK] -&gt; conversations.id</text>
+<text x="1803" y="226" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="1803" y="242" font-family="Courier New, monospace" font-size="11" fill="#0f172a">role: character varying(20) ?</text>
+<text x="1803" y="258" font-family="Courier New, monospace" font-size="11" fill="#0f172a">is_muted: boolean ?</text>
+<text x="1803" y="274" font-family="Courier New, monospace" font-size="11" fill="#0f172a">last_read_at: timestamp with time zone ?</text>
+<text x="1803" y="290" font-family="Courier New, monospace" font-size="11" fill="#0f172a">joined_at: timestamp with time zone ?</text>
+<rect x="2264" y="156" width="282" height="128" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="2264" y="156" width="282" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="2274" y="176" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">conversations</text>
+<line x1="2264" y1="188" x2="2546" y2="188" stroke="#94a3b8" stroke-width="1" />
+<text x="2274" y="210" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="2274" y="226" font-family="Courier New, monospace" font-size="11" fill="#0f172a">type: character varying(20) ?</text>
+<text x="2274" y="242" font-family="Courier New, monospace" font-size="11" fill="#0f172a">title: character varying(100) ?</text>
+<text x="2274" y="258" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="2274" y="274" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<rect x="100" y="332" width="309" height="464" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="100" y="332" width="309" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="110" y="352" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">coupons</text>
+<line x1="100" y1="364" x2="409" y2="364" stroke="#94a3b8" stroke-width="1" />
+<text x="110" y="386" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="110" y="402" font-family="Courier New, monospace" font-size="11" fill="#0f172a">merchant_id: bigint ? [FK] -&gt; merchants.id</text>
+<text x="110" y="418" font-family="Courier New, monospace" font-size="11" fill="#0f172a">store_id: bigint ? [FK] -&gt; stores.id</text>
+<text x="110" y="434" font-family="Courier New, monospace" font-size="11" fill="#0f172a">package_id: bigint ? [FK] -&gt; packages.id</text>
+<text x="110" y="450" font-family="Courier New, monospace" font-size="11" fill="#0f172a">title: character varying(100) ?</text>
+<text x="110" y="466" font-family="Courier New, monospace" font-size="11" fill="#0f172a">description: text ?</text>
+<text x="110" y="482" font-family="Courier New, monospace" font-size="11" fill="#0f172a">image_url: character varying(255) ?</text>
+<text x="110" y="498" font-family="Courier New, monospace" font-size="11" fill="#0f172a">type: character varying(20) ?</text>
+<text x="110" y="514" font-family="Courier New, monospace" font-size="11" fill="#0f172a">coupon_type: character varying(20) ?</text>
+<text x="110" y="530" font-family="Courier New, monospace" font-size="11" fill="#0f172a">value: character varying(50) ?</text>
+<text x="110" y="546" font-family="Courier New, monospace" font-size="11" fill="#0f172a">price: numeric(10,2) ?</text>
+<text x="110" y="562" font-family="Courier New, monospace" font-size="11" fill="#0f172a">original_price: numeric(10,2) ?</text>
+<text x="110" y="578" font-family="Courier New, monospace" font-size="11" fill="#0f172a">sale_price: numeric(10,2) ?</text>
+<text x="110" y="594" font-family="Courier New, monospace" font-size="11" fill="#0f172a">discount_percentage: numeric(5,2) ?</text>
+<text x="110" y="610" font-family="Courier New, monospace" font-size="11" fill="#0f172a">total_quantity: integer ?</text>
+<text x="110" y="626" font-family="Courier New, monospace" font-size="11" fill="#0f172a">claimed_count: integer ?</text>
+<text x="110" y="642" font-family="Courier New, monospace" font-size="11" fill="#0f172a">redeemed_count: integer ?</text>
+<text x="110" y="658" font-family="Courier New, monospace" font-size="11" fill="#0f172a">max_per_user: integer ?</text>
+<text x="110" y="674" font-family="Courier New, monospace" font-size="11" fill="#0f172a">terms: text ?</text>
+<text x="110" y="690" font-family="Courier New, monospace" font-size="11" fill="#0f172a">expiry_date: timestamp with time zone ?</text>
+<text x="110" y="706" font-family="Courier New, monospace" font-size="11" fill="#0f172a">valid_from: timestamp with time zone ?</text>
+<text x="110" y="722" font-family="Courier New, monospace" font-size="11" fill="#0f172a">valid_until: timestamp with time zone ?</text>
+<text x="110" y="738" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: character varying(20) ?</text>
+<text x="110" y="754" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="110" y="770" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<text x="110" y="786" font-family="Courier New, monospace" font-size="11" fill="#0f172a">deleted_at: timestamp with time zone ?</text>
+<rect x="544" y="492" width="282" height="144" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="544" y="492" width="282" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="554" y="512" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">email_verifications</text>
+<line x1="544" y1="524" x2="826" y2="524" stroke="#94a3b8" stroke-width="1" />
+<text x="554" y="546" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="554" y="562" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="554" y="578" font-family="Courier New, monospace" font-size="11" fill="#0f172a">email: character varying(255) ?</text>
+<text x="554" y="594" font-family="Courier New, monospace" font-size="11" fill="#0f172a">token: character varying(255) ?</text>
+<text x="554" y="610" font-family="Courier New, monospace" font-size="11" fill="#0f172a">expires_at: timestamp with time zone ?</text>
+<text x="554" y="626" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<rect x="974" y="500" width="282" height="128" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="974" y="500" width="282" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="984" y="520" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">favorites</text>
+<line x1="974" y1="532" x2="1256" y2="532" stroke="#94a3b8" stroke-width="1" />
+<text x="984" y="554" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="984" y="570" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ?</text>
+<text x="984" y="586" font-family="Courier New, monospace" font-size="11" fill="#0f172a">target_type: character varying(20) ?</text>
+<text x="984" y="602" font-family="Courier New, monospace" font-size="11" fill="#0f172a">target_id: bigint ?</text>
+<text x="984" y="618" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<rect x="1407" y="508" width="275" height="112" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="1407" y="508" width="275" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="1417" y="528" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">goose_db_version</text>
+<line x1="1407" y1="540" x2="1682" y2="540" stroke="#94a3b8" stroke-width="1" />
+<text x="1417" y="562" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: integer ? [PK]</text>
+<text x="1417" y="578" font-family="Courier New, monospace" font-size="11" fill="#0f172a">version_id: bigint ?</text>
+<text x="1417" y="594" font-family="Courier New, monospace" font-size="11" fill="#0f172a">is_applied: boolean ?</text>
+<text x="1417" y="610" font-family="Courier New, monospace" font-size="11" fill="#0f172a">tstamp: timestamp without time zone ?</text>
+<rect x="1834" y="500" width="282" height="128" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="1834" y="500" width="282" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="1844" y="520" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">likes</text>
+<line x1="1834" y1="532" x2="2116" y2="532" stroke="#94a3b8" stroke-width="1" />
+<text x="1844" y="554" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="1844" y="570" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ?</text>
+<text x="1844" y="586" font-family="Courier New, monospace" font-size="11" fill="#0f172a">target_type: character varying(20) ?</text>
+<text x="1844" y="602" font-family="Courier New, monospace" font-size="11" fill="#0f172a">target_id: bigint ?</text>
+<text x="1844" y="618" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<rect x="2250" y="420" width="309" height="288" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="2250" y="420" width="309" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="2260" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">marketing_posts</text>
+<line x1="2250" y1="452" x2="2559" y2="452" stroke="#94a3b8" stroke-width="1" />
+<text x="2260" y="474" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="2260" y="490" font-family="Courier New, monospace" font-size="11" fill="#0f172a">merchant_id: bigint ? [FK] -&gt; merchants.id</text>
+<text x="2260" y="506" font-family="Courier New, monospace" font-size="11" fill="#0f172a">store_id: bigint ? [FK] -&gt; stores.id</text>
+<text x="2260" y="522" font-family="Courier New, monospace" font-size="11" fill="#0f172a">title: character varying(100) ?</text>
+<text x="2260" y="538" font-family="Courier New, monospace" font-size="11" fill="#0f172a">content: text ?</text>
+<text x="2260" y="554" font-family="Courier New, monospace" font-size="11" fill="#0f172a">images: jsonb ?</text>
+<text x="2260" y="570" font-family="Courier New, monospace" font-size="11" fill="#0f172a">post_type: character varying(20) ?</text>
+<text x="2260" y="586" font-family="Courier New, monospace" font-size="11" fill="#0f172a">coupon_id: bigint ? [FK] -&gt; coupons.id</text>
+<text x="2260" y="602" font-family="Courier New, monospace" font-size="11" fill="#0f172a">start_date: timestamp with time zone ?</text>
+<text x="2260" y="618" font-family="Courier New, monospace" font-size="11" fill="#0f172a">end_date: timestamp with time zone ?</text>
+<text x="2260" y="634" font-family="Courier New, monospace" font-size="11" fill="#0f172a">view_count: integer ?</text>
+<text x="2260" y="650" font-family="Courier New, monospace" font-size="11" fill="#0f172a">click_count: integer ?</text>
+<text x="2260" y="666" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: character varying(20) ?</text>
+<text x="2260" y="682" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="2260" y="698" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<rect x="114" y="948" width="282" height="224" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="114" y="948" width="282" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="124" y="968" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">media_uploads</text>
+<line x1="114" y1="980" x2="396" y2="980" stroke="#94a3b8" stroke-width="1" />
+<text x="124" y="1002" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="124" y="1018" font-family="Courier New, monospace" font-size="11" fill="#0f172a">uuid: character varying(36) ?</text>
+<text x="124" y="1034" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="124" y="1050" font-family="Courier New, monospace" font-size="11" fill="#0f172a">object_key: character varying(512) ?</text>
+<text x="124" y="1066" font-family="Courier New, monospace" font-size="11" fill="#0f172a">file_url: character varying(512) ?</text>
+<text x="124" y="1082" font-family="Courier New, monospace" font-size="11" fill="#0f172a">file_size: bigint ?</text>
+<text x="124" y="1098" font-family="Courier New, monospace" font-size="11" fill="#0f172a">mime_type: character varying(100) ?</text>
+<text x="124" y="1114" font-family="Courier New, monospace" font-size="11" fill="#0f172a">r2_bucket: character varying(100) ?</text>
+<text x="124" y="1130" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: character varying(20) ?</text>
+<text x="124" y="1146" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="124" y="1162" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<rect x="530" y="948" width="309" height="224" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="530" y="948" width="309" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="540" y="968" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">merchant_analytics</text>
+<line x1="530" y1="980" x2="839" y2="980" stroke="#94a3b8" stroke-width="1" />
+<text x="540" y="1002" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="540" y="1018" font-family="Courier New, monospace" font-size="11" fill="#0f172a">merchant_id: bigint ? [FK] -&gt; merchants.id</text>
+<text x="540" y="1034" font-family="Courier New, monospace" font-size="11" fill="#0f172a">store_id: bigint ? [FK] -&gt; stores.id</text>
+<text x="540" y="1050" font-family="Courier New, monospace" font-size="11" fill="#0f172a">date: date ?</text>
+<text x="540" y="1066" font-family="Courier New, monospace" font-size="11" fill="#0f172a">total_views: integer ?</text>
+<text x="540" y="1082" font-family="Courier New, monospace" font-size="11" fill="#0f172a">unique_visitors: integer ?</text>
+<text x="540" y="1098" font-family="Courier New, monospace" font-size="11" fill="#0f172a">reviews_received: integer ?</text>
+<text x="540" y="1114" font-family="Courier New, monospace" font-size="11" fill="#0f172a">coupons_redeemed: integer ?</text>
+<text x="540" y="1130" font-family="Courier New, monospace" font-size="11" fill="#0f172a">revenue: numeric(12,2) ?</text>
+<text x="540" y="1146" font-family="Courier New, monospace" font-size="11" fill="#0f172a">avg_rating: numeric(3,2) ?</text>
+<text x="540" y="1162" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<rect x="960" y="1004" width="309" height="112" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="960" y="1004" width="309" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="970" y="1024" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">merchant_follows</text>
+<line x1="960" y1="1036" x2="1269" y2="1036" stroke="#94a3b8" stroke-width="1" />
+<text x="970" y="1058" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="970" y="1074" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="970" y="1090" font-family="Courier New, monospace" font-size="11" fill="#0f172a">merchant_id: bigint ? [FK] -&gt; merchants.id</text>
+<text x="970" y="1106" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<rect x="1390" y="948" width="309" height="224" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="1390" y="948" width="309" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="1400" y="968" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">merchant_verifications</text>
+<line x1="1390" y1="980" x2="1699" y2="980" stroke="#94a3b8" stroke-width="1" />
+<text x="1400" y="1002" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="1400" y="1018" font-family="Courier New, monospace" font-size="11" fill="#0f172a">merchant_id: bigint ? [FK] -&gt; merchants.id</text>
+<text x="1400" y="1034" font-family="Courier New, monospace" font-size="11" fill="#0f172a">document_type: character varying(50) ?</text>
+<text x="1400" y="1050" font-family="Courier New, monospace" font-size="11" fill="#0f172a">document_url: character varying(512) ?</text>
+<text x="1400" y="1066" font-family="Courier New, monospace" font-size="11" fill="#0f172a">business_license: character varying(255) ?</text>
+<text x="1400" y="1082" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: character varying(20) ?</text>
+<text x="1400" y="1098" font-family="Courier New, monospace" font-size="11" fill="#0f172a">reviewed_by: bigint ? [FK] -&gt; users.id</text>
+<text x="1400" y="1114" font-family="Courier New, monospace" font-size="11" fill="#0f172a">reviewed_at: timestamp with time zone ?</text>
+<text x="1400" y="1130" font-family="Courier New, monospace" font-size="11" fill="#0f172a">rejection_reason: text ?</text>
+<text x="1400" y="1146" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="1400" y="1162" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<rect x="1813" y="828" width="323" height="464" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="1813" y="828" width="323" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="1823" y="848" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">merchants</text>
+<line x1="1813" y1="860" x2="2136" y2="860" stroke="#94a3b8" stroke-width="1" />
+<text x="1823" y="882" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="1823" y="898" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="1823" y="914" font-family="Courier New, monospace" font-size="11" fill="#0f172a">name: character varying(100) ?</text>
+<text x="1823" y="930" font-family="Courier New, monospace" font-size="11" fill="#0f172a">business_name: character varying(100) ?</text>
+<text x="1823" y="946" font-family="Courier New, monospace" font-size="11" fill="#0f172a">business_type: character varying(50) ?</text>
+<text x="1823" y="962" font-family="Courier New, monospace" font-size="11" fill="#0f172a">category: character varying(50) ?</text>
+<text x="1823" y="978" font-family="Courier New, monospace" font-size="11" fill="#0f172a">logo_url: character varying(255) ?</text>
+<text x="1823" y="994" font-family="Courier New, monospace" font-size="11" fill="#0f172a">address: character varying(255) ?</text>
+<text x="1823" y="1010" font-family="Courier New, monospace" font-size="11" fill="#0f172a">phone: character varying(20) ?</text>
+<text x="1823" y="1026" font-family="Courier New, monospace" font-size="11" fill="#0f172a">contact_phone: character varying(20) ?</text>
+<text x="1823" y="1042" font-family="Courier New, monospace" font-size="11" fill="#0f172a">contact_email: character varying(255) ?</text>
+<text x="1823" y="1058" font-family="Courier New, monospace" font-size="11" fill="#0f172a">website_url: character varying(255) ?</text>
+<text x="1823" y="1074" font-family="Courier New, monospace" font-size="11" fill="#0f172a">social_links: jsonb ?</text>
+<text x="1823" y="1090" font-family="Courier New, monospace" font-size="11" fill="#0f172a">cover_image: character varying(255) ?</text>
+<text x="1823" y="1106" font-family="Courier New, monospace" font-size="11" fill="#0f172a">description: text ?</text>
+<text x="1823" y="1122" font-family="Courier New, monospace" font-size="11" fill="#0f172a">avg_rating: numeric(3,2) ?</text>
+<text x="1823" y="1138" font-family="Courier New, monospace" font-size="11" fill="#0f172a">review_count: integer ?</text>
+<text x="1823" y="1154" font-family="Courier New, monospace" font-size="11" fill="#0f172a">follower_count: integer ?</text>
+<text x="1823" y="1170" font-family="Courier New, monospace" font-size="11" fill="#0f172a">total_stores: integer ?</text>
+<text x="1823" y="1186" font-family="Courier New, monospace" font-size="11" fill="#0f172a">total_reviews: integer ?</text>
+<text x="1823" y="1202" font-family="Courier New, monospace" font-size="11" fill="#0f172a">verification_status: character varying(20) ?</text>
+<text x="1823" y="1218" font-family="Courier New, monospace" font-size="11" fill="#0f172a">verified_at: timestamp with time zone ?</text>
+<text x="1823" y="1234" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: smallint ?</text>
+<text x="1823" y="1250" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="1823" y="1266" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<text x="1823" y="1282" font-family="Courier New, monospace" font-size="11" fill="#0f172a">deleted_at: timestamp with time zone ?</text>
+<rect x="2223" y="972" width="364" height="176" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="2223" y="972" width="364" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="2233" y="992" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">messages</text>
+<line x1="2223" y1="1004" x2="2587" y2="1004" stroke="#94a3b8" stroke-width="1" />
+<text x="2233" y="1026" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="2233" y="1042" font-family="Courier New, monospace" font-size="11" fill="#0f172a">conversation_id: bigint ? [FK] -&gt; conversations.id</text>
+<text x="2233" y="1058" font-family="Courier New, monospace" font-size="11" fill="#0f172a">sender_id: bigint ? [FK] -&gt; users.id</text>
+<text x="2233" y="1074" font-family="Courier New, monospace" font-size="11" fill="#0f172a">content: text ?</text>
+<text x="2233" y="1090" font-family="Courier New, monospace" font-size="11" fill="#0f172a">message_type: character varying(20) ?</text>
+<text x="2233" y="1106" font-family="Courier New, monospace" font-size="11" fill="#0f172a">attachments: jsonb ?</text>
+<text x="2233" y="1122" font-family="Courier New, monospace" font-size="11" fill="#0f172a">is_read: boolean ?</text>
+<text x="2233" y="1138" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<rect x="114" y="1388" width="282" height="192" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="114" y="1388" width="282" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="124" y="1408" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">notifications</text>
+<line x1="114" y1="1420" x2="396" y2="1420" stroke="#94a3b8" stroke-width="1" />
+<text x="124" y="1442" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="124" y="1458" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="124" y="1474" font-family="Courier New, monospace" font-size="11" fill="#0f172a">type: character varying(50) ?</text>
+<text x="124" y="1490" font-family="Courier New, monospace" font-size="11" fill="#0f172a">title: character varying(255) ?</text>
+<text x="124" y="1506" font-family="Courier New, monospace" font-size="11" fill="#0f172a">content: text ?</text>
+<text x="124" y="1522" font-family="Courier New, monospace" font-size="11" fill="#0f172a">data: jsonb ?</text>
+<text x="124" y="1538" font-family="Courier New, monospace" font-size="11" fill="#0f172a">is_read: boolean ?</text>
+<text x="124" y="1554" font-family="Courier New, monospace" font-size="11" fill="#0f172a">read_at: timestamp with time zone ?</text>
+<text x="124" y="1570" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<rect x="530" y="1364" width="309" height="240" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="530" y="1364" width="309" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="540" y="1384" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">orders</text>
+<line x1="530" y1="1396" x2="839" y2="1396" stroke="#94a3b8" stroke-width="1" />
+<text x="540" y="1418" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="540" y="1434" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="540" y="1450" font-family="Courier New, monospace" font-size="11" fill="#0f172a">coupon_id: bigint ? [FK] -&gt; coupons.id</text>
+<text x="540" y="1466" font-family="Courier New, monospace" font-size="11" fill="#0f172a">package_id: bigint ? [FK] -&gt; packages.id</text>
+<text x="540" y="1482" font-family="Courier New, monospace" font-size="11" fill="#0f172a">merchant_id: bigint ? [FK] -&gt; merchants.id</text>
+<text x="540" y="1498" font-family="Courier New, monospace" font-size="11" fill="#0f172a">store_id: bigint ? [FK] -&gt; stores.id</text>
+<text x="540" y="1514" font-family="Courier New, monospace" font-size="11" fill="#0f172a">quantity: integer ?</text>
+<text x="540" y="1530" font-family="Courier New, monospace" font-size="11" fill="#0f172a">total_price: numeric(10,2) ?</text>
+<text x="540" y="1546" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: character varying(20) ?</text>
+<text x="540" y="1562" font-family="Courier New, monospace" font-size="11" fill="#0f172a">note: text ?</text>
+<text x="540" y="1578" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="540" y="1594" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<rect x="960" y="1324" width="309" height="320" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="960" y="1324" width="309" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="970" y="1344" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">packages</text>
+<line x1="960" y1="1356" x2="1269" y2="1356" stroke="#94a3b8" stroke-width="1" />
+<text x="970" y="1378" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="970" y="1394" font-family="Courier New, monospace" font-size="11" fill="#0f172a">merchant_id: bigint ? [FK] -&gt; merchants.id</text>
+<text x="970" y="1410" font-family="Courier New, monospace" font-size="11" fill="#0f172a">store_id: bigint ? [FK] -&gt; stores.id</text>
+<text x="970" y="1426" font-family="Courier New, monospace" font-size="11" fill="#0f172a">title: character varying(100) ?</text>
+<text x="970" y="1442" font-family="Courier New, monospace" font-size="11" fill="#0f172a">description: text ?</text>
+<text x="970" y="1458" font-family="Courier New, monospace" font-size="11" fill="#0f172a">image_url: character varying(255) ?</text>
+<text x="970" y="1474" font-family="Courier New, monospace" font-size="11" fill="#0f172a">original_price: numeric(10,2) ?</text>
+<text x="970" y="1490" font-family="Courier New, monospace" font-size="11" fill="#0f172a">sale_price: numeric(10,2) ?</text>
+<text x="970" y="1506" font-family="Courier New, monospace" font-size="11" fill="#0f172a">discount_percentage: numeric(5,2) ?</text>
+<text x="970" y="1522" font-family="Courier New, monospace" font-size="11" fill="#0f172a">total_quantity: integer ?</text>
+<text x="970" y="1538" font-family="Courier New, monospace" font-size="11" fill="#0f172a">sold_count: integer ?</text>
+<text x="970" y="1554" font-family="Courier New, monospace" font-size="11" fill="#0f172a">valid_from: timestamp with time zone ?</text>
+<text x="970" y="1570" font-family="Courier New, monospace" font-size="11" fill="#0f172a">valid_until: timestamp with time zone ?</text>
+<text x="970" y="1586" font-family="Courier New, monospace" font-size="11" fill="#0f172a">terms: text ?</text>
+<text x="970" y="1602" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: character varying(20) ?</text>
+<text x="970" y="1618" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="970" y="1634" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<rect x="1383" y="1356" width="323" height="256" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="1383" y="1356" width="323" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="1393" y="1376" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">payments</text>
+<line x1="1383" y1="1388" x2="1706" y2="1388" stroke="#94a3b8" stroke-width="1" />
+<text x="1393" y="1410" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="1393" y="1426" font-family="Courier New, monospace" font-size="11" fill="#0f172a">amount: numeric(10,2) ?</text>
+<text x="1393" y="1442" font-family="Courier New, monospace" font-size="11" fill="#0f172a">currency: character varying(10) ?</text>
+<text x="1393" y="1458" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: character varying(20) ?</text>
+<text x="1393" y="1474" font-family="Courier New, monospace" font-size="11" fill="#0f172a">coupon_id: bigint ? [FK] -&gt; coupons.id</text>
+<text x="1393" y="1490" font-family="Courier New, monospace" font-size="11" fill="#0f172a">merchant_id: bigint ? [FK] -&gt; merchants.id</text>
+<text x="1393" y="1506" font-family="Courier New, monospace" font-size="11" fill="#0f172a">order_id: bigint ? [FK] -&gt; orders.id</text>
+<text x="1393" y="1522" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="1393" y="1538" font-family="Courier New, monospace" font-size="11" fill="#0f172a">payment_method: character varying(30) ?</text>
+<text x="1393" y="1554" font-family="Courier New, monospace" font-size="11" fill="#0f172a">payment_session_id: character varying(255) ?</text>
+<text x="1393" y="1570" font-family="Courier New, monospace" font-size="11" fill="#0f172a">paid_at: timestamp with time zone ?</text>
+<text x="1393" y="1586" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="1393" y="1602" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<rect x="1786" y="1388" width="377" height="192" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="1786" y="1388" width="377" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="1796" y="1408" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">post_comments</text>
+<line x1="1786" y1="1420" x2="2163" y2="1420" stroke="#94a3b8" stroke-width="1" />
+<text x="1796" y="1442" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="1796" y="1458" font-family="Courier New, monospace" font-size="11" fill="#0f172a">post_id: bigint ? [FK] -&gt; posts.id</text>
+<text x="1796" y="1474" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="1796" y="1490" font-family="Courier New, monospace" font-size="11" fill="#0f172a">parent_comment_id: bigint ? [FK] -&gt; post_comments.id</text>
+<text x="1796" y="1506" font-family="Courier New, monospace" font-size="11" fill="#0f172a">content: text ?</text>
+<text x="1796" y="1522" font-family="Courier New, monospace" font-size="11" fill="#0f172a">like_count: integer ?</text>
+<text x="1796" y="1538" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: smallint ?</text>
+<text x="1796" y="1554" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="1796" y="1570" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<rect x="2267" y="1444" width="275" height="80" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="2267" y="1444" width="275" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="2277" y="1464" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">post_tags</text>
+<line x1="2267" y1="1476" x2="2542" y2="1476" stroke="#94a3b8" stroke-width="1" />
+<text x="2277" y="1498" font-family="Courier New, monospace" font-size="11" fill="#0f172a">post_id: bigint ? [PK,FK] -&gt; posts.id</text>
+<text x="2277" y="1514" font-family="Courier New, monospace" font-size="11" fill="#0f172a">tag_id: bigint ? [PK,FK] -&gt; tags.id</text>
+<rect x="100" y="1676" width="309" height="304" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="100" y="1676" width="309" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="110" y="1696" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">posts</text>
+<line x1="100" y1="1708" x2="409" y2="1708" stroke="#94a3b8" stroke-width="1" />
+<text x="110" y="1730" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="110" y="1746" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="110" y="1762" font-family="Courier New, monospace" font-size="11" fill="#0f172a">merchant_id: bigint ? [FK] -&gt; merchants.id</text>
+<text x="110" y="1778" font-family="Courier New, monospace" font-size="11" fill="#0f172a">review_id: bigint ? [FK] -&gt; reviews.id</text>
+<text x="110" y="1794" font-family="Courier New, monospace" font-size="11" fill="#0f172a">post_type: character varying(20) ?</text>
+<text x="110" y="1810" font-family="Courier New, monospace" font-size="11" fill="#0f172a">title: character varying(100) ?</text>
+<text x="110" y="1826" font-family="Courier New, monospace" font-size="11" fill="#0f172a">content: text ?</text>
+<text x="110" y="1842" font-family="Courier New, monospace" font-size="11" fill="#0f172a">images: jsonb ?</text>
+<text x="110" y="1858" font-family="Courier New, monospace" font-size="11" fill="#0f172a">like_count: integer ?</text>
+<text x="110" y="1874" font-family="Courier New, monospace" font-size="11" fill="#0f172a">comment_count: integer ?</text>
+<text x="110" y="1890" font-family="Courier New, monospace" font-size="11" fill="#0f172a">share_count: integer ?</text>
+<text x="110" y="1906" font-family="Courier New, monospace" font-size="11" fill="#0f172a">view_count: integer ?</text>
+<text x="110" y="1922" font-family="Courier New, monospace" font-size="11" fill="#0f172a">is_pinned: boolean ?</text>
+<text x="110" y="1938" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: smallint ?</text>
+<text x="110" y="1954" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="110" y="1970" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<rect x="537" y="1740" width="296" height="176" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="537" y="1740" width="296" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="547" y="1760" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">refresh_tokens</text>
+<line x1="537" y1="1772" x2="833" y2="1772" stroke="#94a3b8" stroke-width="1" />
+<text x="547" y="1794" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="547" y="1810" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="547" y="1826" font-family="Courier New, monospace" font-size="11" fill="#0f172a">token_hash: character(64) ?</text>
+<text x="547" y="1842" font-family="Courier New, monospace" font-size="11" fill="#0f172a">expires_at: timestamp with time zone ?</text>
+<text x="547" y="1858" font-family="Courier New, monospace" font-size="11" fill="#0f172a">revoked_at: timestamp with time zone ?</text>
+<text x="547" y="1874" font-family="Courier New, monospace" font-size="11" fill="#0f172a">last_used_at: timestamp with time zone ?</text>
+<text x="547" y="1890" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="547" y="1906" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<rect x="970" y="1708" width="289" height="240" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="970" y="1708" width="289" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="980" y="1728" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">reports</text>
+<line x1="970" y1="1740" x2="1259" y2="1740" stroke="#94a3b8" stroke-width="1" />
+<text x="980" y="1762" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="980" y="1778" font-family="Courier New, monospace" font-size="11" fill="#0f172a">reporter_id: bigint ? [FK] -&gt; users.id</text>
+<text x="980" y="1794" font-family="Courier New, monospace" font-size="11" fill="#0f172a">target_type: character varying(20) ?</text>
+<text x="980" y="1810" font-family="Courier New, monospace" font-size="11" fill="#0f172a">target_id: bigint ?</text>
+<text x="980" y="1826" font-family="Courier New, monospace" font-size="11" fill="#0f172a">reason: character varying(50) ?</text>
+<text x="980" y="1842" font-family="Courier New, monospace" font-size="11" fill="#0f172a">description: text ?</text>
+<text x="980" y="1858" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: character varying(20) ?</text>
+<text x="980" y="1874" font-family="Courier New, monospace" font-size="11" fill="#0f172a">reviewed_by: bigint ? [FK] -&gt; users.id</text>
+<text x="980" y="1890" font-family="Courier New, monospace" font-size="11" fill="#0f172a">reviewed_at: timestamp with time zone ?</text>
+<text x="980" y="1906" font-family="Courier New, monospace" font-size="11" fill="#0f172a">resolution: text ?</text>
+<text x="980" y="1922" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="980" y="1938" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<rect x="1349" y="1732" width="391" height="192" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="1349" y="1732" width="391" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="1359" y="1752" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">review_comments</text>
+<line x1="1349" y1="1764" x2="1740" y2="1764" stroke="#94a3b8" stroke-width="1" />
+<text x="1359" y="1786" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="1359" y="1802" font-family="Courier New, monospace" font-size="11" fill="#0f172a">review_id: bigint ? [FK] -&gt; reviews.id</text>
+<text x="1359" y="1818" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="1359" y="1834" font-family="Courier New, monospace" font-size="11" fill="#0f172a">parent_comment_id: bigint ? [FK] -&gt; review_comments.id</text>
+<text x="1359" y="1850" font-family="Courier New, monospace" font-size="11" fill="#0f172a">content: text ?</text>
+<text x="1359" y="1866" font-family="Courier New, monospace" font-size="11" fill="#0f172a">is_merchant_reply: boolean ?</text>
+<text x="1359" y="1882" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: smallint ?</text>
+<text x="1359" y="1898" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="1359" y="1914" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<rect x="1834" y="1756" width="282" height="144" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="1834" y="1756" width="282" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="1844" y="1776" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">review_media</text>
+<line x1="1834" y1="1788" x2="2116" y2="1788" stroke="#94a3b8" stroke-width="1" />
+<text x="1844" y="1810" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="1844" y="1826" font-family="Courier New, monospace" font-size="11" fill="#0f172a">review_id: bigint ? [FK] -&gt; reviews.id</text>
+<text x="1844" y="1842" font-family="Courier New, monospace" font-size="11" fill="#0f172a">media_type: character varying(10) ?</text>
+<text x="1844" y="1858" font-family="Courier New, monospace" font-size="11" fill="#0f172a">url: character varying(512) ?</text>
+<text x="1844" y="1874" font-family="Courier New, monospace" font-size="11" fill="#0f172a">sort_order: integer ?</text>
+<text x="1844" y="1890" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<rect x="2254" y="1788" width="302" height="80" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="2254" y="1788" width="302" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="2264" y="1808" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">review_tags</text>
+<line x1="2254" y1="1820" x2="2556" y2="1820" stroke="#94a3b8" stroke-width="1" />
+<text x="2264" y="1842" font-family="Courier New, monospace" font-size="11" fill="#0f172a">review_id: bigint ? [PK,FK] -&gt; reviews.id</text>
+<text x="2264" y="1858" font-family="Courier New, monospace" font-size="11" fill="#0f172a">tag_id: bigint ? [PK,FK] -&gt; tags.id</text>
+<rect x="114" y="2148" width="282" height="128" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="114" y="2148" width="282" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="124" y="2168" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">review_votes</text>
+<line x1="114" y1="2180" x2="396" y2="2180" stroke="#94a3b8" stroke-width="1" />
+<text x="124" y="2202" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="124" y="2218" font-family="Courier New, monospace" font-size="11" fill="#0f172a">review_id: bigint ? [FK] -&gt; reviews.id</text>
+<text x="124" y="2234" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="124" y="2250" font-family="Courier New, monospace" font-size="11" fill="#0f172a">vote_type: character varying(20) ?</text>
+<text x="124" y="2266" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<rect x="530" y="2036" width="309" height="352" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="530" y="2036" width="309" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="540" y="2056" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">reviews</text>
+<line x1="530" y1="2068" x2="839" y2="2068" stroke="#94a3b8" stroke-width="1" />
+<text x="540" y="2090" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="540" y="2106" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="540" y="2122" font-family="Courier New, monospace" font-size="11" fill="#0f172a">venue_id: bigint ?</text>
+<text x="540" y="2138" font-family="Courier New, monospace" font-size="11" fill="#0f172a">merchant_id: bigint ? [FK] -&gt; merchants.id</text>
+<text x="540" y="2154" font-family="Courier New, monospace" font-size="11" fill="#0f172a">store_id: bigint ? [FK] -&gt; stores.id</text>
+<text x="540" y="2170" font-family="Courier New, monospace" font-size="11" fill="#0f172a">rating: real ?</text>
+<text x="540" y="2186" font-family="Courier New, monospace" font-size="11" fill="#0f172a">rating_env: real ?</text>
+<text x="540" y="2202" font-family="Courier New, monospace" font-size="11" fill="#0f172a">rating_service: real ?</text>
+<text x="540" y="2218" font-family="Courier New, monospace" font-size="11" fill="#0f172a">rating_value: real ?</text>
+<text x="540" y="2234" font-family="Courier New, monospace" font-size="11" fill="#0f172a">rating_food: real ?</text>
+<text x="540" y="2250" font-family="Courier New, monospace" font-size="11" fill="#0f172a">content: text ?</text>
+<text x="540" y="2266" font-family="Courier New, monospace" font-size="11" fill="#0f172a">images: jsonb ?</text>
+<text x="540" y="2282" font-family="Courier New, monospace" font-size="11" fill="#0f172a">visit_date: date ?</text>
+<text x="540" y="2298" font-family="Courier New, monospace" font-size="11" fill="#0f172a">avg_cost: integer ?</text>
+<text x="540" y="2314" font-family="Courier New, monospace" font-size="11" fill="#0f172a">like_count: integer ?</text>
+<text x="540" y="2330" font-family="Courier New, monospace" font-size="11" fill="#0f172a">comment_count: integer ?</text>
+<text x="540" y="2346" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: smallint ?</text>
+<text x="540" y="2362" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="540" y="2378" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<rect x="947" y="2172" width="336" height="80" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="947" y="2172" width="336" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="957" y="2192" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">store_categories</text>
+<line x1="947" y1="2204" x2="1283" y2="2204" stroke="#94a3b8" stroke-width="1" />
+<text x="957" y="2226" font-family="Courier New, monospace" font-size="11" fill="#0f172a">store_id: bigint ? [PK,FK] -&gt; stores.id</text>
+<text x="957" y="2242" font-family="Courier New, monospace" font-size="11" fill="#0f172a">category_id: bigint ? [PK,FK] -&gt; categories.id</text>
+<rect x="1411" y="2140" width="268" height="144" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="1411" y="2140" width="268" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="1421" y="2160" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">store_hours</text>
+<line x1="1411" y1="2172" x2="1679" y2="2172" stroke="#94a3b8" stroke-width="1" />
+<text x="1421" y="2194" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="1421" y="2210" font-family="Courier New, monospace" font-size="11" fill="#0f172a">store_id: bigint ? [FK] -&gt; stores.id</text>
+<text x="1421" y="2226" font-family="Courier New, monospace" font-size="11" fill="#0f172a">day_of_week: smallint ?</text>
+<text x="1421" y="2242" font-family="Courier New, monospace" font-size="11" fill="#0f172a">open_time: character varying(10) ?</text>
+<text x="1421" y="2258" font-family="Courier New, monospace" font-size="11" fill="#0f172a">close_time: character varying(10) ?</text>
+<text x="1421" y="2274" font-family="Courier New, monospace" font-size="11" fill="#0f172a">is_closed: boolean ?</text>
+<rect x="1820" y="2012" width="309" height="400" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="1820" y="2012" width="309" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="1830" y="2032" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">stores</text>
+<line x1="1820" y1="2044" x2="2129" y2="2044" stroke="#94a3b8" stroke-width="1" />
+<text x="1830" y="2066" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="1830" y="2082" font-family="Courier New, monospace" font-size="11" fill="#0f172a">merchant_id: bigint ? [FK] -&gt; merchants.id</text>
+<text x="1830" y="2098" font-family="Courier New, monospace" font-size="11" fill="#0f172a">name: character varying(255) ?</text>
+<text x="1830" y="2114" font-family="Courier New, monospace" font-size="11" fill="#0f172a">description: text ?</text>
+<text x="1830" y="2130" font-family="Courier New, monospace" font-size="11" fill="#0f172a">address: character varying(255) ?</text>
+<text x="1830" y="2146" font-family="Courier New, monospace" font-size="11" fill="#0f172a">city: character varying(100) ?</text>
+<text x="1830" y="2162" font-family="Courier New, monospace" font-size="11" fill="#0f172a">state: character varying(100) ?</text>
+<text x="1830" y="2178" font-family="Courier New, monospace" font-size="11" fill="#0f172a">zip_code: character varying(20) ?</text>
+<text x="1830" y="2194" font-family="Courier New, monospace" font-size="11" fill="#0f172a">country: character varying(50) ?</text>
+<text x="1830" y="2210" font-family="Courier New, monospace" font-size="11" fill="#0f172a">phone: character varying(50) ?</text>
+<text x="1830" y="2226" font-family="Courier New, monospace" font-size="11" fill="#0f172a">website: character varying(255) ?</text>
+<text x="1830" y="2242" font-family="Courier New, monospace" font-size="11" fill="#0f172a">latitude: double precision ?</text>
+<text x="1830" y="2258" font-family="Courier New, monospace" font-size="11" fill="#0f172a">longitude: double precision ?</text>
+<text x="1830" y="2274" font-family="Courier New, monospace" font-size="11" fill="#0f172a">cover_image_url: character varying(255) ?</text>
+<text x="1830" y="2290" font-family="Courier New, monospace" font-size="11" fill="#0f172a">images: jsonb ?</text>
+<text x="1830" y="2306" font-family="Courier New, monospace" font-size="11" fill="#0f172a">avg_rating: numeric(3,2) ?</text>
+<text x="1830" y="2322" font-family="Courier New, monospace" font-size="11" fill="#0f172a">review_count: integer ?</text>
+<text x="1830" y="2338" font-family="Courier New, monospace" font-size="11" fill="#0f172a">follower_count: integer ?</text>
+<text x="1830" y="2354" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: smallint ?</text>
+<text x="1830" y="2370" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="1830" y="2386" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<text x="1830" y="2402" font-family="Courier New, monospace" font-size="11" fill="#0f172a">deleted_at: timestamp with time zone ?</text>
+<rect x="2264" y="2140" width="282" height="144" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="2264" y="2140" width="282" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="2274" y="2160" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">tags</text>
+<line x1="2264" y1="2172" x2="2546" y2="2172" stroke="#94a3b8" stroke-width="1" />
+<text x="2274" y="2194" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="2274" y="2210" font-family="Courier New, monospace" font-size="11" fill="#0f172a">name: character varying(50) ?</text>
+<text x="2274" y="2226" font-family="Courier New, monospace" font-size="11" fill="#0f172a">type: character varying(20) ?</text>
+<text x="2274" y="2242" font-family="Courier New, monospace" font-size="11" fill="#0f172a">post_count: integer ?</text>
+<text x="2274" y="2258" font-family="Courier New, monospace" font-size="11" fill="#0f172a">review_count: integer ?</text>
+<text x="2274" y="2274" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<rect x="114" y="2444" width="282" height="240" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="114" y="2444" width="282" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="124" y="2464" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">user_addresses</text>
+<line x1="114" y1="2476" x2="396" y2="2476" stroke="#94a3b8" stroke-width="1" />
+<text x="124" y="2498" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="124" y="2514" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="124" y="2530" font-family="Courier New, monospace" font-size="11" fill="#0f172a">name: character varying(50) ?</text>
+<text x="124" y="2546" font-family="Courier New, monospace" font-size="11" fill="#0f172a">phone: character varying(20) ?</text>
+<text x="124" y="2562" font-family="Courier New, monospace" font-size="11" fill="#0f172a">province: character varying(50) ?</text>
+<text x="124" y="2578" font-family="Courier New, monospace" font-size="11" fill="#0f172a">city: character varying(100) ?</text>
+<text x="124" y="2594" font-family="Courier New, monospace" font-size="11" fill="#0f172a">district: character varying(50) ?</text>
+<text x="124" y="2610" font-family="Courier New, monospace" font-size="11" fill="#0f172a">address: character varying(255) ?</text>
+<text x="124" y="2626" font-family="Courier New, monospace" font-size="11" fill="#0f172a">postal_code: character varying(20) ?</text>
+<text x="124" y="2642" font-family="Courier New, monospace" font-size="11" fill="#0f172a">is_default: boolean ?</text>
+<text x="124" y="2658" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="124" y="2674" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<rect x="523" y="2492" width="323" height="144" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="523" y="2492" width="323" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="533" y="2512" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">user_auths</text>
+<line x1="523" y1="2524" x2="846" y2="2524" stroke="#94a3b8" stroke-width="1" />
+<text x="533" y="2546" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="533" y="2562" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id, users.id</text>
+<text x="533" y="2578" font-family="Courier New, monospace" font-size="11" fill="#0f172a">identity_type: character varying(20) ?</text>
+<text x="533" y="2594" font-family="Courier New, monospace" font-size="11" fill="#0f172a">identifier: character varying(255) ?</text>
+<text x="533" y="2610" font-family="Courier New, monospace" font-size="11" fill="#0f172a">credential: character varying(255) ?</text>
+<text x="533" y="2626" font-family="Courier New, monospace" font-size="11" fill="#0f172a">last_login_at: timestamp with time zone ?</text>
+<rect x="970" y="2508" width="289" height="112" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="970" y="2508" width="289" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="980" y="2528" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">user_follows</text>
+<line x1="970" y1="2540" x2="1259" y2="2540" stroke="#94a3b8" stroke-width="1" />
+<text x="980" y="2562" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="980" y="2578" font-family="Courier New, monospace" font-size="11" fill="#0f172a">follower_id: bigint ? [FK] -&gt; users.id</text>
+<text x="980" y="2594" font-family="Courier New, monospace" font-size="11" fill="#0f172a">following_id: bigint ? [FK] -&gt; users.id</text>
+<text x="980" y="2610" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<rect x="1407" y="2516" width="275" height="96" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="1407" y="2516" width="275" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="1417" y="2536" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">user_notifications</text>
+<line x1="1407" y1="2548" x2="1682" y2="2548" stroke="#94a3b8" stroke-width="1" />
+<text x="1417" y="2570" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [PK,FK] -&gt; users.id</text>
+<text x="1417" y="2586" font-family="Courier New, monospace" font-size="11" fill="#0f172a">push_enabled: boolean ?</text>
+<text x="1417" y="2602" font-family="Courier New, monospace" font-size="11" fill="#0f172a">email_enabled: boolean ?</text>
+<rect x="1837" y="2524" width="275" height="80" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="1837" y="2524" width="275" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="1847" y="2544" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">user_privacies</text>
+<line x1="1837" y1="2556" x2="2112" y2="2556" stroke="#94a3b8" stroke-width="1" />
+<text x="1847" y="2578" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [PK,FK] -&gt; users.id</text>
+<text x="1847" y="2594" font-family="Courier New, monospace" font-size="11" fill="#0f172a">is_public: boolean ?</text>
+<rect x="2233" y="2452" width="343" height="224" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="2233" y="2452" width="343" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="2243" y="2472" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">user_profiles</text>
+<line x1="2233" y1="2484" x2="2576" y2="2484" stroke="#94a3b8" stroke-width="1" />
+<text x="2243" y="2506" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [PK,FK] -&gt; users.id, users.id</text>
+<text x="2243" y="2522" font-family="Courier New, monospace" font-size="11" fill="#0f172a">nickname: character varying(50) ?</text>
+<text x="2243" y="2538" font-family="Courier New, monospace" font-size="11" fill="#0f172a">avatar_url: character varying(255) ?</text>
+<text x="2243" y="2554" font-family="Courier New, monospace" font-size="11" fill="#0f172a">intro: character varying(255) ?</text>
+<text x="2243" y="2570" font-family="Courier New, monospace" font-size="11" fill="#0f172a">location: character varying(100) ?</text>
+<text x="2243" y="2586" font-family="Courier New, monospace" font-size="11" fill="#0f172a">follower_count: integer ?</text>
+<text x="2243" y="2602" font-family="Courier New, monospace" font-size="11" fill="#0f172a">following_count: integer ?</text>
+<text x="2243" y="2618" font-family="Courier New, monospace" font-size="11" fill="#0f172a">post_count: integer ?</text>
+<text x="2243" y="2634" font-family="Courier New, monospace" font-size="11" fill="#0f172a">review_count: integer ?</text>
+<text x="2243" y="2650" font-family="Courier New, monospace" font-size="11" fill="#0f172a">like_count: integer ?</text>
+<text x="2243" y="2666" font-family="Courier New, monospace" font-size="11" fill="#0f172a">coupon_count: integer ?</text>
+<rect x="114" y="2812" width="282" height="128" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="114" y="2812" width="282" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="124" y="2832" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">users</text>
+<line x1="114" y1="2844" x2="396" y2="2844" stroke="#94a3b8" stroke-width="1" />
+<text x="124" y="2866" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="124" y="2882" font-family="Courier New, monospace" font-size="11" fill="#0f172a">role: character varying(20) ?</text>
+<text x="124" y="2898" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: smallint ?</text>
+<text x="124" y="2914" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="124" y="2930" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+<rect x="530" y="2716" width="309" height="320" rx="8" ry="8" fill="#ffffff" stroke="#0f172a" stroke-opacity="0.25" />
+<rect x="530" y="2716" width="309" height="32" rx="8" ry="8" fill="#e2e8f0" stroke="none" />
+<text x="540" y="2736" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a">vouchers</text>
+<line x1="530" y1="2748" x2="839" y2="2748" stroke="#94a3b8" stroke-width="1" />
+<text x="540" y="2770" font-family="Courier New, monospace" font-size="11" fill="#0f172a">id: bigint ? [PK]</text>
+<text x="540" y="2786" font-family="Courier New, monospace" font-size="11" fill="#0f172a">code: character varying(50) ?</text>
+<text x="540" y="2802" font-family="Courier New, monospace" font-size="11" fill="#0f172a">coupon_id: bigint ? [FK] -&gt; coupons.id</text>
+<text x="540" y="2818" font-family="Courier New, monospace" font-size="11" fill="#0f172a">user_id: bigint ? [FK] -&gt; users.id</text>
+<text x="540" y="2834" font-family="Courier New, monospace" font-size="11" fill="#0f172a">package_id: bigint ? [FK] -&gt; packages.id</text>
+<text x="540" y="2850" font-family="Courier New, monospace" font-size="11" fill="#0f172a">order_id: bigint ? [FK] -&gt; orders.id</text>
+<text x="540" y="2866" font-family="Courier New, monospace" font-size="11" fill="#0f172a">merchant_id: bigint ? [FK] -&gt; merchants.id</text>
+<text x="540" y="2882" font-family="Courier New, monospace" font-size="11" fill="#0f172a">status: character varying(20) ?</text>
+<text x="540" y="2898" font-family="Courier New, monospace" font-size="11" fill="#0f172a">expiry_date: timestamp with time zone ?</text>
+<text x="540" y="2914" font-family="Courier New, monospace" font-size="11" fill="#0f172a">valid_from: timestamp with time zone ?</text>
+<text x="540" y="2930" font-family="Courier New, monospace" font-size="11" fill="#0f172a">valid_until: timestamp with time zone ?</text>
+<text x="540" y="2946" font-family="Courier New, monospace" font-size="11" fill="#0f172a">redeemed_at: timestamp with time zone ?</text>
+<text x="540" y="2962" font-family="Courier New, monospace" font-size="11" fill="#0f172a">redeemed_by: bigint ? [FK] -&gt; users.id</text>
+<text x="540" y="2978" font-family="Courier New, monospace" font-size="11" fill="#0f172a">redemption_note: text ?</text>
+<text x="540" y="2994" font-family="Courier New, monospace" font-size="11" fill="#0f172a">qr_code: character varying(255) ?</text>
+<text x="540" y="3010" font-family="Courier New, monospace" font-size="11" fill="#0f172a">created_at: timestamp with time zone ?</text>
+<text x="540" y="3026" font-family="Courier New, monospace" font-size="11" fill="#0f172a">updated_at: timestamp with time zone ?</text>
+</svg>

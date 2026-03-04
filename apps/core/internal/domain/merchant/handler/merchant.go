@@ -100,3 +100,16 @@ func (h *MerchantHandler) Reviews(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": reviewdto.FromModels(reviews)})
 }
+
+// DeleteMerchantMe godoc
+// @Summary Delete current merchant (placeholder)
+// @Description Placeholder endpoint for future merchant deletion flow
+// @Tags merchant
+// @Produce json
+// @Success 501 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Security BearerAuth
+// @Router /merchant/me [delete]
+func (h *MerchantHandler) DeleteMe(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented"})
+}

@@ -28,5 +28,6 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 		merchantStores.POST("/:id/activate", h.Activate)
 		merchantStores.POST("/:id/deactivate", h.Deactivate)
 		merchantStores.PATCH("/:id", h.Update)
+		merchantStores.DELETE("/:id", h.Delete)
 	}
 }

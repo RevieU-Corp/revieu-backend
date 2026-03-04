@@ -28,6 +28,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	merchantStores := r.Group("/merchant/stores", middleware.JWTAuth(cfg.JWT))
 	{
 		merchantStores.POST("/:id/coupons", h.CreateStoreCoupon)
+		merchantStores.DELETE("/:id/coupons/:couponId", h.DeleteStoreCoupon)
 	}
 
 	packages := r.Group("/packages")

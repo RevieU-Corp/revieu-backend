@@ -217,9 +217,21 @@ docker run -p 8080:8080 revieu-core
 
 ## 📚 Documentation
 
+- [Database ERD (SVG)](docs/database-erd.svg) - Full database schema with PK/FK markers and FK links
 - [Scripts README](scripts/README.md) - Secrets management and hooks
 - [Core Service](apps/core/) - API documentation
 - [Infrastructure Repo](https://github.com/RevieU-Corp/revieu-infra) - K8s configs
+
+### Regenerate Database ERD
+
+```bash
+python scripts/generate_db_erd_svg.py \
+  --host 10.0.0.1 \
+  --user postgres \
+  --db revieu \
+  --password 123456 \
+  --output docs/database-erd.svg
+```
 
 ---
 
