@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
+	userservice "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/user/service"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/router"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/logger"
@@ -74,6 +75,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	startAccountDeletionExecutor(ctx, userservice.NewUserService(database.DB))
+
 	// Initialize Gin router with JSON logging
 	gin.SetMode(gin.ReleaseMode)
 	router := buildRouter(cfg)
@@ -127,4 +130,27 @@ func jsonLoggerMiddleware() gin.HandlerFunc {
 			"user_agent", c.Request.UserAgent(),
 		)
 	}
+}
+
+func startAccountDeletionExecutor(ctx context.Context, svc *userservice.UserService) {
+	runOnce := func() {
+		processed, err := svc.ExecuteDueAccountDeletions(ctx, time.Now().UTC(), 0)
+		if err != nil {
+			logger.Error(ctx, "Failed to execute due account deletions", "error", err.Error())
+			return
+		}
+		if processed > 0 {
+			logger.Info(ctx, "Executed due account deletions", "processed", processed)
+		}
+	}
+
+	runOnce()
+
+	go func() {
+		ticker := time.NewTicker(time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			runOnce()
+		}
+	}()
 }

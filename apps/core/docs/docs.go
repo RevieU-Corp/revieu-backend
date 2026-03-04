@@ -3161,7 +3161,7 @@ const docTemplate = `{
         },
         "/user/account": {
             "delete": {
-                "description": "Schedules account deletion (cooling period)",
+                "description": "Schedules account deletion (cooling period). Due deletions are executed asynchronously by a background worker.",
                 "consumes": [
                     "application/json"
                 ],

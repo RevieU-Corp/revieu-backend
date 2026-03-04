@@ -425,7 +425,7 @@ func (h *UserHandler) RequestAccountExport(c *gin.Context) {
 
 // RequestAccountDeletion godoc
 // @Summary Request account deletion
-// @Description Schedules account deletion (cooling period)
+// @Description Schedules account deletion (cooling period). Due deletions are executed asynchronously by a background worker.
 // @Tags user
 // @Accept json
 // @Produce json
