@@ -82,9 +82,25 @@ func (s *VoucherService) Detail(ctx context.Context, id int64) (*model.Voucher, 
 	return &v, nil
 }
 
+func (s *VoucherService) DetailForUser(ctx context.Context, userID, id int64) (*model.Voucher, error) {
+	var v model.Voucher
+	if err := s.db.WithContext(ctx).Where("id = ? AND user_id = ?", id, userID).First(&v).Error; err != nil {
+		return nil, err
+	}
+	return &v, nil
+}
+
 func (s *VoucherService) ByCode(ctx context.Context, code string) (*model.Voucher, error) {
 	var v model.Voucher
 	if err := s.db.WithContext(ctx).Where("code = ?", code).First(&v).Error; err != nil {
+		return nil, err
+	}
+	return &v, nil
+}
+
+func (s *VoucherService) ByCodeForUser(ctx context.Context, userID int64, code string) (*model.Voucher, error) {
+	var v model.Voucher
+	if err := s.db.WithContext(ctx).Where("code = ? AND user_id = ?", code, userID).First(&v).Error; err != nil {
 		return nil, err
 	}
 	return &v, nil

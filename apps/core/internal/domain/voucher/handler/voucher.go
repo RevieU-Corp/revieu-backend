@@ -5,19 +5,24 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/voucher/dto"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/voucher/service"
 	"github.com/gin-gonic/gin"
 )
 
 type VoucherHandler struct {
-	svc *service.VoucherService
+	svc         *service.VoucherService
+	frontendURL string
 }
 
-func NewVoucherHandler(svc *service.VoucherService) *VoucherHandler {
+func NewVoucherHandler(svc *service.VoucherService, frontendURL string) *VoucherHandler {
 	if svc == nil {
 		svc = service.NewVoucherService(nil)
 	}
-	return &VoucherHandler{svc: svc}
+	return &VoucherHandler{
+		svc:         svc,
+		frontendURL: frontendURL,
+	}
 }
 
 // CreateVoucher godoc
@@ -76,17 +81,23 @@ func (h *VoucherHandler) List(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Router /vouchers/{id} [get]
 func (h *VoucherHandler) Detail(c *gin.Context) {
+	userID := c.GetInt64("user_id")
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
-	v, err := h.svc.Detail(c.Request.Context(), id)
+	v, err := h.svc.DetailForUser(c.Request.Context(), userID, id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
 	}
-	c.JSON(http.StatusOK, v)
+	resp, err := dto.FromModel(*v, h.frontendURL)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to build scan url"})
+		return
+	}
+	c.JSON(http.StatusOK, resp)
 }
 
 // VoucherByCode godoc
@@ -100,12 +111,18 @@ func (h *VoucherHandler) Detail(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Router /vouchers/code/{code} [get]
 func (h *VoucherHandler) ByCode(c *gin.Context) {
-	v, err := h.svc.ByCode(c.Request.Context(), c.Param("code"))
+	userID := c.GetInt64("user_id")
+	v, err := h.svc.ByCodeForUser(c.Request.Context(), userID, c.Param("code"))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
 	}
-	c.JSON(http.StatusOK, v)
+	resp, err := dto.FromModel(*v, h.frontendURL)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to build scan url"})
+		return
+	}
+	c.JSON(http.StatusOK, resp)
 }
 
 // UseVoucher godoc
