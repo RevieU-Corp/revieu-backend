@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/voucher/dto"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/voucher/service"
@@ -190,6 +191,48 @@ func (h *VoucherHandler) ShareEmail(c *gin.Context) { c.JSON(http.StatusOK, gin.
 // @Failure 401 {object} map[string]string
 // @Router /vouchers/share/sms [post]
 func (h *VoucherHandler) ShareSMS(c *gin.Context) { c.JSON(http.StatusOK, gin.H{}) }
+
+// MerchantVoucherScanPreview godoc
+// @Summary Preview voucher redemption by scan token
+// @Description Validates a scanned voucher for the authenticated merchant without mutating state
+// @Tags voucher
+// @Produce json
+// @Param t query string true "Voucher scan token"
+// @Success 200 {object} service.RedeemPreview
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /merchant/vouchers/scan [get]
+func (h *VoucherHandler) ScanPreview(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	scanToken := strings.TrimSpace(c.Query("t"))
+	if scanToken == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing scan token"})
+		return
+	}
+
+	preview, err := h.svc.PreviewRedeemByToken(c.Request.Context(), userID, scanToken)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrVoucherForbidden):
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		case errors.Is(err, service.ErrVoucherNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to preview voucher"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, preview)
+}
 
 // RedeemVoucherByMerchant godoc
 // @Summary Redeem voucher by merchant owner

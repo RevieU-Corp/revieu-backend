@@ -1231,6 +1231,76 @@ func TestVoucherByCodeRejectsNonOwner(t *testing.T) {
 	}
 }
 
+func TestMerchantVoucherScanPreviewFlow(t *testing.T) {
+	r, _ := setupAPITest(t)
+	db := database.DB
+
+	merchantOwner := model.User{Role: "user", Status: 0}
+	if err := db.Create(&merchantOwner).Error; err != nil {
+		t.Fatalf("failed to create merchant owner: %v", err)
+	}
+	merchantOwnerTok := issueAPITestToken(t, merchantOwner, "merchant-preview@example.com")
+
+	buyer := model.User{Role: "user", Status: 0}
+	if err := db.Create(&buyer).Error; err != nil {
+		t.Fatalf("failed to create buyer: %v", err)
+	}
+
+	merchant := model.Merchant{Name: "Preview Flow Merchant", UserID: &merchantOwner.ID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Preview Flow Store", Status: 1}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	coupon := model.Coupon{
+		MerchantID:    merchant.ID,
+		StoreID:       &store.ID,
+		Title:         "Preview Flow Coupon",
+		Type:          "discount",
+		TotalQuantity: 10,
+		MaxPerUser:    1,
+		Status:        "active",
+	}
+	if err := db.Create(&coupon).Error; err != nil {
+		t.Fatalf("failed to create coupon: %v", err)
+	}
+	voucher := model.Voucher{
+		Code:       "PREVIEW-FLOW-VOUCHER",
+		ScanToken:  "scan-token-preview-flow",
+		CouponID:   coupon.ID,
+		UserID:     buyer.ID,
+		MerchantID: &merchant.ID,
+		Status:     "active",
+	}
+	if err := db.Create(&voucher).Error; err != nil {
+		t.Fatalf("failed to create voucher: %v", err)
+	}
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/merchant/vouchers/scan?t=scan-token-preview-flow", nil)
+	req.Header.Set("Authorization", "Bearer "+merchantOwnerTok)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	var resp map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("failed to decode scan preview response: %v", err)
+	}
+	if canRedeem, _ := resp["can_redeem"].(bool); !canRedeem {
+		t.Fatalf("expected can_redeem=true, got %+v", resp["can_redeem"])
+	}
+	if voucherCode, _ := resp["voucher_code"].(string); voucherCode != voucher.Code {
+		t.Fatalf("expected voucher_code=%q, got %q", voucher.Code, voucherCode)
+	}
+	if couponTitle, _ := resp["coupon_title"].(string); couponTitle != coupon.Title {
+		t.Fatalf("expected coupon_title=%q, got %q", coupon.Title, couponTitle)
+	}
+}
+
 func TestPaymentsCreateAndDetail(t *testing.T) {
 	r, tok := setupAPITest(t)
 
