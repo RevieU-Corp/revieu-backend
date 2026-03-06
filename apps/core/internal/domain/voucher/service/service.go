@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -47,7 +50,19 @@ func (s *VoucherService) Create(ctx context.Context, req CreateVoucherRequest) (
 		merchantID = &coupon.MerchantID
 	}
 
-	v := model.Voucher{Code: req.Code, CouponID: couponID, UserID: userID, MerchantID: merchantID, Status: "active"}
+	scanToken, err := generateVoucherScanToken()
+	if err != nil {
+		return model.Voucher{}, err
+	}
+
+	v := model.Voucher{
+		Code:       req.Code,
+		ScanToken:  scanToken,
+		CouponID:   couponID,
+		UserID:     userID,
+		MerchantID: merchantID,
+		Status:     "active",
+	}
 	return v, s.db.WithContext(ctx).Create(&v).Error
 }
 
@@ -137,4 +152,12 @@ func (s *VoucherService) RedeemByMerchant(ctx context.Context, userID, voucherID
 			Where("id = ?", coupon.ID).
 			UpdateColumn("redeemed_count", gorm.Expr("redeemed_count + 1")).Error
 	})
+}
+
+func generateVoucherScanToken() (string, error) {
+	var raw [24]byte
+	if _, err := rand.Read(raw[:]); err != nil {
+		return "", fmt.Errorf("generate voucher scan token: %w", err)
+	}
+	return "vst_" + base64.RawURLEncoding.EncodeToString(raw[:]), nil
 }

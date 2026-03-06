@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strconv"
 	"testing"
 
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
@@ -28,6 +29,71 @@ func setupVoucherTestDB(t *testing.T) *gorm.DB {
 	}
 
 	return db
+}
+
+func TestVoucherServiceCreateAssignsUniqueScanTokens(t *testing.T) {
+	db := setupVoucherTestDB(t)
+	svc := NewVoucherService(db)
+
+	user := model.User{ID: 1001, Role: "user", Status: 0}
+	if err := db.Create(&user).Error; err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+
+	merchantOwner := model.User{ID: 1002, Role: "user", Status: 0}
+	if err := db.Create(&merchantOwner).Error; err != nil {
+		t.Fatalf("failed to create merchant owner: %v", err)
+	}
+
+	merchant := model.Merchant{Name: "Create Merchant", UserID: &merchantOwner.ID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+
+	store := model.Store{MerchantID: merchant.ID, Name: "Create Store", Status: 1}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	coupon := model.Coupon{
+		MerchantID:    merchant.ID,
+		StoreID:       &store.ID,
+		Title:         "Create Coupon",
+		Type:          "cash",
+		TotalQuantity: 100,
+		MaxPerUser:    5,
+		Status:        "active",
+	}
+	if err := db.Create(&coupon).Error; err != nil {
+		t.Fatalf("failed to create coupon: %v", err)
+	}
+
+	first, err := svc.Create(context.Background(), CreateVoucherRequest{
+		CouponID: strconv.FormatInt(coupon.ID, 10),
+		UserID:   strconv.FormatInt(user.ID, 10),
+		Code:     "CREATE-ONE",
+	})
+	if err != nil {
+		t.Fatalf("failed to create first voucher: %v", err)
+	}
+	second, err := svc.Create(context.Background(), CreateVoucherRequest{
+		CouponID: strconv.FormatInt(coupon.ID, 10),
+		UserID:   strconv.FormatInt(user.ID, 10),
+		Code:     "CREATE-TWO",
+	})
+	if err != nil {
+		t.Fatalf("failed to create second voucher: %v", err)
+	}
+
+	if first.ScanToken == "" {
+		t.Fatalf("expected first voucher scan token to be populated")
+	}
+	if second.ScanToken == "" {
+		t.Fatalf("expected second voucher scan token to be populated")
+	}
+	if first.ScanToken == second.ScanToken {
+		t.Fatalf("expected voucher scan tokens to be unique, got %q", first.ScanToken)
+	}
 }
 
 func TestVoucherServiceRedeemByMerchantAllowsSoftDeletedCoupon(t *testing.T) {
