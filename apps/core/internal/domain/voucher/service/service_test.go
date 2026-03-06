@@ -448,3 +448,194 @@ func TestPreviewRedeemByTokenReturnsExpiredVoucherAsNotRedeemable(t *testing.T) 
 		t.Fatalf("expected reason expired, got %q", preview.Reason)
 	}
 }
+
+func TestRedeemByTokenMarksVoucherUsed(t *testing.T) {
+	db := setupVoucherTestDB(t)
+	svc := NewVoucherService(db)
+
+	merchantUserID := int64(1601)
+	customerUserID := int64(1602)
+	for _, id := range []int64{merchantUserID, customerUserID} {
+		if err := db.Create(&model.User{ID: id, Role: "user", Status: 0}).Error; err != nil {
+			t.Fatalf("failed to create user %d: %v", id, err)
+		}
+	}
+
+	merchant := model.Merchant{Name: "Redeem Token Merchant", UserID: &merchantUserID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Redeem Token Store", Status: 1}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	storeID := store.ID
+	coupon := model.Coupon{
+		MerchantID:    merchant.ID,
+		StoreID:       &storeID,
+		Title:         "Redeem Token Coupon",
+		Type:          "cash",
+		TotalQuantity: 100,
+		MaxPerUser:    1,
+		Status:        "active",
+	}
+	if err := db.Create(&coupon).Error; err != nil {
+		t.Fatalf("failed to create coupon: %v", err)
+	}
+	voucher := model.Voucher{
+		Code:       "voucher-redeem-token",
+		ScanToken:  "scan-token-redeem-success",
+		CouponID:   coupon.ID,
+		UserID:     customerUserID,
+		MerchantID: &merchant.ID,
+		Status:     "active",
+	}
+	if err := db.Create(&voucher).Error; err != nil {
+		t.Fatalf("failed to create voucher: %v", err)
+	}
+
+	if err := svc.RedeemByMerchantToken(context.Background(), merchantUserID, voucher.ScanToken); err != nil {
+		t.Fatalf("redeem by token returned error: %v", err)
+	}
+
+	var refreshedVoucher model.Voucher
+	if err := db.First(&refreshedVoucher, voucher.ID).Error; err != nil {
+		t.Fatalf("failed to reload voucher: %v", err)
+	}
+	if refreshedVoucher.Status != "used" {
+		t.Fatalf("expected voucher status used, got %q", refreshedVoucher.Status)
+	}
+	if refreshedVoucher.RedeemedAt == nil {
+		t.Fatalf("expected redeemed_at to be set")
+	}
+	if refreshedVoucher.RedeemedBy == nil || *refreshedVoucher.RedeemedBy != merchantUserID {
+		t.Fatalf("expected redeemed_by=%d, got %+v", merchantUserID, refreshedVoucher.RedeemedBy)
+	}
+
+	var refreshedCoupon model.Coupon
+	if err := db.Unscoped().First(&refreshedCoupon, coupon.ID).Error; err != nil {
+		t.Fatalf("failed to reload coupon: %v", err)
+	}
+	if refreshedCoupon.RedeemedCount != 1 {
+		t.Fatalf("expected redeemed_count=1, got %d", refreshedCoupon.RedeemedCount)
+	}
+}
+
+func TestRedeemByTokenRejectsRepeatedRedemption(t *testing.T) {
+	db := setupVoucherTestDB(t)
+	svc := NewVoucherService(db)
+
+	merchantUserID := int64(1701)
+	customerUserID := int64(1702)
+	for _, id := range []int64{merchantUserID, customerUserID} {
+		if err := db.Create(&model.User{ID: id, Role: "user", Status: 0}).Error; err != nil {
+			t.Fatalf("failed to create user %d: %v", id, err)
+		}
+	}
+
+	merchant := model.Merchant{Name: "Repeated Redeem Merchant", UserID: &merchantUserID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Repeated Redeem Store", Status: 1}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	storeID := store.ID
+	coupon := model.Coupon{
+		MerchantID:    merchant.ID,
+		StoreID:       &storeID,
+		Title:         "Repeated Redeem Coupon",
+		Type:          "cash",
+		TotalQuantity: 100,
+		MaxPerUser:    1,
+		Status:        "active",
+	}
+	if err := db.Create(&coupon).Error; err != nil {
+		t.Fatalf("failed to create coupon: %v", err)
+	}
+	voucher := model.Voucher{
+		Code:       "voucher-redeem-repeat",
+		ScanToken:  "scan-token-redeem-repeat",
+		CouponID:   coupon.ID,
+		UserID:     customerUserID,
+		MerchantID: &merchant.ID,
+		Status:     "active",
+	}
+	if err := db.Create(&voucher).Error; err != nil {
+		t.Fatalf("failed to create voucher: %v", err)
+	}
+
+	if err := svc.RedeemByMerchantToken(context.Background(), merchantUserID, voucher.ScanToken); err != nil {
+		t.Fatalf("first redeem returned error: %v", err)
+	}
+
+	err := svc.RedeemByMerchantToken(context.Background(), merchantUserID, voucher.ScanToken)
+	if err != ErrVoucherNotRedeemable {
+		t.Fatalf("expected ErrVoucherNotRedeemable, got %v", err)
+	}
+
+	var refreshedCoupon model.Coupon
+	if err := db.Unscoped().First(&refreshedCoupon, coupon.ID).Error; err != nil {
+		t.Fatalf("failed to reload coupon: %v", err)
+	}
+	if refreshedCoupon.RedeemedCount != 1 {
+		t.Fatalf("expected redeemed_count to stay 1, got %d", refreshedCoupon.RedeemedCount)
+	}
+}
+
+func TestRedeemByTokenRejectsWrongMerchant(t *testing.T) {
+	db := setupVoucherTestDB(t)
+	svc := NewVoucherService(db)
+
+	issuingMerchantUserID := int64(1801)
+	otherMerchantUserID := int64(1802)
+	customerUserID := int64(1803)
+	for _, id := range []int64{issuingMerchantUserID, otherMerchantUserID, customerUserID} {
+		if err := db.Create(&model.User{ID: id, Role: "user", Status: 0}).Error; err != nil {
+			t.Fatalf("failed to create user %d: %v", id, err)
+		}
+	}
+
+	issuingMerchant := model.Merchant{Name: "Issuing Redeem Merchant", UserID: &issuingMerchantUserID}
+	if err := db.Create(&issuingMerchant).Error; err != nil {
+		t.Fatalf("failed to create issuing merchant: %v", err)
+	}
+	otherMerchant := model.Merchant{Name: "Other Redeem Merchant", UserID: &otherMerchantUserID}
+	if err := db.Create(&otherMerchant).Error; err != nil {
+		t.Fatalf("failed to create other merchant: %v", err)
+	}
+	store := model.Store{MerchantID: issuingMerchant.ID, Name: "Wrong Merchant Store", Status: 1}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	storeID := store.ID
+	coupon := model.Coupon{
+		MerchantID:    issuingMerchant.ID,
+		StoreID:       &storeID,
+		Title:         "Wrong Merchant Coupon",
+		Type:          "cash",
+		TotalQuantity: 100,
+		MaxPerUser:    1,
+		Status:        "active",
+	}
+	if err := db.Create(&coupon).Error; err != nil {
+		t.Fatalf("failed to create coupon: %v", err)
+	}
+	voucher := model.Voucher{
+		Code:       "voucher-wrong-merchant",
+		ScanToken:  "scan-token-wrong-merchant",
+		CouponID:   coupon.ID,
+		UserID:     customerUserID,
+		MerchantID: &issuingMerchant.ID,
+		Status:     "active",
+	}
+	if err := db.Create(&voucher).Error; err != nil {
+		t.Fatalf("failed to create voucher: %v", err)
+	}
+
+	err := svc.RedeemByMerchantToken(context.Background(), otherMerchantUserID, voucher.ScanToken)
+	if err != ErrVoucherForbidden {
+		t.Fatalf("expected ErrVoucherForbidden, got %v", err)
+	}
+}

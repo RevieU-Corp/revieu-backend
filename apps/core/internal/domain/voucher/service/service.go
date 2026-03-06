@@ -202,6 +202,64 @@ func (s *VoucherService) PreviewRedeemByToken(ctx context.Context, merchantUserI
 	return preview, nil
 }
 
+func (s *VoucherService) RedeemByMerchantToken(ctx context.Context, merchantUserID int64, scanToken string) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var merchant model.Merchant
+		if err := tx.Where("user_id = ?", merchantUserID).First(&merchant).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrVoucherForbidden
+			}
+			return err
+		}
+
+		var voucher model.Voucher
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("scan_token = ?", scanToken).
+			First(&voucher).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrVoucherNotFound
+			}
+			return err
+		}
+
+		var coupon model.Coupon
+		if err := tx.Unscoped().First(&coupon, voucher.CouponID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrVoucherNotFound
+			}
+			return err
+		}
+		if coupon.StoreID == nil || coupon.MerchantID != merchant.ID {
+			return ErrVoucherForbidden
+		}
+
+		now := time.Now()
+		if voucher.Status != "active" {
+			return ErrVoucherNotRedeemable
+		}
+		if voucher.ValidUntil != nil && voucher.ValidUntil.Before(now) {
+			return ErrVoucherExpired
+		}
+		if !voucher.ExpiryDate.IsZero() && voucher.ExpiryDate.Before(now) {
+			return ErrVoucherExpired
+		}
+
+		if err := tx.Model(&model.Voucher{}).
+			Where("id = ?", voucher.ID).
+			Updates(map[string]interface{}{
+				"status":      "used",
+				"redeemed_at": now,
+				"redeemed_by": merchantUserID,
+			}).Error; err != nil {
+			return err
+		}
+
+		return tx.Unscoped().Model(&model.Coupon{}).
+			Where("id = ?", coupon.ID).
+			UpdateColumn("redeemed_count", gorm.Expr("redeemed_count + 1")).Error
+	})
+}
+
 func (s *VoucherService) RedeemByMerchant(ctx context.Context, userID, voucherID int64) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var merchant model.Merchant

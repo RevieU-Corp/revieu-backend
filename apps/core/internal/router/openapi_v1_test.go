@@ -1301,6 +1301,90 @@ func TestMerchantVoucherScanPreviewFlow(t *testing.T) {
 	}
 }
 
+func TestMerchantVoucherPreviewThenRedeemByTokenFlow(t *testing.T) {
+	r, _ := setupAPITest(t)
+	db := database.DB
+
+	merchantOwner := model.User{Role: "user", Status: 0}
+	if err := db.Create(&merchantOwner).Error; err != nil {
+		t.Fatalf("failed to create merchant owner: %v", err)
+	}
+	merchantOwnerTok := issueAPITestToken(t, merchantOwner, "merchant-redeem-token@example.com")
+
+	buyer := model.User{Role: "user", Status: 0}
+	if err := db.Create(&buyer).Error; err != nil {
+		t.Fatalf("failed to create buyer: %v", err)
+	}
+
+	merchant := model.Merchant{Name: "Redeem Token Flow Merchant", UserID: &merchantOwner.ID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Redeem Token Flow Store", Status: 1}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	coupon := model.Coupon{
+		MerchantID:    merchant.ID,
+		StoreID:       &store.ID,
+		Title:         "Redeem Token Flow Coupon",
+		Type:          "discount",
+		TotalQuantity: 10,
+		MaxPerUser:    1,
+		Status:        "active",
+	}
+	if err := db.Create(&coupon).Error; err != nil {
+		t.Fatalf("failed to create coupon: %v", err)
+	}
+	voucher := model.Voucher{
+		Code:       "REDEEM-TOKEN-FLOW-VOUCHER",
+		ScanToken:  "scan-token-redeem-flow",
+		CouponID:   coupon.ID,
+		UserID:     buyer.ID,
+		MerchantID: &merchant.ID,
+		Status:     "active",
+	}
+	if err := db.Create(&voucher).Error; err != nil {
+		t.Fatalf("failed to create voucher: %v", err)
+	}
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/merchant/vouchers/scan?t=scan-token-redeem-flow", nil)
+	req.Header.Set("Authorization", "Bearer "+merchantOwnerTok)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected preview 200, got %d", w.Code)
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodPost, "/api/v1/merchant/vouchers/redeem-by-token", strings.NewReader(`{"scan_token":"scan-token-redeem-flow"}`))
+	req.Header.Set("Authorization", "Bearer "+merchantOwnerTok)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected redeem-by-token 200, got %d", w.Code)
+	}
+
+	var redeemed model.Voucher
+	if err := db.First(&redeemed, voucher.ID).Error; err != nil {
+		t.Fatalf("failed to load redeemed voucher: %v", err)
+	}
+	if redeemed.Status != "used" {
+		t.Fatalf("expected voucher used, got %q", redeemed.Status)
+	}
+	if redeemed.RedeemedBy == nil || *redeemed.RedeemedBy != merchantOwner.ID {
+		t.Fatalf("expected redeemed_by=%d, got %+v", merchantOwner.ID, redeemed.RedeemedBy)
+	}
+
+	var refreshedCoupon model.Coupon
+	if err := db.First(&refreshedCoupon, coupon.ID).Error; err != nil {
+		t.Fatalf("failed to load coupon: %v", err)
+	}
+	if refreshedCoupon.RedeemedCount != 1 {
+		t.Fatalf("expected redeemed_count=1, got %d", refreshedCoupon.RedeemedCount)
+	}
+}
+
 func TestPaymentsCreateAndDetail(t *testing.T) {
 	r, tok := setupAPITest(t)
 

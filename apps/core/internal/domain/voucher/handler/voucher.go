@@ -16,6 +16,10 @@ type VoucherHandler struct {
 	frontendURL string
 }
 
+type RedeemByTokenRequest struct {
+	ScanToken string `json:"scan_token"`
+}
+
 func NewVoucherHandler(svc *service.VoucherService, frontendURL string) *VoucherHandler {
 	if svc == nil {
 		svc = service.NewVoucherService(nil)
@@ -232,6 +236,57 @@ func (h *VoucherHandler) ScanPreview(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, preview)
+}
+
+// RedeemVoucherByToken godoc
+// @Summary Redeem voucher by scan token
+// @Description Redeems a scanned voucher for the authenticated merchant
+// @Tags voucher
+// @Accept json
+// @Produce json
+// @Param request body handler.RedeemByTokenRequest true "Redeem by token request"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /merchant/vouchers/redeem-by-token [post]
+func (h *VoucherHandler) RedeemByToken(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req RedeemByTokenRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	req.ScanToken = strings.TrimSpace(req.ScanToken)
+	if req.ScanToken == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing scan token"})
+		return
+	}
+
+	if err := h.svc.RedeemByMerchantToken(c.Request.Context(), userID, req.ScanToken); err != nil {
+		switch {
+		case errors.Is(err, service.ErrVoucherNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		case errors.Is(err, service.ErrVoucherForbidden):
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		case errors.Is(err, service.ErrVoucherNotRedeemable):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "voucher not redeemable"})
+		case errors.Is(err, service.ErrVoucherExpired):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "voucher expired"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to redeem voucher"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
 // RedeemVoucherByMerchant godoc
