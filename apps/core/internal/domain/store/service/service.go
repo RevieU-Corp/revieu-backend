@@ -283,14 +283,19 @@ func (s *StoreService) HoursPublished(ctx context.Context, storeID int64) ([]mod
 	return hours, nil
 }
 
-func (s *StoreService) ListMine(ctx context.Context, userID int64) ([]model.Store, error) {
-	var stores []model.Store
-	if err := s.db.WithContext(ctx).
+func (s *StoreService) ListMine(ctx context.Context, userID int64, limit *int) ([]model.Store, error) {
+	dbQuery := s.db.WithContext(ctx).
 		Model(&model.Store{}).
 		Joins("JOIN merchants ON merchants.id = stores.merchant_id").
 		Where("merchants.user_id = ?", userID).
-		Order("stores.id desc").
-		Find(&stores).Error; err != nil {
+		Order("stores.id desc")
+
+	if limit != nil {
+		dbQuery = dbQuery.Limit(sanitizeLimit(limit, defaultPublicListLimit, maxPublicListLimit))
+	}
+
+	var stores []model.Store
+	if err := dbQuery.Find(&stores).Error; err != nil {
 		return nil, err
 	}
 	return stores, nil
