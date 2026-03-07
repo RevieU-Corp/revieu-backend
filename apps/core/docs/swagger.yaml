@@ -373,6 +373,33 @@ definitions:
       userId:
         type: string
     type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_voucher_service.RedeemPreview:
+    properties:
+      can_redeem:
+        type: boolean
+      coupon_id:
+        type: integer
+      coupon_title:
+        type: string
+      merchant_id:
+        type: integer
+      merchant_name:
+        type: string
+      reason:
+        type: string
+      redeemed_at:
+        type: string
+      store_id:
+        type: integer
+      store_name:
+        type: string
+      voucher_code:
+        type: string
+      voucher_id:
+        type: integer
+      voucher_status:
+        type: string
+    type: object
   internal_domain_ai_handler.SuggestionsRequest:
     properties:
       businessCategory:
@@ -503,6 +530,11 @@ definitions:
     properties:
       quantity:
         type: integer
+    type: object
+  internal_domain_voucher_handler.RedeemByTokenRequest:
+    properties:
+      scan_token:
+        type: string
     type: object
 host: localhost:8080
 info:
@@ -1738,6 +1770,102 @@ paths:
       security:
       - BearerAuth: []
       summary: Redeem voucher by merchant owner
+      tags:
+      - voucher
+  /merchant/vouchers/redeem-by-token:
+    post:
+      consumes:
+      - application/json
+      description: Redeems a scanned voucher for the authenticated merchant
+      parameters:
+      - description: Redeem by token request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_voucher_handler.RedeemByTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Redeem voucher by scan token
+      tags:
+      - voucher
+  /merchant/vouchers/scan:
+    get:
+      description: Validates a scanned voucher for the authenticated merchant without
+        mutating state
+      parameters:
+      - description: Voucher scan token
+        in: query
+        name: t
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_voucher_service.RedeemPreview'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Preview voucher redemption by scan token
       tags:
       - voucher
   /merchants:

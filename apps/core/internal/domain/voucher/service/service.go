@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -23,6 +26,21 @@ type CreateVoucherRequest struct {
 	CouponID string `json:"couponId"`
 	UserID   string `json:"userId"`
 	Code     string `json:"code"`
+}
+
+type RedeemPreview struct {
+	VoucherID     int64      `json:"voucher_id"`
+	VoucherCode   string     `json:"voucher_code"`
+	VoucherStatus string     `json:"voucher_status"`
+	RedeemedAt    *time.Time `json:"redeemed_at,omitempty"`
+	CouponID      int64      `json:"coupon_id"`
+	CouponTitle   string     `json:"coupon_title"`
+	StoreID       *int64     `json:"store_id,omitempty"`
+	StoreName     string     `json:"store_name,omitempty"`
+	MerchantID    int64      `json:"merchant_id"`
+	MerchantName  string     `json:"merchant_name"`
+	CanRedeem     bool       `json:"can_redeem"`
+	Reason        string     `json:"reason,omitempty"`
 }
 
 type VoucherService struct {
@@ -47,7 +65,19 @@ func (s *VoucherService) Create(ctx context.Context, req CreateVoucherRequest) (
 		merchantID = &coupon.MerchantID
 	}
 
-	v := model.Voucher{Code: req.Code, CouponID: couponID, UserID: userID, MerchantID: merchantID, Status: "active"}
+	scanToken, err := generateVoucherScanToken()
+	if err != nil {
+		return model.Voucher{}, err
+	}
+
+	v := model.Voucher{
+		Code:       req.Code,
+		ScanToken:  scanToken,
+		CouponID:   couponID,
+		UserID:     userID,
+		MerchantID: merchantID,
+		Status:     "active",
+	}
 	return v, s.db.WithContext(ctx).Create(&v).Error
 }
 
@@ -67,9 +97,25 @@ func (s *VoucherService) Detail(ctx context.Context, id int64) (*model.Voucher, 
 	return &v, nil
 }
 
+func (s *VoucherService) DetailForUser(ctx context.Context, userID, id int64) (*model.Voucher, error) {
+	var v model.Voucher
+	if err := s.db.WithContext(ctx).Where("id = ? AND user_id = ?", id, userID).First(&v).Error; err != nil {
+		return nil, err
+	}
+	return &v, nil
+}
+
 func (s *VoucherService) ByCode(ctx context.Context, code string) (*model.Voucher, error) {
 	var v model.Voucher
 	if err := s.db.WithContext(ctx).Where("code = ?", code).First(&v).Error; err != nil {
+		return nil, err
+	}
+	return &v, nil
+}
+
+func (s *VoucherService) ByCodeForUser(ctx context.Context, userID int64, code string) (*model.Voucher, error) {
+	var v model.Voucher
+	if err := s.db.WithContext(ctx).Where("code = ? AND user_id = ?", code, userID).First(&v).Error; err != nil {
 		return nil, err
 	}
 	return &v, nil
@@ -81,6 +127,137 @@ func (s *VoucherService) Use(ctx context.Context, id int64) error {
 
 func (s *VoucherService) UpdateStatus(ctx context.Context, id int64, status string) error {
 	return s.db.WithContext(ctx).Model(&model.Voucher{}).Where("id = ?", id).UpdateColumn("status", status).Error
+}
+
+func (s *VoucherService) PreviewRedeemByToken(ctx context.Context, merchantUserID int64, scanToken string) (*RedeemPreview, error) {
+	var merchant model.Merchant
+	if err := s.db.WithContext(ctx).Where("user_id = ?", merchantUserID).First(&merchant).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrVoucherForbidden
+		}
+		return nil, err
+	}
+
+	var voucher model.Voucher
+	if err := s.db.WithContext(ctx).Where("scan_token = ?", scanToken).First(&voucher).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrVoucherNotFound
+		}
+		return nil, err
+	}
+
+	var coupon model.Coupon
+	if err := s.db.WithContext(ctx).Unscoped().First(&coupon, voucher.CouponID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrVoucherNotFound
+		}
+		return nil, err
+	}
+	if coupon.StoreID == nil || coupon.MerchantID != merchant.ID {
+		return nil, ErrVoucherForbidden
+	}
+
+	preview := &RedeemPreview{
+		VoucherID:     voucher.ID,
+		VoucherCode:   voucher.Code,
+		VoucherStatus: voucher.Status,
+		RedeemedAt:    voucher.RedeemedAt,
+		CouponID:      coupon.ID,
+		CouponTitle:   coupon.Title,
+		StoreID:       coupon.StoreID,
+		MerchantID:    merchant.ID,
+		MerchantName:  merchant.Name,
+	}
+
+	if coupon.StoreID != nil {
+		var store model.Store
+		if err := s.db.WithContext(ctx).Unscoped().First(&store, *coupon.StoreID).Error; err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, err
+			}
+		} else {
+			preview.StoreName = store.Name
+		}
+	}
+
+	now := time.Now()
+	switch {
+	case voucher.Status != "active":
+		preview.CanRedeem = false
+		if voucher.Status == "used" {
+			preview.Reason = "used"
+		} else {
+			preview.Reason = "not_redeemable"
+		}
+	case voucher.ValidUntil != nil && voucher.ValidUntil.Before(now):
+		preview.CanRedeem = false
+		preview.Reason = "expired"
+	case !voucher.ExpiryDate.IsZero() && voucher.ExpiryDate.Before(now):
+		preview.CanRedeem = false
+		preview.Reason = "expired"
+	default:
+		preview.CanRedeem = true
+	}
+
+	return preview, nil
+}
+
+func (s *VoucherService) RedeemByMerchantToken(ctx context.Context, merchantUserID int64, scanToken string) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var merchant model.Merchant
+		if err := tx.Where("user_id = ?", merchantUserID).First(&merchant).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrVoucherForbidden
+			}
+			return err
+		}
+
+		var voucher model.Voucher
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("scan_token = ?", scanToken).
+			First(&voucher).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrVoucherNotFound
+			}
+			return err
+		}
+
+		var coupon model.Coupon
+		if err := tx.Unscoped().First(&coupon, voucher.CouponID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrVoucherNotFound
+			}
+			return err
+		}
+		if coupon.StoreID == nil || coupon.MerchantID != merchant.ID {
+			return ErrVoucherForbidden
+		}
+
+		now := time.Now()
+		if voucher.Status != "active" {
+			return ErrVoucherNotRedeemable
+		}
+		if voucher.ValidUntil != nil && voucher.ValidUntil.Before(now) {
+			return ErrVoucherExpired
+		}
+		if !voucher.ExpiryDate.IsZero() && voucher.ExpiryDate.Before(now) {
+			return ErrVoucherExpired
+		}
+
+		if err := tx.Model(&model.Voucher{}).
+			Where("id = ?", voucher.ID).
+			Updates(map[string]interface{}{
+				"status":      "used",
+				"redeemed_at": now,
+				"redeemed_by": merchantUserID,
+			}).Error; err != nil {
+			return err
+		}
+
+		return tx.Unscoped().Model(&model.Coupon{}).
+			Where("id = ?", coupon.ID).
+			UpdateColumn("redeemed_count", gorm.Expr("redeemed_count + 1")).Error
+	})
 }
 
 func (s *VoucherService) RedeemByMerchant(ctx context.Context, userID, voucherID int64) error {
@@ -137,4 +314,12 @@ func (s *VoucherService) RedeemByMerchant(ctx context.Context, userID, voucherID
 			Where("id = ?", coupon.ID).
 			UpdateColumn("redeemed_count", gorm.Expr("redeemed_count + 1")).Error
 	})
+}
+
+func generateVoucherScanToken() (string, error) {
+	var raw [24]byte
+	if _, err := rand.Read(raw[:]); err != nil {
+		return "", fmt.Errorf("generate voucher scan token: %w", err)
+	}
+	return "vst_" + base64.RawURLEncoding.EncodeToString(raw[:]), nil
 }
