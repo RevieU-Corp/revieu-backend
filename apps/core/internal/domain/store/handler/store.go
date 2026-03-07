@@ -150,7 +150,9 @@ func (h *StoreHandler) Hours(c *gin.Context) {
 // @Description Returns stores owned by the authenticated merchant user
 // @Tags store
 // @Produce json
+// @Param limit query int false "Page size (max 100)"
 // @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Security BearerAuth
@@ -161,7 +163,19 @@ func (h *StoreHandler) ListMine(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	stores, err := h.svc.ListMine(c.Request.Context(), userID)
+
+	limit, hasLimit, err := parseIntQuery(c, "limit")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var limitPtr *int
+	if hasLimit {
+		limitPtr = &limit
+	}
+
+	stores, err := h.svc.ListMine(c.Request.Context(), userID, limitPtr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list stores"})
 		return

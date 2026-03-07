@@ -709,7 +709,7 @@ func TestStoreServiceListMine(t *testing.T) {
 		t.Fatalf("failed to create other store: %v", err)
 	}
 
-	stores, err := svc.ListMine(context.Background(), userID)
+	stores, err := svc.ListMine(context.Background(), userID, nil)
 	if err != nil {
 		t.Fatalf("list mine returned error: %v", err)
 	}

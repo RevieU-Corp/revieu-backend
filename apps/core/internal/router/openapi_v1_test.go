@@ -285,6 +285,62 @@ func TestStoreCreateActivateAndPublicVisibility(t *testing.T) {
 	}
 }
 
+func TestMerchantStoresListHonorsLimitQuery(t *testing.T) {
+	r, tok := setupAPITest(t)
+
+	createStore := func(name string) model.Store {
+		t.Helper()
+
+		body := strings.NewReader(fmt.Sprintf(`{"name":"%s","address":"Austin"}`, name))
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodPost, "/api/v1/merchant/stores", body)
+		req.Header.Set("Authorization", "Bearer "+tok)
+		req.Header.Set("Content-Type", "application/json")
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusCreated {
+			t.Fatalf("expected create 201, got %d", w.Code)
+		}
+
+		var created struct {
+			Data model.Store `json:"data"`
+		}
+		if err := json.Unmarshal(w.Body.Bytes(), &created); err != nil {
+			t.Fatalf("failed to decode create response: %v", err)
+		}
+		return created.Data
+	}
+
+	first := createStore("Store One")
+	second := createStore("Store Two")
+	third := createStore("Store Three")
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/merchant/stores?limit=2", nil)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected list 200, got %d", w.Code)
+	}
+
+	var listed struct {
+		Data []model.Store `json:"data"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &listed); err != nil {
+		t.Fatalf("failed to decode merchant stores list response: %v", err)
+	}
+	if len(listed.Data) != 2 {
+		t.Fatalf("expected 2 merchant stores when limit=2, got %d", len(listed.Data))
+	}
+	if listed.Data[0].ID != third.ID || listed.Data[1].ID != second.ID {
+		t.Fatalf("expected newest two stores [%d %d], got [%d %d]", third.ID, second.ID, listed.Data[0].ID, listed.Data[1].ID)
+	}
+	for _, store := range listed.Data {
+		if store.ID == first.ID {
+			t.Fatalf("did not expect oldest store %d when limit=2", first.ID)
+		}
+	}
+}
+
 func TestStoreCreateWithCategoriesReflectedInCategoryFilter(t *testing.T) {
 	r, tok := setupAPITest(t)
 	db := database.DB
