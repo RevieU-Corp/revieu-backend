@@ -719,23 +719,120 @@ func TestStoreReviewsSupportsCursorPaginationAndUserPreload(t *testing.T) {
 	}
 }
 
-func TestReviewsList(t *testing.T) {
+func TestUserReviewsListSupportsPaginationAndIncludesCommentCount(t *testing.T) {
 	r, tok := setupAPITest(t)
 
 	db := database.DB
-	m := model.Merchant{Name: "Cafe"}
-	_ = db.Create(&m).Error
-	u := model.User{Role: "user", Status: 0}
-	_ = db.Create(&u).Error
-	_ = db.Create(&model.Review{UserID: u.ID, MerchantID: m.ID, Rating: 5, Content: "great"}).Error
+	var authUser model.User
+	if err := db.First(&authUser).Error; err != nil {
+		t.Fatalf("failed to load auth user: %v", err)
+	}
+	merchant := model.Merchant{Name: "Cafe"}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	addReview := func(content string, commentCount int) model.Review {
+		review := model.Review{
+			UserID:       authUser.ID,
+			MerchantID:   merchant.ID,
+			VenueID:      merchant.ID,
+			Rating:       5,
+			Content:      content,
+			CommentCount: commentCount,
+		}
+		if err := db.Create(&review).Error; err != nil {
+			t.Fatalf("failed to create review %s: %v", content, err)
+		}
+		return review
+	}
+
+	oldest := addReview("great", 1)
+	_ = addReview("better", 2)
+	latest := addReview("best", 3)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/user/reviews?limit=2", nil)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	var firstPage struct {
+		Reviews []struct {
+			ID           int64 `json:"id"`
+			CommentCount int   `json:"comment_count"`
+		} `json:"reviews"`
+		Total  int    `json:"total"`
+		Cursor *int64 `json:"cursor"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &firstPage); err != nil {
+		t.Fatalf("failed to decode first-page response: %v", err)
+	}
+	if firstPage.Total != 3 {
+		t.Fatalf("expected total 3, got %d", firstPage.Total)
+	}
+	if len(firstPage.Reviews) != 2 {
+		t.Fatalf("expected first page size 2, got %d", len(firstPage.Reviews))
+	}
+	if firstPage.Reviews[0].ID != latest.ID {
+		t.Fatalf("unexpected first review id: got %d, want %d", firstPage.Reviews[0].ID, latest.ID)
+	}
+	if firstPage.Reviews[0].CommentCount != 3 {
+		t.Fatalf("unexpected first review comment count: got %d, want 3", firstPage.Reviews[0].CommentCount)
+	}
+	if firstPage.Cursor == nil {
+		t.Fatalf("expected first page cursor")
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/user/reviews?limit=2&cursor=%d", *firstPage.Cursor), nil)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected second page 200, got %d", w.Code)
+	}
+
+	var secondPage struct {
+		Reviews []struct {
+			ID           int64 `json:"id"`
+			CommentCount int   `json:"comment_count"`
+		} `json:"reviews"`
+		Total  int    `json:"total"`
+		Cursor *int64 `json:"cursor"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &secondPage); err != nil {
+		t.Fatalf("failed to decode second-page response: %v", err)
+	}
+	if len(secondPage.Reviews) != 1 {
+		t.Fatalf("expected second page size 1, got %d", len(secondPage.Reviews))
+	}
+	if secondPage.Total != 3 {
+		t.Fatalf("expected second page total 3, got %d", secondPage.Total)
+	}
+	if secondPage.Reviews[0].ID != oldest.ID {
+		t.Fatalf("unexpected second-page review id: got %d, want %d", secondPage.Reviews[0].ID, oldest.ID)
+	}
+	if secondPage.Reviews[0].CommentCount != 1 {
+		t.Fatalf("unexpected second-page review comment count: got %d, want 1", secondPage.Reviews[0].CommentCount)
+	}
+	if secondPage.Cursor != nil {
+		t.Fatalf("expected second page cursor to be nil")
+	}
+}
+
+func TestLegacyReviewsListRouteRemoved(t *testing.T) {
+	r, tok := setupAPITest(t)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/api/v1/reviews", nil)
 	req.Header.Set("Authorization", "Bearer "+tok)
 	r.ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", w.Code)
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", w.Code)
 	}
 }
 

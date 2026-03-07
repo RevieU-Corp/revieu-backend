@@ -15,7 +15,6 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 
 	reviews := r.Group("/reviews")
 	{
-		reviews.GET("", middleware.JWTAuth(cfg.JWT), h.ListMyReviews)
 		reviews.POST("", middleware.JWTAuth(cfg.JWT), h.Create)
 		reviews.GET("/:id", h.Detail)
 		reviews.POST("/:id/like", middleware.JWTAuth(cfg.JWT), h.Like)

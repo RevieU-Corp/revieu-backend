@@ -12,6 +12,7 @@ type ReviewItem struct {
 	Images        []string      `json:"images"`
 	AvgCost       *int          `json:"avg_cost,omitempty"`
 	LikeCount     int           `json:"like_count"`
+	CommentCount  int           `json:"comment_count"`
 	IsLiked       bool          `json:"is_liked"`
 	Merchant      MerchantBrief `json:"merchant"`
 	Tags          []string      `json:"tags"`

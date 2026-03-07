@@ -39,7 +39,7 @@ func (h *ReviewHandler) ListUserReviews(c *gin.Context) {
 		return
 	}
 	cursor, limit := parseCursorLimit(c)
-	reviews, total, err := h.svc.ListUserReviews(c.Request.Context(), targetID, cursor, limit)
+	reviews, total, nextCursor, err := h.svc.ListUserReviews(c.Request.Context(), targetID, cursor, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -62,13 +62,14 @@ func (h *ReviewHandler) ListUserReviews(c *gin.Context) {
 			Images:        parseJSONStrings(review.Images),
 			AvgCost:       review.AvgCost,
 			LikeCount:     review.LikeCount,
+			CommentCount:  review.CommentCount,
 			IsLiked:       liked[review.ID],
 			Merchant:      merchantValue,
 			Tags:          []string{},
 			CreatedAt:     review.CreatedAt,
 		})
 	}
-	c.JSON(http.StatusOK, dto.ReviewListResponse{Reviews: items, Total: int(total), Cursor: nextCursor(reviews)})
+	c.JSON(http.StatusOK, dto.ReviewListResponse{Reviews: items, Total: int(total), Cursor: nextCursor})
 }
 
 // ListMyReviews godoc
@@ -85,7 +86,7 @@ func (h *ReviewHandler) ListUserReviews(c *gin.Context) {
 func (h *ReviewHandler) ListMyReviews(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	cursor, limit := parseCursorLimit(c)
-	reviews, total, err := h.svc.ListUserReviews(c.Request.Context(), userID, cursor, limit)
+	reviews, total, nextCursor, err := h.svc.ListUserReviews(c.Request.Context(), userID, cursor, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -108,11 +109,12 @@ func (h *ReviewHandler) ListMyReviews(c *gin.Context) {
 			Images:        parseJSONStrings(review.Images),
 			AvgCost:       review.AvgCost,
 			LikeCount:     review.LikeCount,
+			CommentCount:  review.CommentCount,
 			IsLiked:       liked[review.ID],
 			Merchant:      merchantValue,
 			Tags:          []string{},
 			CreatedAt:     review.CreatedAt,
 		})
 	}
-	c.JSON(http.StatusOK, dto.ReviewListResponse{Reviews: items, Total: int(total), Cursor: nextCursor(reviews)})
+	c.JSON(http.StatusOK, dto.ReviewListResponse{Reviews: items, Total: int(total), Cursor: nextCursor})
 }

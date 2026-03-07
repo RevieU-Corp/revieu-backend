@@ -2351,31 +2351,6 @@ paths:
       tags:
       - payment
   /reviews:
-    get:
-      description: Returns reviews created by the authenticated user
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: List my reviews
-      tags:
-      - review
     post:
       consumes:
       - application/json

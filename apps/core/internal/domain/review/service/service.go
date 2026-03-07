@@ -28,14 +28,6 @@ func NewReviewService(db *gorm.DB) *ReviewService {
 	return &ReviewService{db: db}
 }
 
-func (s *ReviewService) ListByUser(ctx context.Context, userID int64) ([]model.Review, error) {
-	var reviews []model.Review
-	if err := s.db.WithContext(ctx).Preload("Merchant").Where("user_id = ?", userID).Order("id desc").Find(&reviews).Error; err != nil {
-		return nil, err
-	}
-	return reviews, nil
-}
-
 func (s *ReviewService) Detail(ctx context.Context, id int64) (*model.Review, error) {
 	var review model.Review
 	if err := s.db.WithContext(ctx).Preload("Merchant").Preload("Store").First(&review, id).Error; err != nil {

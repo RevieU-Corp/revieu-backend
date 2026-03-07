@@ -2762,43 +2762,6 @@
             }
         },
         "/reviews": {
-            "get": {
-                "description": "Returns reviews created by the authenticated user",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "review"
-                ],
-                "summary": "List my reviews",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
             "post": {
                 "description": "Creates a new review for the authenticated user",
                 "consumes": [

@@ -21,25 +21,6 @@ func NewReviewHandler(svc *service.ReviewService) *ReviewHandler {
 	return &ReviewHandler{svc: svc}
 }
 
-// ListMyReviews godoc
-// @Summary List my reviews
-// @Description Returns reviews created by the authenticated user
-// @Tags review
-// @Produce json
-// @Success 200 {object} map[string]interface{}
-// @Failure 401 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /reviews [get]
-func (h *ReviewHandler) ListMyReviews(c *gin.Context) {
-	userID := c.GetInt64("user_id")
-	reviews, err := h.svc.ListByUser(c.Request.Context(), userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"data": dto.FromModels(reviews)})
-}
-
 // CreateReview godoc
 // @Summary Create a review
 // @Description Creates a new review for the authenticated user

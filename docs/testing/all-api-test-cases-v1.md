@@ -2755,51 +2755,6 @@ GET /api/v1/users/1
 
 ## Tag: review
 
-### TC-054 `GET /reviews`
-
-- 用例名称：List my reviews
-- 说明：Returns reviews created by the authenticated user
-- 鉴权：不需要
-- 响应 Content-Type：`application/json`
-
-**请求示例**
-
-```http
-GET /api/v1/reviews
-```
-
-**期望响应**
-
-- HTTP `200` (OK)
-
-```json
-{
-  "key": "value"
-}
-```
-
-- HTTP `401` (Unauthorized)
-
-```json
-{
-  "key": "string"
-}
-```
-
-- HTTP `500` (Internal Server Error)
-
-```json
-{
-  "key": "string"
-}
-```
-
-断言重点：
-- 状态码与 swagger 定义一致
-- 返回 JSON 字段类型符合 schema
-
----
-
 ### TC-055 `POST /reviews`
 
 - 用例名称：Create a review

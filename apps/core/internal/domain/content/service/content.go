@@ -35,20 +35,28 @@ func (s *ContentService) ListUserPosts(ctx context.Context, userID int64, cursor
 	return posts, total, nil
 }
 
-func (s *ContentService) ListUserReviews(ctx context.Context, userID int64, cursor *int64, limit int) ([]model.Review, int64, error) {
-	q := s.db.WithContext(ctx).Model(&model.Review{}).Where("user_id = ?", userID).Order("id desc")
+func (s *ContentService) ListUserReviews(ctx context.Context, userID int64, cursor *int64, limit int) ([]model.Review, int64, *int64, error) {
+	baseQuery := s.db.WithContext(ctx).Model(&model.Review{}).Where("user_id = ?", userID)
+	var total int64
+	if err := baseQuery.Count(&total).Error; err != nil {
+		return nil, 0, nil, err
+	}
+
+	q := baseQuery.Order("id desc")
 	if cursor != nil {
 		q = q.Where("id < ?", *cursor)
 	}
-	var total int64
-	if err := q.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
 	var reviews []model.Review
-	if err := q.Limit(limit).Find(&reviews).Error; err != nil {
-		return nil, 0, err
+	if err := q.Limit(limit + 1).Find(&reviews).Error; err != nil {
+		return nil, 0, nil, err
 	}
-	return reviews, total, nil
+	var nextCursor *int64
+	if len(reviews) > limit {
+		cursorValue := reviews[limit-1].ID
+		nextCursor = &cursorValue
+		reviews = reviews[:limit]
+	}
+	return reviews, total, nextCursor, nil
 }
 
 func (s *ContentService) ListFavorites(ctx context.Context, userID int64, targetType string, cursor *int64, limit int) ([]model.Favorite, int64, error) {
