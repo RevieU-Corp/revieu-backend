@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/conversation/service"
 	"github.com/gin-gonic/gin"
@@ -27,7 +29,18 @@ func NewConversationHandler(svc *service.ConversationService) *ConversationHandl
 // @Failure 401 {object} map[string]string
 // @Router /conversations [get]
 func (h *ConversationHandler) List(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	conversations, err := h.svc.List(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list conversations"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": conversations})
 }
 
 // CreateConversation godoc
@@ -40,7 +53,28 @@ func (h *ConversationHandler) List(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Router /conversations [post]
 func (h *ConversationHandler) Create(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req service.CreateConversationInput
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	conversation, err := h.svc.Create(c.Request.Context(), userID, req)
+	if err != nil {
+		if errors.Is(err, service.ErrConversationInvalidInput) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid conversation input"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create conversation"})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"data": conversation})
 }
 
 // ConversationMessages godoc
@@ -53,7 +87,30 @@ func (h *ConversationHandler) Create(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Router /conversations/{id}/messages [get]
 func (h *ConversationHandler) Messages(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	messages, err := h.svc.Messages(c.Request.Context(), userID, id)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrConversationForbidden):
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load messages"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": messages})
 }
 
 // SendMessage godoc
@@ -67,7 +124,37 @@ func (h *ConversationHandler) Messages(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Router /conversations/{id}/messages [post]
 func (h *ConversationHandler) SendMessage(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var req service.SendMessageInput
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	message, err := h.svc.SendMessage(c.Request.Context(), userID, id, req)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrConversationForbidden):
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		case errors.Is(err, service.ErrConversationInvalidInput):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid message"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send message"})
+		}
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"data": message})
 }
 
 // UpdateConversationSettings godoc
@@ -81,5 +168,33 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Router /conversations/{id}/settings [patch]
 func (h *ConversationHandler) UpdateSettings(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var req service.UpdateConversationSettingsInput
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	conversation, err := h.svc.UpdateSettings(c.Request.Context(), userID, id, req)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrConversationForbidden):
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update settings"})
+		}
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": conversation})
 }
