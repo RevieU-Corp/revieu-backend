@@ -1155,12 +1155,29 @@ const docTemplate = `{
                     "store"
                 ],
                 "summary": "List current merchant stores",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page size (max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "401": {
@@ -2052,6 +2069,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Category filter",
                         "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by name",
+                        "name": "search",
                         "in": "query"
                     }
                 ],

@@ -1289,6 +1289,11 @@ paths:
   /merchant/stores:
     get:
       description: Returns stores owned by the authenticated merchant user
+      parameters:
+      - description: Page size (max 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -1296,6 +1301,12 @@ paths:
           description: OK
           schema:
             additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "401":
           description: Unauthorized
@@ -1875,6 +1886,10 @@ paths:
       - description: Category filter
         in: query
         name: category
+        type: string
+      - description: Search by name
+        in: query
+        name: search
         type: string
       produces:
       - application/json
