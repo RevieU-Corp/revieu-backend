@@ -22,10 +22,14 @@ func NewMerchantService(db *gorm.DB) *MerchantService {
 	return &MerchantService{db: db}
 }
 
-func (s *MerchantService) List(ctx context.Context, category string) ([]model.Merchant, error) {
+func (s *MerchantService) List(ctx context.Context, category, search string) ([]model.Merchant, error) {
 	q := s.publicScope(s.db.WithContext(ctx).Model(&model.Merchant{}))
 	if category != "" {
 		q = q.Where("category = ?", category)
+	}
+	if search != "" {
+		pattern := "%" + search + "%"
+		q = q.Where("name ILIKE ? OR business_name ILIKE ?", pattern, pattern)
 	}
 	var merchants []model.Merchant
 	if err := q.Order("id desc").Find(&merchants).Error; err != nil {

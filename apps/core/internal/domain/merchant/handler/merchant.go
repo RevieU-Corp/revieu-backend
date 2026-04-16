@@ -28,12 +28,14 @@ func NewMerchantHandler(svc *service.MerchantService) *MerchantHandler {
 // @Tags merchant
 // @Produce json
 // @Param category query string false "Category filter"
+// @Param search query string false "Search by name"
 // @Success 200 {object} map[string]interface{}
 // @Failure 500 {object} map[string]string
 // @Router /merchants [get]
 func (h *MerchantHandler) List(c *gin.Context) {
 	category := c.Query("category")
-	merchants, err := h.svc.List(c.Request.Context(), category)
+	search := c.Query("search")
+	merchants, err := h.svc.List(c.Request.Context(), category, search)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
