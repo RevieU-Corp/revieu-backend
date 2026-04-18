@@ -22,6 +22,7 @@ type Store struct {
 	Longitude     float64        `json:"longitude"`
 	CoverImageURL string         `gorm:"type:varchar(255)" json:"cover_image_url"`
 	Images        string         `gorm:"type:jsonb;default:'[]'" json:"images"`
+	MenuImages    string         `gorm:"type:jsonb;default:'[]'" json:"menu_images"`
 	AvgRating     float32        `gorm:"default:0" json:"avg_rating"`
 	ReviewCount   int            `gorm:"default:0" json:"review_count"`
 	FollowerCount int            `gorm:"default:0" json:"follower_count"`

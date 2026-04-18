@@ -110,6 +110,82 @@ func TestStoreServiceCreate(t *testing.T) {
 	}
 }
 
+func TestStoreServiceMenuImages(t *testing.T) {
+	db := setupStoreTestDB(t)
+	svc := NewStoreService(db)
+
+	userID := int64(111)
+	if err := db.Create(&model.User{ID: userID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+	merchant := model.Merchant{Name: "Menu Merchant", UserID: &userID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+
+	initialMenuImages := []string{
+		"https://cdn.test/menu-1.jpg",
+		"https://cdn.test/menu-2.jpg",
+	}
+	store, err := svc.Create(context.Background(), userID, dto.CreateStoreRequest{
+		Name:       "Menu Store",
+		MenuImages: initialMenuImages,
+	})
+	if err != nil {
+		t.Fatalf("create returned error: %v", err)
+	}
+
+	var createdMenuImages []string
+	if err := json.Unmarshal([]byte(store.MenuImages), &createdMenuImages); err != nil {
+		t.Fatalf("failed to unmarshal created menu images: %v", err)
+	}
+	if len(createdMenuImages) != len(initialMenuImages) {
+		t.Fatalf("unexpected created menu images length: got %d want %d", len(createdMenuImages), len(initialMenuImages))
+	}
+	for i := range initialMenuImages {
+		if createdMenuImages[i] != initialMenuImages[i] {
+			t.Fatalf("unexpected created menu image %d: got %q want %q", i, createdMenuImages[i], initialMenuImages[i])
+		}
+	}
+
+	if err := db.Model(&model.Store{}).Where("id = ?", store.ID).Update("status", StoreStatusPublished).Error; err != nil {
+		t.Fatalf("failed to publish store for detail lookup: %v", err)
+	}
+
+	detail, err := svc.DetailPublished(context.Background(), store.ID)
+	if err != nil {
+		t.Fatalf("detail returned error: %v", err)
+	}
+	if detail.MenuImages != store.MenuImages {
+		t.Fatalf("unexpected detail menu images: got %q want %q", detail.MenuImages, store.MenuImages)
+	}
+
+	replacementMenuImages := []string{
+		"https://cdn.test/menu-a.jpg",
+		"https://cdn.test/menu-b.jpg",
+		"https://cdn.test/menu-c.jpg",
+	}
+	updated, err := svc.Update(context.Background(), userID, store.ID, dto.UpdateStoreRequest{
+		MenuImages: &replacementMenuImages,
+	})
+	if err != nil {
+		t.Fatalf("update returned error: %v", err)
+	}
+
+	var updatedMenuImages []string
+	if err := json.Unmarshal([]byte(updated.MenuImages), &updatedMenuImages); err != nil {
+		t.Fatalf("failed to unmarshal updated menu images: %v", err)
+	}
+	if len(updatedMenuImages) != len(replacementMenuImages) {
+		t.Fatalf("unexpected updated menu images length: got %d want %d", len(updatedMenuImages), len(replacementMenuImages))
+	}
+	for i := range replacementMenuImages {
+		if updatedMenuImages[i] != replacementMenuImages[i] {
+			t.Fatalf("unexpected updated menu image %d: got %q want %q", i, updatedMenuImages[i], replacementMenuImages[i])
+		}
+	}
+}
+
 func TestStoreServiceCreateAutoCreatesMerchantPlaceholder(t *testing.T) {
 	db := setupStoreTestDB(t)
 	svc := NewStoreService(db)
