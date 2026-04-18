@@ -964,7 +964,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLRequest"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLRequest"
                         }
                     }
                 ],
@@ -972,7 +972,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLResponse"
                         }
                     },
                     "400": {
@@ -4978,7 +4978,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.FileRequest": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.FileRequest": {
             "type": "object",
             "properties": {
                 "content_type": {
@@ -4989,29 +4989,29 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLRequest": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLRequest": {
             "type": "object",
             "properties": {
                 "files": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.FileRequest"
+                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.FileRequest"
                     }
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLResponse": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLResponse": {
             "type": "object",
             "properties": {
                 "uploads": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.UploadInfo"
+                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.UploadInfo"
                     }
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.UploadInfo": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.UploadInfo": {
             "type": "object",
             "properties": {
                 "expires_at": {
@@ -5240,6 +5240,12 @@ const docTemplate = `{
                 "longitude": {
                     "type": "number"
                 },
+                "menu_images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 255
@@ -5327,6 +5333,12 @@ const docTemplate = `{
                 },
                 "longitude": {
                     "type": "number"
+                },
+                "menu_images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string",

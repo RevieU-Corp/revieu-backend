@@ -71,6 +71,10 @@ func (s *StoreService) Create(ctx context.Context, userID int64, req dto.CreateS
 	if err != nil {
 		return nil, err
 	}
+	menuImagesRaw, err := json.Marshal(req.MenuImages)
+	if err != nil {
+		return nil, err
+	}
 
 	storeName := req.Name
 	if storeName == "" {
@@ -98,6 +102,7 @@ func (s *StoreService) Create(ctx context.Context, userID int64, req dto.CreateS
 		Longitude:     req.Longitude,
 		CoverImageURL: req.CoverImageURL,
 		Images:        string(imagesRaw),
+		MenuImages:    string(menuImagesRaw),
 		Status:        StoreStatusDraft,
 	}
 
@@ -437,6 +442,13 @@ func (s *StoreService) Update(ctx context.Context, userID, storeID int64, req dt
 			return nil, err
 		}
 		updates["images"] = string(imagesRaw)
+	}
+	if req.MenuImages != nil {
+		menuImagesRaw, err := json.Marshal(*req.MenuImages)
+		if err != nil {
+			return nil, err
+		}
+		updates["menu_images"] = string(menuImagesRaw)
 	}
 
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {

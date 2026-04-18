@@ -1,27 +1,27 @@
 basePath: /api/v1
 definitions:
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.FileRequest:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.FileRequest:
     properties:
       content_type:
         type: string
       filename:
         type: string
     type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLRequest:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLRequest:
     properties:
       files:
         items:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.FileRequest'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.FileRequest'
         type: array
     type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLResponse:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLResponse:
     properties:
       uploads:
         items:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.UploadInfo'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.UploadInfo'
         type: array
     type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.UploadInfo:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.UploadInfo:
     properties:
       expires_at:
         type: string
@@ -173,6 +173,10 @@ definitions:
         type: number
       longitude:
         type: number
+      menu_images:
+        items:
+          type: string
+        type: array
       name:
         maxLength: 255
         type: string
@@ -235,6 +239,10 @@ definitions:
         type: number
       longitude:
         type: number
+      menu_images:
+        items:
+          type: string
+        type: array
       name:
         maxLength: 255
         type: string
@@ -1208,14 +1216,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLRequest'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLResponse'
         "400":
           description: Bad Request
           schema:

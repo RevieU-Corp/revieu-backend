@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/media/dto"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/media/service"
 	"github.com/gin-gonic/gin"
 )
@@ -68,8 +69,8 @@ func (h *MediaHandler) Analyze(c *gin.Context) {
 // @Tags media
 // @Accept json
 // @Produce json
-// @Param request body service.PresignedURLRequest true "Files to upload"
-// @Success 200 {object} service.PresignedURLResponse
+// @Param request body dto.PresignedURLRequest true "Files to upload"
+// @Success 200 {object} dto.PresignedURLResponse
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 500 {object} map[string]string
@@ -81,7 +82,7 @@ func (h *MediaHandler) CreatePresignedURLs(c *gin.Context) {
 		return
 	}
 
-	var req service.PresignedURLRequest
+	var req dto.PresignedURLRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return

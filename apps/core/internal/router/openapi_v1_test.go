@@ -1635,6 +1635,65 @@ func TestStoreUpdateOwnStore(t *testing.T) {
 	}
 }
 
+func TestStoreMenuImages(t *testing.T) {
+	r, tok := setupAPITest(t)
+	db := database.DB
+
+	var ownerAuth model.UserAuth
+	if err := db.Where("identifier = ?", "user@example.com").First(&ownerAuth).Error; err != nil {
+		t.Fatalf("failed to load owner auth: %v", err)
+	}
+	ownerID := ownerAuth.UserID
+
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Menu Store", Status: 1}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	body := strings.NewReader(`{"menu_images":["https://cdn.revieu.com/menu-1.jpg","https://cdn.revieu.com/menu-2.jpg"]}`)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPatch, fmt.Sprintf("/api/v1/merchant/stores/%d", store.ID), body)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected patch 200, got %d", w.Code)
+	}
+
+	var patchResp struct {
+		Data model.Store `json:"data"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &patchResp); err != nil {
+		t.Fatalf("failed to decode patch response: %v", err)
+	}
+	if patchResp.Data.MenuImages != `["https://cdn.revieu.com/menu-1.jpg","https://cdn.revieu.com/menu-2.jpg"]` {
+		t.Fatalf("unexpected patched menu images: %q", patchResp.Data.MenuImages)
+	}
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/stores/%d", store.ID), nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected detail 200, got %d", w.Code)
+	}
+
+	var detailResp struct {
+		Data model.Store `json:"data"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &detailResp); err != nil {
+		t.Fatalf("failed to decode detail response: %v", err)
+	}
+	if detailResp.Data.MenuImages != `["https://cdn.revieu.com/menu-1.jpg","https://cdn.revieu.com/menu-2.jpg"]` {
+		t.Fatalf("unexpected detail menu images: %q", detailResp.Data.MenuImages)
+	}
+}
+
 func TestStoreUpdateForbiddenForNonOwner(t *testing.T) {
 	r, _ := setupAPITest(t)
 	db := database.DB
