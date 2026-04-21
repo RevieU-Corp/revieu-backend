@@ -48,7 +48,7 @@ gemini:
   # Backend selects the API surface. "gemini-api" uses generativelanguage.googleapis.com
   # (AI Studio keys); "vertex-ai" uses aiplatform.googleapis.com in express-mode with
   # the same key shape.
-  backend: "gemini-api"
+  backend: "vertex-ai"
   api_key: "${GEMINI_API_KEY}"
   model: "gemini-2.5-flash"
   timeout_seconds: 30
