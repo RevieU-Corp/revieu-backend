@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -61,7 +60,7 @@ func TestPolishReview_LiveSmoke(t *testing.T) {
 
 	t.Log("--- polished candidates ---")
 	for i, c := range resp.Candidates {
-		t.Log(fmt.Sprintf("[%d] %s", i+1, c))
+		t.Logf("[%d] %s", i+1, c)
 	}
 }
 
