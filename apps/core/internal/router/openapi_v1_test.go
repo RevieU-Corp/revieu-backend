@@ -1,8 +1,10 @@
 package router
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -1567,15 +1569,24 @@ func TestMediaUploadAndAnalysis(t *testing.T) {
 func TestAISuggestions(t *testing.T) {
 	r, tok := setupAPITest(t)
 
-	body := strings.NewReader(`{"overallRating":4.5,"merchantName":"Cafe"}`)
+	// The endpoint now expects multipart/form-data and calls Gemini. Without a configured
+	// API key the Gemini client is nil, so the service rejects the request with an upstream
+	// error mapped to 502. The test asserts that the multipart contract and JWT middleware
+	// are wired up (i.e. we do not get 400/401/404) rather than that Gemini is reachable.
+	body := &bytes.Buffer{}
+	mw := multipart.NewWriter(body)
+	_ = mw.WriteField("text", "The coffee was great and the atmosphere was chill.")
+	_ = mw.WriteField("merchantName", "Cafe")
+	_ = mw.Close()
+
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPost, "/api/v1/ai/reviews/suggestions", body)
 	req.Header.Set("Authorization", "Bearer "+tok)
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", mw.FormDataContentType())
 	r.ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", w.Code)
+	if w.Code != http.StatusBadGateway {
+		t.Fatalf("expected 502 without a Gemini API key, got %d (body=%s)", w.Code, w.Body.String())
 	}
 }
 

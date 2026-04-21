@@ -43,3 +43,12 @@ r2:
   secret_access_key: "${R2_SECRET_ACCESS_KEY}"
   bucket_name: "revieu-media"
   public_url: "${R2_PUBLIC_URL}"
+
+gemini:
+  # Backend selects the API surface. "gemini-api" uses generativelanguage.googleapis.com
+  # (AI Studio keys); "vertex-ai" uses aiplatform.googleapis.com in express-mode with
+  # the same key shape.
+  backend: "gemini-api"
+  api_key: "${GEMINI_API_KEY}"
+  model: "gemini-2.5-flash"
+  timeout_seconds: 30
