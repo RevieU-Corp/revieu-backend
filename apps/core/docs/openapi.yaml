@@ -563,20 +563,21 @@ paths:
   /ai/reviews/suggestions:
     post:
       tags: [ai]
-      summary: Generate review suggestions
+      summary: Polish a draft review with AI
+      description: Sends a draft review (text + optional images) to Gemini and returns three polished candidates as plain text.
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: '#/components/schemas/AISuggestionsRequest'
+              $ref: '#/components/schemas/AIPolishRequest'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AISuggestionsResponse'
+                $ref: '#/components/schemas/AIPolishResponse'
 components:
   securitySchemes:
     bearerAuth:
@@ -784,21 +785,55 @@ components:
           type: string
         fileUrl:
           type: string
-    AISuggestionsRequest:
+    AIPolishRequest:
       type: object
+      required: [text]
       properties:
-        overallRating:
-          type: number
-        businessCategory:
+        text:
           type: string
-        currentText:
-          type: string
+          description: Draft review text (10-4000 characters after trim).
+        images:
+          type: array
+          description: Up to 6 images, 5 MiB each, content-type jpeg/png/gif/webp.
+          items:
+            type: string
+            format: binary
         merchantName:
           type: string
-    AISuggestionsResponse:
+        storeName:
+          type: string
+        businessCategory:
+          type: string
+        language:
+          type: string
+          description: Output language hint, e.g. "en" or "zh".
+        ratingOverall:
+          type: number
+          minimum: 0
+          maximum: 5
+        ratingService:
+          type: number
+          minimum: 0
+          maximum: 5
+        ratingEnvironment:
+          type: number
+          minimum: 0
+          maximum: 5
+        ratingValue:
+          type: number
+          minimum: 0
+          maximum: 5
+        ratingFood:
+          type: number
+          minimum: 0
+          maximum: 5
+    AIPolishResponse:
       type: object
+      required: [candidates]
       properties:
-        suggestions:
+        candidates:
           type: array
+          minItems: 3
+          maxItems: 3
           items:
             type: string

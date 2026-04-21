@@ -17,7 +17,19 @@ type Config struct {
 	OAuth       OAuthConfig    `yaml:"oauth"`
 	SMTP        SMTPConfig     `yaml:"smtp"`
 	R2          R2Config       `yaml:"r2"`
+	Gemini      GeminiConfig   `yaml:"gemini"`
 	FrontendURL string         `yaml:"frontend_url"`
+}
+
+// GeminiConfig holds Google Gemini API configuration for AI-powered review polishing.
+// Backend selects between the Gemini Developer API (generativelanguage.googleapis.com)
+// and Vertex AI (aiplatform.googleapis.com) — both accept a single API key in express mode.
+// Valid values: "gemini-api" (default) or "vertex-ai".
+type GeminiConfig struct {
+	Backend        string `yaml:"backend"`
+	APIKey         string `yaml:"api_key"`
+	Model          string `yaml:"model"`
+	TimeoutSeconds int    `yaml:"timeout_seconds"`
 }
 
 // SMTPConfig holds SMTP email configuration
@@ -156,6 +168,12 @@ func Load() (*Config, error) {
 	if strings.HasPrefix(cfg.R2.PublicURL, "${") && strings.HasSuffix(cfg.R2.PublicURL, "}") {
 		envVar := cfg.R2.PublicURL[2 : len(cfg.R2.PublicURL)-1]
 		cfg.R2.PublicURL = os.Getenv(envVar)
+	}
+
+	// Expand environment variables in Gemini config
+	if strings.HasPrefix(cfg.Gemini.APIKey, "${") && strings.HasSuffix(cfg.Gemini.APIKey, "}") {
+		envVar := cfg.Gemini.APIKey[2 : len(cfg.Gemini.APIKey)-1]
+		cfg.Gemini.APIKey = os.Getenv(envVar)
 	}
 
 	if strings.TrimSpace(cfg.JWT.Secret) == "" {

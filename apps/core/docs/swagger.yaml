@@ -1,5 +1,12 @@
 basePath: /api/v1
 definitions:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_dto.PolishResponse:
+    properties:
+      candidates:
+        items:
+          type: string
+        type: array
+    type: object
   github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.FileRequest:
     properties:
       content_type:
@@ -408,24 +415,6 @@ definitions:
       voucher_status:
         type: string
     type: object
-  internal_domain_ai_handler.SuggestionsRequest:
-    properties:
-      businessCategory:
-        type: string
-      currentText:
-        type: string
-      merchantName:
-        type: string
-      overallRating:
-        type: number
-    type: object
-  internal_domain_ai_handler.SuggestionsResponse:
-    properties:
-      suggestions:
-        items:
-          type: string
-        type: array
-    type: object
   internal_domain_auth.ForgotPasswordRequest:
     properties:
       email:
@@ -657,22 +646,63 @@ paths:
   /ai/reviews/suggestions:
     post:
       consumes:
-      - application/json
-      description: Generates AI suggestions for improving a review
+      - multipart/form-data
+      description: Sends a user-written draft review (text and optional images) to
+        Gemini and returns three polished candidates. The response contains text only;
+        images are processed for context but never returned.
       parameters:
-      - description: Suggestions request
-        in: body
-        name: request
+      - description: Draft review text (10-4000 chars after trim)
+        in: formData
+        name: text
         required: true
-        schema:
-          $ref: '#/definitions/internal_domain_ai_handler.SuggestionsRequest'
+        type: string
+      - description: Image attachment (repeat for multiple, up to 6, 5 MiB each, jpeg/png/gif/webp)
+        in: formData
+        name: images
+        type: file
+      - description: Optional merchant name for context
+        in: formData
+        name: merchantName
+        type: string
+      - description: Optional store name for context
+        in: formData
+        name: storeName
+        type: string
+      - description: Optional business category, e.g. restaurant, cafe
+        in: formData
+        name: businessCategory
+        type: string
+      - description: Optional output language hint, e.g. en, zh
+        in: formData
+        name: language
+        type: string
+      - description: Optional overall rating 0-5
+        in: formData
+        name: ratingOverall
+        type: number
+      - description: Optional service rating 0-5
+        in: formData
+        name: ratingService
+        type: number
+      - description: Optional environment rating 0-5
+        in: formData
+        name: ratingEnvironment
+        type: number
+      - description: Optional value rating 0-5
+        in: formData
+        name: ratingValue
+        type: number
+      - description: Optional food rating 0-5
+        in: formData
+        name: ratingFood
+        type: number
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_domain_ai_handler.SuggestionsResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_dto.PolishResponse'
         "400":
           description: Bad Request
           schema:
@@ -685,7 +715,25 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Get review suggestions
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "429":
+          description: Too Many Requests
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "502":
+          description: Bad Gateway
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Polish a draft review with AI
       tags:
       - ai
   /auth/callback/google:

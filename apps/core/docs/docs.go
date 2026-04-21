@@ -170,9 +170,9 @@ const docTemplate = `{
         },
         "/ai/reviews/suggestions": {
             "post": {
-                "description": "Generates AI suggestions for improving a review",
+                "description": "Sends a user-written draft review (text and optional images) to Gemini and returns three polished candidates. The response contains text only; images are processed for context but never returned.",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -180,23 +180,81 @@ const docTemplate = `{
                 "tags": [
                     "ai"
                 ],
-                "summary": "Get review suggestions",
+                "summary": "Polish a draft review with AI",
                 "parameters": [
                     {
-                        "description": "Suggestions request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/internal_domain_ai_handler.SuggestionsRequest"
-                        }
+                        "type": "string",
+                        "description": "Draft review text (10-4000 chars after trim)",
+                        "name": "text",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Image attachment (repeat for multiple, up to 6, 5 MiB each, jpeg/png/gif/webp)",
+                        "name": "images",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Optional merchant name for context",
+                        "name": "merchantName",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Optional store name for context",
+                        "name": "storeName",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Optional business category, e.g. restaurant, cafe",
+                        "name": "businessCategory",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Optional output language hint, e.g. en, zh",
+                        "name": "language",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Optional overall rating 0-5",
+                        "name": "ratingOverall",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Optional service rating 0-5",
+                        "name": "ratingService",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Optional environment rating 0-5",
+                        "name": "ratingEnvironment",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Optional value rating 0-5",
+                        "name": "ratingValue",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Optional food rating 0-5",
+                        "name": "ratingFood",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_domain_ai_handler.SuggestionsResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_dto.PolishResponse"
                         }
                     },
                     "400": {
@@ -210,6 +268,33 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -4978,6 +5063,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_dto.PolishResponse": {
+            "type": "object",
+            "properties": {
+                "candidates": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.FileRequest": {
             "type": "object",
             "properties": {
@@ -5583,34 +5679,6 @@ const docTemplate = `{
                 },
                 "voucher_status": {
                     "type": "string"
-                }
-            }
-        },
-        "internal_domain_ai_handler.SuggestionsRequest": {
-            "type": "object",
-            "properties": {
-                "businessCategory": {
-                    "type": "string"
-                },
-                "currentText": {
-                    "type": "string"
-                },
-                "merchantName": {
-                    "type": "string"
-                },
-                "overallRating": {
-                    "type": "number"
-                }
-            }
-        },
-        "internal_domain_ai_handler.SuggestionsResponse": {
-            "type": "object",
-            "properties": {
-                "suggestions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },
