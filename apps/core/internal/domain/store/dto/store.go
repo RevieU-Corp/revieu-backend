@@ -15,6 +15,7 @@ type CreateStoreRequest struct {
 	Longitude     float64            `json:"longitude"`
 	CoverImageURL string             `json:"cover_image_url" binding:"max=255"`
 	Images        []string           `json:"images"`
+	MenuImages    []string           `json:"menu_images"`
 	Hours         []StoreHourRequest `json:"hours"`
 	CategoryIDs   []int64            `json:"category_ids"`
 }
@@ -34,6 +35,7 @@ type UpdateStoreRequest struct {
 	Longitude     *float64            `json:"longitude"`
 	CoverImageURL *string             `json:"cover_image_url" binding:"omitempty,max=255"`
 	Images        *[]string           `json:"images"`
+	MenuImages    *[]string           `json:"menu_images"`
 	Hours         *[]StoreHourRequest `json:"hours"`
 	CategoryIDs   *[]int64            `json:"category_ids"`
 }

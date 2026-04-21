@@ -150,7 +150,9 @@ func (h *StoreHandler) Hours(c *gin.Context) {
 // @Description Returns stores owned by the authenticated merchant user
 // @Tags store
 // @Produce json
+// @Param limit query int false "Page size (max 100)"
 // @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Security BearerAuth
@@ -161,7 +163,19 @@ func (h *StoreHandler) ListMine(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	stores, err := h.svc.ListMine(c.Request.Context(), userID)
+
+	limit, hasLimit, err := parseIntQuery(c, "limit")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var limitPtr *int
+	if hasLimit {
+		limitPtr = &limit
+	}
+
+	stores, err := h.svc.ListMine(c.Request.Context(), userID, limitPtr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list stores"})
 		return
@@ -344,6 +358,48 @@ func (h *StoreHandler) Deactivate(c *gin.Context) {
 		}
 		return
 	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+// DeleteStore godoc
+// @Summary Delete a store
+// @Description Soft-deletes a merchant-owned store and its bound coupons
+// @Tags store
+// @Produce json
+// @Param id path int true "Store ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /merchant/stores/{id} [delete]
+func (h *StoreHandler) Delete(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	storeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid store id"})
+		return
+	}
+
+	if err := h.svc.Delete(c.Request.Context(), userID, storeID); err != nil {
+		switch {
+		case errors.Is(err, service.ErrStoreNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		case errors.Is(err, service.ErrStoreForbidden):
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete store"})
+		}
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 

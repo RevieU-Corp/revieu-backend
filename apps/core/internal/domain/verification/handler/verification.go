@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/verification/service"
@@ -28,7 +29,29 @@ func NewVerificationHandler(svc *service.VerificationService) *VerificationHandl
 // @Failure 401 {object} map[string]string
 // @Router /merchant/verification [post]
 func (h *VerificationHandler) Submit(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req service.SubmitVerificationInput
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	verification, err := h.svc.Submit(c.Request.Context(), userID, req)
+	if err != nil {
+		if errors.Is(err, service.ErrVerificationInvalidInput) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid verification input"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to submit verification"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"data": verification})
 }
 
 // VerificationStatus godoc
@@ -40,5 +63,16 @@ func (h *VerificationHandler) Submit(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Router /merchant/verification [get]
 func (h *VerificationHandler) Status(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "not implemented"})
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	status, err := h.svc.Status(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load verification status"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": status})
 }

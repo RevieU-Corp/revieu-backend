@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/media/dto"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/storage"
@@ -38,37 +39,17 @@ func NewMediaService(db *gorm.DB, r2Client *storage.R2Client) *MediaService {
 	return &MediaService{db: db, r2Client: r2Client}
 }
 
-type FileRequest struct {
-	Filename    string `json:"filename"`
-	ContentType string `json:"content_type"`
-}
-
-type PresignedURLRequest struct {
-	Files []FileRequest `json:"files"`
-}
-
-type UploadInfo struct {
-	ID        string    `json:"id"`
-	UploadURL string    `json:"upload_url"`
-	FileURL   string    `json:"file_url"`
-	ExpiresAt time.Time `json:"expires_at"`
-}
-
-type PresignedURLResponse struct {
-	Uploads []UploadInfo `json:"uploads"`
-}
-
-func (s *MediaService) CreatePresignedURLs(ctx context.Context, userID int64, req *PresignedURLRequest) (*PresignedURLResponse, error) {
+func (s *MediaService) CreatePresignedURLs(ctx context.Context, userID int64, req *dto.PresignedURLRequest) (*dto.PresignedURLResponse, error) {
 	if len(req.Files) > 10 {
 		return nil, ErrTooManyFiles
 	}
 
 	if len(req.Files) == 0 {
-		return &PresignedURLResponse{Uploads: []UploadInfo{}}, nil
+		return &dto.PresignedURLResponse{Uploads: []dto.UploadInfo{}}, nil
 	}
 
-	response := &PresignedURLResponse{
-		Uploads: make([]UploadInfo, 0, len(req.Files)),
+	response := &dto.PresignedURLResponse{
+		Uploads: make([]dto.UploadInfo, 0, len(req.Files)),
 	}
 
 	now := time.Now()
@@ -101,7 +82,7 @@ func (s *MediaService) CreatePresignedURLs(ctx context.Context, userID int64, re
 			return nil, fmt.Errorf("failed to save upload record: %w", err)
 		}
 
-		response.Uploads = append(response.Uploads, UploadInfo{
+		response.Uploads = append(response.Uploads, dto.UploadInfo{
 			ID:        fileUUID,
 			UploadURL: result.UploadURL,
 			FileURL:   result.FileURL,

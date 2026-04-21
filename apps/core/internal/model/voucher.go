@@ -5,6 +5,7 @@ import "time"
 type Voucher struct {
 	ID             int64      `gorm:"primaryKey;autoIncrement" json:"id"`
 	Code           string     `gorm:"type:varchar(50);uniqueIndex" json:"code"`
+	ScanToken      string     `gorm:"type:varchar(128);uniqueIndex" json:"-"`
 	CouponID       int64      `gorm:"not null;index" json:"coupon_id"`
 	UserID         int64      `gorm:"not null;index" json:"user_id"`
 	PackageID      *int64     `gorm:"index" json:"package_id"`

@@ -98,6 +98,48 @@ func (h *CouponHandler) CreateStoreCoupon(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"data": coupon})
 }
 
+// DeleteStoreCoupon godoc
+// @Summary Delete store coupon
+// @Description Soft-deletes a store-scoped coupon under an owned store
+// @Tags coupon
+// @Produce json
+// @Param id path int true "Store ID"
+// @Param couponId path int true "Coupon ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /merchant/stores/{id}/coupons/{couponId} [delete]
+func (h *CouponHandler) DeleteStoreCoupon(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	storeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid store id"})
+		return
+	}
+	couponID, err := strconv.ParseInt(c.Param("couponId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid coupon id"})
+		return
+	}
+
+	if err := h.svc.DeleteForStore(c.Request.Context(), userID, storeID, couponID); err != nil {
+		status, msg := couponErrorStatus(err)
+		c.JSON(status, gin.H{"error": msg})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
 // ListStoreCoupons godoc
 // @Summary List store coupons
 // @Description Lists published active coupons under a store

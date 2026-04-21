@@ -71,6 +71,10 @@ func (s *StoreService) Create(ctx context.Context, userID int64, req dto.CreateS
 	if err != nil {
 		return nil, err
 	}
+	menuImagesRaw, err := json.Marshal(req.MenuImages)
+	if err != nil {
+		return nil, err
+	}
 
 	storeName := req.Name
 	if storeName == "" {
@@ -98,6 +102,7 @@ func (s *StoreService) Create(ctx context.Context, userID int64, req dto.CreateS
 		Longitude:     req.Longitude,
 		CoverImageURL: req.CoverImageURL,
 		Images:        string(imagesRaw),
+		MenuImages:    string(menuImagesRaw),
 		Status:        StoreStatusDraft,
 	}
 
@@ -283,14 +288,19 @@ func (s *StoreService) HoursPublished(ctx context.Context, storeID int64) ([]mod
 	return hours, nil
 }
 
-func (s *StoreService) ListMine(ctx context.Context, userID int64) ([]model.Store, error) {
-	var stores []model.Store
-	if err := s.db.WithContext(ctx).
+func (s *StoreService) ListMine(ctx context.Context, userID int64, limit *int) ([]model.Store, error) {
+	dbQuery := s.db.WithContext(ctx).
 		Model(&model.Store{}).
 		Joins("JOIN merchants ON merchants.id = stores.merchant_id").
 		Where("merchants.user_id = ?", userID).
-		Order("stores.id desc").
-		Find(&stores).Error; err != nil {
+		Order("stores.id desc")
+
+	if limit != nil {
+		dbQuery = dbQuery.Limit(sanitizeLimit(limit, defaultPublicListLimit, maxPublicListLimit))
+	}
+
+	var stores []model.Store
+	if err := dbQuery.Find(&stores).Error; err != nil {
 		return nil, err
 	}
 	return stores, nil
@@ -302,6 +312,43 @@ func (s *StoreService) Activate(ctx context.Context, userID, storeID int64) erro
 
 func (s *StoreService) Deactivate(ctx context.Context, userID, storeID int64) error {
 	return s.updateStatusOwned(ctx, userID, storeID, StoreStatusHidden)
+}
+
+func (s *StoreService) Delete(ctx context.Context, userID, storeID int64) error {
+	var merchant model.Merchant
+	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&merchant).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrStoreForbidden
+		}
+		return err
+	}
+
+	var store model.Store
+	if err := s.db.WithContext(ctx).Unscoped().First(&store, storeID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrStoreNotFound
+		}
+		return err
+	}
+	if store.MerchantID != merchant.ID {
+		return ErrStoreForbidden
+	}
+	if store.DeletedAt.Valid {
+		return nil
+	}
+
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("store_id = ?", storeID).Delete(&model.Coupon{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("id = ?", storeID).Delete(&model.Store{}).Error; err != nil {
+			return err
+		}
+		return tx.Model(&model.Merchant{}).
+			Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("id = ?", merchant.ID).
+			UpdateColumn("total_stores", gorm.Expr("CASE WHEN total_stores > 0 THEN total_stores - 1 ELSE 0 END")).Error
+	})
 }
 
 func (s *StoreService) updateStatusOwned(ctx context.Context, userID, storeID int64, toStatus int16) error {
@@ -395,6 +442,13 @@ func (s *StoreService) Update(ctx context.Context, userID, storeID int64, req dt
 			return nil, err
 		}
 		updates["images"] = string(imagesRaw)
+	}
+	if req.MenuImages != nil {
+		menuImagesRaw, err := json.Marshal(*req.MenuImages)
+		if err != nil {
+			return nil, err
+		}
+		updates["menu_images"] = string(menuImagesRaw)
 	}
 
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {

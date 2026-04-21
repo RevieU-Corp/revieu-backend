@@ -4,6 +4,11 @@
 # Repository governance and CI
 /.github/ @LosFurina @waynejune
 /README.md @LosFurina @waynejune
+/apps/core/README.md @LosFurina @waynejune
+/apps/core/Makefile @LosFurina @waynejune
+/apps/core/go.mod @LosFurina @waynejune
+/apps/core/go.sum @LosFurina @waynejune
+/apps/core/init-db.sql @LosFurina @waynejune
 /lefthook.yml @LosFurina @waynejune
 /tools.go @LosFurina
 
@@ -34,14 +39,14 @@
 /apps/core/internal/domain/ai/ @LosFurina
 /apps/core/internal/domain/category/ @LosFurina
 /apps/core/internal/domain/content/ @LosFurina
-/apps/core/internal/domain/conversation/ @LosFurina
-/apps/core/internal/domain/coupon/ @LosFurina
+/apps/core/internal/domain/conversation/ @LosFurina @jasonpaul0727
+/apps/core/internal/domain/coupon/ @LosFurina @waynejune
 /apps/core/internal/domain/feed/ @LosFurina
 /apps/core/internal/domain/follow/ @LosFurina
 /apps/core/internal/domain/merchant/ @LosFurina
-/apps/core/internal/domain/notification/ @LosFurina
-/apps/core/internal/domain/order/ @LosFurina
-/apps/core/internal/domain/payment/ @LosFurina
+/apps/core/internal/domain/notification/ @LosFurina @jasonpaul0727
+/apps/core/internal/domain/order/ @LosFurina @waynejune
+/apps/core/internal/domain/payment/ @LosFurina @waynejune
 /apps/core/internal/domain/profile/ @LosFurina
-/apps/core/internal/domain/verification/ @LosFurina
-/apps/core/internal/domain/voucher/ @LosFurina
+/apps/core/internal/domain/verification/ @LosFurina @jasonpaul0727 @ChangGu328
+/apps/core/internal/domain/voucher/ @LosFurina @waynejune

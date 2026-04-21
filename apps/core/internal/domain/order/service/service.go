@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"strings"
@@ -238,8 +240,13 @@ func (s *OrderService) Pay(ctx context.Context, userID, orderID int64) (*PayResu
 
 		vouchers := make([]model.Voucher, 0, order.Quantity)
 		for i := 0; i < order.Quantity; i++ {
+			scanToken, err := generateVoucherScanToken()
+			if err != nil {
+				return err
+			}
 			voucher := model.Voucher{
 				Code:       generateVoucherCode(),
+				ScanToken:  scanToken,
 				CouponID:   coupon.ID,
 				UserID:     userID,
 				OrderID:    &order.ID,
@@ -319,4 +326,12 @@ func (s *OrderService) loadPurchasableCouponTx(db *gorm.DB, couponID int64) (*mo
 func generateVoucherCode() string {
 	raw := strings.ToUpper(strings.ReplaceAll(uuid.NewString(), "-", ""))
 	return "VCH-" + raw[:12]
+}
+
+func generateVoucherScanToken() (string, error) {
+	var raw [24]byte
+	if _, err := rand.Read(raw[:]); err != nil {
+		return "", fmt.Errorf("generate voucher scan token: %w", err)
+	}
+	return "vst_" + base64.RawURLEncoding.EncodeToString(raw[:]), nil
 }

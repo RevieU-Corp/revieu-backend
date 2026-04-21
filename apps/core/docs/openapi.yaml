@@ -247,10 +247,19 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Review'
-  /reviews:
+  /user/reviews:
     get:
-      tags: [reviews]
-      summary: List user reviews
+      tags: [users]
+      summary: List my reviews
+      parameters:
+        - in: query
+          name: cursor
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
       responses:
         '200':
           description: OK
@@ -259,10 +268,16 @@ paths:
               schema:
                 type: object
                 properties:
-                  data:
+                  reviews:
                     type: array
                     items:
                       $ref: '#/components/schemas/Review'
+                  total:
+                    type: integer
+                  cursor:
+                    type: integer
+                    nullable: true
+  /reviews:
     post:
       tags: [reviews]
       summary: Create review

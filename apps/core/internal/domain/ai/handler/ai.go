@@ -11,11 +11,18 @@ type AIHandler struct {
 	svc *service.AIService
 }
 
-// SuggestionsRequest is a local alias for Swagger schema generation.
-type SuggestionsRequest = service.SuggestionsRequest
+// SuggestionsRequest is the request body for generating suggestions.
+type SuggestionsRequest struct {
+	OverallRating    float64 `json:"overallRating"`
+	BusinessCategory string  `json:"businessCategory"`
+	CurrentText      string  `json:"currentText"`
+	MerchantName     string  `json:"merchantName"`
+}
 
-// SuggestionsResponse is a local alias for Swagger schema generation.
-type SuggestionsResponse = service.SuggestionsResponse
+// SuggestionsResponse is the response body for generated suggestions.
+type SuggestionsResponse struct {
+	Suggestions []string `json:"suggestions"`
+}
 
 func NewAIHandler(svc *service.AIService) *AIHandler {
 	return &AIHandler{svc: svc}
@@ -33,11 +40,16 @@ func NewAIHandler(svc *service.AIService) *AIHandler {
 // @Failure 401 {object} map[string]string
 // @Router /ai/reviews/suggestions [post]
 func (h *AIHandler) Suggestions(c *gin.Context) {
-	var req service.SuggestionsRequest
+	var req SuggestionsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	resp := h.svc.Suggestions(req)
-	c.JSON(http.StatusOK, resp)
+	resp := h.svc.Suggestions(service.SuggestionsRequest{
+		OverallRating:    req.OverallRating,
+		BusinessCategory: req.BusinessCategory,
+		CurrentText:      req.CurrentText,
+		MerchantName:     req.MerchantName,
+	})
+	c.JSON(http.StatusOK, SuggestionsResponse{Suggestions: resp.Suggestions})
 }

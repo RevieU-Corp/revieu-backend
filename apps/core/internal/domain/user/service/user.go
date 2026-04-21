@@ -9,11 +9,15 @@ import (
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type UserService struct {
 	db *gorm.DB
 }
+
+const accountDeletionDelay = 7 * 24 * time.Hour
+const defaultAccountDeletionBatchSize = 50
 
 func NewUserService(db *gorm.DB) *UserService {
 	if db == nil {
@@ -185,6 +189,92 @@ func (s *UserService) SetDefaultAddress(ctx context.Context, userID, addressID i
 }
 
 func (s *UserService) RequestAccountDeletion(ctx context.Context, userID int64, reason string) error {
-	deletion := model.AccountDeletion{UserID: userID, Reason: reason, ScheduledAt: time.Now().UTC().Add(7 * 24 * time.Hour)}
-	return s.db.WithContext(ctx).Save(&deletion).Error
+	deletion := model.AccountDeletion{
+		UserID:      userID,
+		Reason:      reason,
+		ScheduledAt: time.Now().UTC().Add(accountDeletionDelay),
+	}
+	return s.db.WithContext(ctx).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "user_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"reason", "scheduled_at"}),
+		}).
+		Create(&deletion).Error
+}
+
+func (s *UserService) ExecuteDueAccountDeletions(ctx context.Context, now time.Time, limit int) (int, error) {
+	if limit <= 0 {
+		limit = defaultAccountDeletionBatchSize
+	}
+
+	var due []model.AccountDeletion
+	if err := s.db.WithContext(ctx).
+		Where("scheduled_at <= ?", now).
+		Order("scheduled_at asc, id asc").
+		Limit(limit).
+		Find(&due).Error; err != nil {
+		return 0, err
+	}
+
+	processed := 0
+	for _, item := range due {
+		if err := s.executeAccountDeletion(ctx, item.UserID, now); err != nil {
+			return processed, err
+		}
+		processed++
+	}
+
+	return processed, nil
+}
+
+func (s *UserService) executeAccountDeletion(ctx context.Context, userID int64, now time.Time) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var deletion model.AccountDeletion
+		if err := tx.
+			Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("user_id = ?", userID).
+			First(&deletion).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil
+			}
+			return err
+		}
+
+		if deletion.ScheduledAt.After(now) {
+			return nil
+		}
+
+		var merchantIDs []int64
+		if err := tx.Model(&model.Merchant{}).
+			Where("user_id = ?", userID).
+			Pluck("id", &merchantIDs).Error; err != nil {
+			return err
+		}
+
+		if len(merchantIDs) > 0 {
+			if err := tx.Where("merchant_id IN ?", merchantIDs).Delete(&model.Coupon{}).Error; err != nil {
+				return err
+			}
+			if err := tx.Where("merchant_id IN ?", merchantIDs).Delete(&model.Store{}).Error; err != nil {
+				return err
+			}
+			if err := tx.Where("id IN ?", merchantIDs).Delete(&model.Merchant{}).Error; err != nil {
+				return err
+			}
+		}
+
+		// Some production DBs still include NO ACTION constraints from users->user_auths/profile.
+		// Remove dependents explicitly before deleting the user row.
+		if err := tx.Where("user_id = ?", userID).Delete(&model.UserAuth{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("user_id = ?", userID).Delete(&model.UserProfile{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Delete(&model.User{}, userID).Error; err != nil {
+			return err
+		}
+
+		return tx.Where("user_id = ?", userID).Delete(&model.AccountDeletion{}).Error
+	})
 }

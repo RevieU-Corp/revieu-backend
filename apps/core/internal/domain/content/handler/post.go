@@ -28,7 +28,7 @@ func NewPostHandler(svc *service.ContentService) *PostHandler {
 // @Param id path int true "User ID"
 // @Param cursor query int false "Cursor"
 // @Param limit query int false "Limit"
-// @Success 200 {object} dto.PostListResponse
+// @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /users/{id}/posts [get]
@@ -74,7 +74,7 @@ func (h *PostHandler) ListUserPosts(c *gin.Context) {
 // @Produce json
 // @Param cursor query int false "Cursor"
 // @Param limit query int false "Limit"
-// @Success 200 {object} dto.PostListResponse
+// @Success 200 {object} map[string]interface{}
 // @Failure 401 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /user/posts [get]

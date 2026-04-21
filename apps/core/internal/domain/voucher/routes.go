@@ -11,7 +11,7 @@ import (
 // RegisterRoutes registers voucher routes.
 func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	svc := service.NewVoucherService(nil)
-	h := handler.NewVoucherHandler(svc)
+	h := handler.NewVoucherHandler(svc, cfg.FrontendURL)
 
 	vouchers := r.Group("/vouchers", middleware.JWTAuth(cfg.JWT))
 	{
@@ -27,6 +27,8 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 
 	merchantVouchers := r.Group("/merchant/vouchers", middleware.JWTAuth(cfg.JWT))
 	{
+		merchantVouchers.GET("/scan", h.ScanPreview)
+		merchantVouchers.POST("/redeem-by-token", h.RedeemByToken)
 		merchantVouchers.POST("/:id/redeem", h.RedeemByMerchant)
 	}
 }

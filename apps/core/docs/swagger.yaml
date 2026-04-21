@@ -1,146 +1,27 @@
 basePath: /api/v1
 definitions:
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteItem:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: integer
-      merchant:
-        $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief'
-      post:
-        $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostItem'
-      review:
-        $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewItem'
-      target_id:
-        type: integer
-      target_type:
-        type: string
-    type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteListResponse:
-    properties:
-      cursor:
-        type: integer
-      items:
-        items:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteItem'
-        type: array
-      total:
-        type: integer
-    type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief:
-    properties:
-      category:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-    type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostItem:
-    properties:
-      content:
-        type: string
-      created_at:
-        type: string
-      id:
-        type: integer
-      images:
-        items:
-          type: string
-        type: array
-      is_liked:
-        type: boolean
-      like_count:
-        type: integer
-      merchant:
-        $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief'
-      tags:
-        items:
-          type: string
-        type: array
-      title:
-        type: string
-      view_count:
-        type: integer
-    type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostListResponse:
-    properties:
-      cursor:
-        type: integer
-      posts:
-        items:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostItem'
-        type: array
-      total:
-        type: integer
-    type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewItem:
-    properties:
-      avg_cost:
-        type: integer
-      content:
-        type: string
-      created_at:
-        type: string
-      id:
-        type: integer
-      images:
-        items:
-          type: string
-        type: array
-      is_liked:
-        type: boolean
-      like_count:
-        type: integer
-      merchant:
-        $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.MerchantBrief'
-      rating:
-        type: number
-      rating_env:
-        type: number
-      rating_service:
-        type: number
-      rating_value:
-        type: number
-      tags:
-        items:
-          type: string
-        type: array
-    type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewListResponse:
-    properties:
-      cursor:
-        type: integer
-      reviews:
-        items:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewItem'
-        type: array
-      total:
-        type: integer
-    type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.FileRequest:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.FileRequest:
     properties:
       content_type:
         type: string
       filename:
         type: string
     type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLRequest:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLRequest:
     properties:
       files:
         items:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.FileRequest'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.FileRequest'
         type: array
     type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLResponse:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLResponse:
     properties:
       uploads:
         items:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.UploadInfo'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.UploadInfo'
         type: array
     type: object
-  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.UploadInfo:
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.UploadInfo:
     properties:
       expires_at:
         type: string
@@ -292,6 +173,10 @@ definitions:
         type: number
       longitude:
         type: number
+      menu_images:
+        items:
+          type: string
+        type: array
       name:
         maxLength: 255
         type: string
@@ -354,6 +239,10 @@ definitions:
         type: number
       longitude:
         type: number
+      menu_images:
+        items:
+          type: string
+        type: array
       name:
         maxLength: 255
         type: string
@@ -492,6 +381,33 @@ definitions:
       userId:
         type: string
     type: object
+  github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_voucher_service.RedeemPreview:
+    properties:
+      can_redeem:
+        type: boolean
+      coupon_id:
+        type: integer
+      coupon_title:
+        type: string
+      merchant_id:
+        type: integer
+      merchant_name:
+        type: string
+      reason:
+        type: string
+      redeemed_at:
+        type: string
+      store_id:
+        type: integer
+      store_name:
+        type: string
+      voucher_code:
+        type: string
+      voucher_id:
+        type: integer
+      voucher_status:
+        type: string
+    type: object
   internal_domain_ai_handler.SuggestionsRequest:
     properties:
       businessCategory:
@@ -622,6 +538,11 @@ definitions:
     properties:
       quantity:
         type: integer
+    type: object
+  internal_domain_voucher_handler.RedeemByTokenRequest:
+    properties:
+      scan_token:
+        type: string
     type: object
 host: localhost:8080
 info:
@@ -1295,14 +1216,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLRequest'
+          $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_service.PresignedURLResponse'
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLResponse'
         "400":
           description: Bad Request
           schema:
@@ -1350,9 +1271,37 @@ paths:
       summary: Create media upload
       tags:
       - media
+  /merchant/me:
+    delete:
+      description: Placeholder endpoint for future merchant deletion flow
+      produces:
+      - application/json
+      responses:
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "501":
+          description: Not Implemented
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete current merchant (placeholder)
+      tags:
+      - merchant
   /merchant/stores:
     get:
       description: Returns stores owned by the authenticated merchant user
+      parameters:
+      - description: Page size (max 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -1360,6 +1309,12 @@ paths:
           description: OK
           schema:
             additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "401":
           description: Unauthorized
@@ -1420,6 +1375,58 @@ paths:
       tags:
       - store
   /merchant/stores/{id}:
+    delete:
+      description: Soft-deletes a merchant-owned store and its bound coupons
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a store
+      tags:
+      - store
     patch:
       consumes:
       - application/json
@@ -1585,6 +1592,64 @@ paths:
       summary: Create store coupon
       tags:
       - coupon
+  /merchant/stores/{id}/coupons/{couponId}:
+    delete:
+      description: Soft-deletes a store-scoped coupon under an owned store
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Coupon ID
+        in: path
+        name: couponId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete store coupon
+      tags:
+      - coupon
   /merchant/stores/{id}/deactivate:
     post:
       description: Marks a merchant-owned store as hidden
@@ -1726,6 +1791,102 @@ paths:
       summary: Redeem voucher by merchant owner
       tags:
       - voucher
+  /merchant/vouchers/redeem-by-token:
+    post:
+      consumes:
+      - application/json
+      description: Redeems a scanned voucher for the authenticated merchant
+      parameters:
+      - description: Redeem by token request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_voucher_handler.RedeemByTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Redeem voucher by scan token
+      tags:
+      - voucher
+  /merchant/vouchers/scan:
+    get:
+      description: Validates a scanned voucher for the authenticated merchant without
+        mutating state
+      parameters:
+      - description: Voucher scan token
+        in: query
+        name: t
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_voucher_service.RedeemPreview'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Preview voucher redemption by scan token
+      tags:
+      - voucher
   /merchants:
     get:
       description: Returns merchants, optionally filtered by category
@@ -1733,6 +1894,10 @@ paths:
       - description: Category filter
         in: query
         name: category
+        type: string
+      - description: Search by name
+        in: query
+        name: search
         type: string
       produces:
       - application/json
@@ -2209,31 +2374,6 @@ paths:
       tags:
       - payment
   /reviews:
-    get:
-      description: Returns reviews created by the authenticated user
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: List my reviews
-      tags:
-      - review
     post:
       consumes:
       - application/json
@@ -2573,7 +2713,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Schedules account deletion (cooling period)
+      description: Schedules account deletion (cooling period). Due deletions are
+        executed asynchronously by a background worker.
       parameters:
       - description: Deletion reason
         in: body
@@ -2831,7 +2972,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.FavoriteListResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
@@ -3071,7 +3213,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostListResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
@@ -3237,7 +3380,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewListResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
@@ -3384,7 +3528,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.PostListResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
@@ -3423,7 +3568,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_content_dto.ReviewListResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
