@@ -176,6 +176,40 @@ func (h *VoucherHandler) UpdateStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
+// DeleteVoucher godoc
+// @Summary Delete voucher
+// @Description Deletes a voucher owned by the authenticated user
+// @Tags voucher
+// @Produce json
+// @Param id path int true "Voucher ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /vouchers/{id} [delete]
+func (h *VoucherHandler) Delete(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	if err := h.svc.DeleteForUser(c.Request.Context(), userID, id); err != nil {
+		if errors.Is(err, service.ErrVoucherNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete voucher"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
 // ShareVoucherEmail godoc
 // @Summary Share voucher via email
 // @Description Sends voucher share email
