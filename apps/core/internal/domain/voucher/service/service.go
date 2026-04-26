@@ -129,6 +129,17 @@ func (s *VoucherService) UpdateStatus(ctx context.Context, id int64, status stri
 	return s.db.WithContext(ctx).Model(&model.Voucher{}).Where("id = ?", id).UpdateColumn("status", status).Error
 }
 
+func (s *VoucherService) DeleteForUser(ctx context.Context, userID, voucherID int64) error {
+	var v model.Voucher
+	if err := s.db.WithContext(ctx).Where("id = ? AND user_id = ?", voucherID, userID).First(&v).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrVoucherNotFound
+		}
+		return err
+	}
+	return s.db.WithContext(ctx).Delete(&v).Error
+}
+
 func (s *VoucherService) PreviewRedeemByToken(ctx context.Context, merchantUserID int64, scanToken string) (*RedeemPreview, error) {
 	var merchant model.Merchant
 	if err := s.db.WithContext(ctx).Where("user_id = ?", merchantUserID).First(&merchant).Error; err != nil {
