@@ -3694,6 +3694,46 @@ paths:
       tags:
       - voucher
   /vouchers/{id}:
+    delete:
+      description: Deletes a voucher owned by the authenticated user
+      parameters:
+      - description: Voucher ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete voucher
+      tags:
+      - voucher
     get:
       description: Returns a voucher by ID
       parameters:
