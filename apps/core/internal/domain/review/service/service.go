@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 
+	aisvc "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/ai/service"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/review/dto"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
 	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
@@ -14,7 +15,8 @@ import (
 )
 
 type ReviewService struct {
-	db *gorm.DB
+	db    *gorm.DB
+	style *aisvc.StyleService
 }
 
 var ErrMerchantNotFound = errors.New("merchant not found")
@@ -26,6 +28,14 @@ func NewReviewService(db *gorm.DB) *ReviewService {
 		db = database.DB
 	}
 	return &ReviewService{db: db}
+}
+
+// WithStyle attaches the writing-style service so review submissions can fan out into
+// counter increments and async style derivation. Passing nil keeps the review path
+// completely independent of the AI feature.
+func (s *ReviewService) WithStyle(style *aisvc.StyleService) *ReviewService {
+	s.style = style
+	return s
 }
 
 func (s *ReviewService) Detail(ctx context.Context, id int64) (*model.Review, error) {
@@ -108,6 +118,11 @@ func (s *ReviewService) Create(ctx context.Context, userID int64, req dto.Review
 	}); err != nil {
 		return model.Review{}, err
 	}
+
+	// Hook the writing-style learning pipeline AFTER the transaction commits — counter
+	// bumps must not roll back with the review, and OnReviewSubmitted is fire-and-forget
+	// so failures here are silently logged inside the style service.
+	s.style.OnReviewSubmitted(ctx, userID)
 
 	return review, nil
 }

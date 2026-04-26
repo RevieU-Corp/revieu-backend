@@ -30,7 +30,7 @@ func Setup(router *gin.Engine, cfg *config.Config) {
 	api := router.Group(cfg.Server.APIBasePath)
 
 	auth.RegisterRoutes(api, cfg)
-	ai.RegisterRoutes(api, cfg)
+	styleSvc := ai.RegisterRoutes(api, cfg)
 	user.RegisterRoutes(api, cfg)
 	profile.RegisterRoutes(api, cfg)
 	follow.RegisterRoutes(api, cfg)
@@ -40,7 +40,7 @@ func Setup(router *gin.Engine, cfg *config.Config) {
 	merchant.RegisterRoutes(api, cfg)
 	media.RegisterRoutes(api, cfg)
 	payment.RegisterRoutes(api, cfg)
-	review.RegisterRoutes(api, cfg)
+	review.RegisterRoutes(api, cfg, styleSvc)
 	voucher.RegisterRoutes(api, cfg)
 	store.RegisterRoutes(api, cfg)
 	category.RegisterRoutes(api, cfg)

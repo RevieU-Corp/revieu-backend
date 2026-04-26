@@ -12,11 +12,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterRoutes registers AI routes. The Gemini client is constructed eagerly so a
-// missing or invalid API key surfaces at boot time. When construction fails, the route
-// is still registered but every request returns a configuration error from the service —
-// this keeps boot resilient when the AI feature is intentionally disabled.
-func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
+// RegisterRoutes registers AI routes and returns the StyleService so the review domain
+// can hook review-submission events into style derivation. The Gemini client is
+// constructed eagerly so a missing or invalid API key surfaces at boot time. When
+// construction fails, the route is still registered but every request returns a
+// configuration error from the service — this keeps boot resilient when the AI feature
+// is intentionally disabled. The returned StyleService may be nil in that case; callers
+// must treat that as "no personalization, no learning."
+func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) *service.StyleService {
 	client, err := service.NewGeminiClient(context.Background(), cfg.Gemini)
 	if err != nil {
 		if logger.Log != nil {
@@ -24,11 +27,18 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 		}
 		client = nil
 	}
-	svc := service.NewAIService(client, cfg.Gemini)
+
+	var styleSvc *service.StyleService
+	if styleClient, ok := client.(service.StyleClient); ok && styleClient != nil {
+		styleSvc = service.NewStyleService(nil, styleClient)
+	}
+
+	svc := service.NewAIService(client, cfg.Gemini).WithStyle(styleSvc)
 	h := handler.NewAIHandler(svc, cfg.Gemini)
 
 	ai := r.Group("/ai", middleware.JWTAuth(cfg.JWT))
 	{
 		ai.POST("/reviews/suggestions", h.Suggestions)
 	}
+	return styleSvc
 }

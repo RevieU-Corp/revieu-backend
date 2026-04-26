@@ -6,6 +6,8 @@ definitions:
         items:
           type: string
         type: array
+      style_applied:
+        type: boolean
     type: object
   github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.FileRequest:
     properties:
@@ -696,6 +698,10 @@ paths:
         in: formData
         name: ratingFood
         type: number
+      - description: Apply caller's saved writing style; defaults to true
+        in: formData
+        name: useStyle
+        type: boolean
       produces:
       - application/json
       responses:

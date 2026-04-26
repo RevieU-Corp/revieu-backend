@@ -192,6 +192,52 @@ func stripJSONFence(s string) string {
 	return strings.TrimSpace(s)
 }
 
+// DeriveStyle runs the writing-style extraction call. It uses a low temperature because
+// the task is structured analysis, not creative rewriting, and parses the response
+// defensively (the response schema is intentionally not enforced server-side — the
+// derived JSON is nested enough that a strict schema makes the call fragile).
+func (c *geminiClient) DeriveStyle(ctx context.Context, reviews []ReviewForStyle) (dto.StyleProfile, []dto.SampleSnippet, error) {
+	if len(reviews) == 0 {
+		return dto.StyleProfile{}, nil, errors.New("ai: no reviews provided to DeriveStyle")
+	}
+
+	parts := []*genai.Part{genai.NewPartFromText(buildStyleUserPrompt(reviews))}
+	temperature := float32(0.3)
+
+	resp, err := c.sdk.Models.GenerateContent(
+		ctx,
+		c.model,
+		[]*genai.Content{{Parts: parts, Role: genai.RoleUser}},
+		&genai.GenerateContentConfig{
+			SystemInstruction: &genai.Content{
+				Parts: []*genai.Part{genai.NewPartFromText(styleSystemInstruction)},
+			},
+			Temperature:      &temperature,
+			ResponseMIMEType: "application/json",
+		},
+	)
+	if err != nil {
+		return dto.StyleProfile{}, nil, classifyUpstreamError(err)
+	}
+
+	if fb := resp.PromptFeedback; fb != nil && fb.BlockReason != "" {
+		return dto.StyleProfile{}, nil, &SafetyBlockError{Reason: string(fb.BlockReason)}
+	}
+	if len(resp.Candidates) > 0 {
+		switch resp.Candidates[0].FinishReason {
+		case genai.FinishReasonSafety,
+			genai.FinishReasonBlocklist,
+			genai.FinishReasonProhibitedContent,
+			genai.FinishReasonSPII,
+			genai.FinishReasonImageSafety,
+			genai.FinishReasonImageProhibitedContent:
+			return dto.StyleProfile{}, nil, &SafetyBlockError{Reason: string(resp.Candidates[0].FinishReason)}
+		}
+	}
+
+	return parseStyleResponse(resp.Text(), reviews)
+}
+
 // classifyUpstreamError maps an SDK error to one of our sentinels so the handler can
 // choose the right HTTP status. The SDK returns genai.APIError by value for HTTP
 // failures, carrying the upstream status code.

@@ -248,6 +248,12 @@ const docTemplate = `{
                         "description": "Optional food rating 0-5",
                         "name": "ratingFood",
                         "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Apply caller's saved writing style; defaults to true",
+                        "name": "useStyle",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -5071,6 +5077,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "style_applied": {
+                    "type": "boolean"
                 }
             }
         },
