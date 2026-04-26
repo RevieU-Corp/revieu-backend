@@ -64,6 +64,7 @@ func NewAIHandler(svc *service.AIService, cfg config.GeminiConfig) *AIHandler {
 // @Param ratingEnvironment formData number false "Optional environment rating 0-5"
 // @Param ratingValue formData number false "Optional value rating 0-5"
 // @Param ratingFood formData number false "Optional food rating 0-5"
+// @Param useStyle formData boolean false "Apply caller's saved writing style; defaults to true"
 // @Success 200 {object} dto.PolishResponse
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
@@ -84,6 +85,7 @@ func (h *AIHandler) Suggestions(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	req.UserID = c.GetInt64("user_id")
 
 	timeout := time.Duration(h.cfg.TimeoutSeconds) * time.Second
 	if timeout <= 0 {
@@ -141,7 +143,24 @@ func parsePolishRequest(form *multipart.Form) (dto.PolishRequest, error) {
 		BusinessCategory: strings.TrimSpace(formValue(form, "businessCategory")),
 		Language:         strings.TrimSpace(formValue(form, "language")),
 		Rating:           rating,
+		UseStyle:         parseUseStyle(form),
 	}, nil
+}
+
+// parseUseStyle reads the optional `useStyle` form value, defaulting to true. We treat
+// missing, blank, and unparseable values as true so existing clients (which never sent
+// the field) automatically opt into personalization.
+func parseUseStyle(form *multipart.Form) bool {
+	raw := strings.TrimSpace(formValue(form, "useStyle"))
+	if raw == "" {
+		return true
+	}
+	switch strings.ToLower(raw) {
+	case "false", "0", "no", "off":
+		return false
+	default:
+		return true
+	}
 }
 
 func formValue(form *multipart.Form, key string) string {

@@ -23,6 +23,7 @@ func migrationModels() []interface{} {
 		&model.UserPrivacy{},
 		&model.UserNotification{},
 		&model.AccountDeletion{},
+		&model.UserWritingStyle{},
 		// Merchant & Store
 		&model.Merchant{},
 		&model.Category{},
