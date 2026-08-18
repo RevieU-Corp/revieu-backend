@@ -46,4 +46,4 @@ logs/
 tmp/
 temp/
 
-secrets.yaml
+*.secret

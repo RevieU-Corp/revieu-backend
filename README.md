@@ -50,10 +50,10 @@ cd revieu-core-api-go
 
 ```bash
 # Copy example secrets
-cp apps/core/configs/secrets.yaml.example apps/core/configs/secrets.yaml
-
-# Edit with your values
-vim apps/core/configs/secrets.yaml
+export CLOUDFLARE_ACCOUNT_ID=...
+export CLOUDFLARE_KV_NAMESPACE_ID=...
+export CLOUDFLARE_API_TOKEN=...
+export JWT_SECRET=...
 
 # Encrypt before committing
 ./scripts/seal-secrets.sh

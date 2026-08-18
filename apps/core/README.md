@@ -20,8 +20,7 @@ A standard Go/Gin backend service following best practices and clean architectur
 │   └── utils/             # Utility functions
 ├── api/                   # API protocol definitions
 │   ├── openapi/           # Swagger/OpenAPI specifications
-│   └── proto/             # gRPC .proto files
-├── configs/               # Configuration files (yaml, json, toml)
+├── configs/               # Reserved for non-configuration assets; runtime config uses environment variables
 ├── scripts/               # Build, install, and analysis scripts
 ├── build/                 # Packaging and CI
 │   ├── package/           # Dockerfiles
@@ -76,9 +75,7 @@ make test-coverage
 make lint
 ```
 
-### Database Migrations
-
-`AutoMigrate` is controlled by `database.auto_migrate` in `configs/config.yaml` and should stay `false` in production.
+`DB_AUTO_MIGRATE` defaults to `false` and should stay false in production. Runtime configuration is loaded from Cloudflare KV first, then process environment variables.
 
 Use SQL migrations managed by Goose:
 
@@ -111,7 +108,15 @@ make docker-run
 
 ## Configuration
 
-Configuration files should be placed in the `configs/` directory. The application supports multiple configuration formats (YAML, JSON, TOML).
+The service does not read YAML, JSON, TOML, `.env`, or other configuration files. It loads configuration in this order:
+
+```text
+Cloudflare KV > process environment > code defaults
+```
+
+The Cloudflare KV adapter itself reads `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_KV_NAMESPACE_ID`, `CLOUDFLARE_API_TOKEN`, optional `CLOUDFLARE_KV_PREFIX`, and optional `CLOUDFLARE_KV_TIMEOUT` from the process environment. Kubernetes should inject these through ConfigMap/Secret; local development should use `export`.
+
+Application variables use names such as `SERVER_PORT`, `DB_HOST`, `DB_PASSWORD`, `JWT_SECRET`, and `GEMINI_API_KEY`.
 
 ## API Documentation
 

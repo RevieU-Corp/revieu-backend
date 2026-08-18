@@ -1,184 +1,82 @@
 package config
 
 import (
-	"fmt"
-	"os"
-	"strings"
-
-	"gopkg.in/yaml.v3"
+    "context"
+    "fmt"
+    "io"
+    "net/http"
+    "os"
+    "strconv"
+    "strings"
+    "time"
 )
 
-// Config holds all configuration for the application
 type Config struct {
-	Server      ServerConfig   `yaml:"server"`
-	Database    DatabaseConfig `yaml:"database"`
-	Logger      LoggerConfig   `yaml:"logger"`
-	JWT         JWTConfig      `yaml:"jwt"`
-	OAuth       OAuthConfig    `yaml:"oauth"`
-	SMTP        SMTPConfig     `yaml:"smtp"`
-	R2          R2Config       `yaml:"r2"`
-	Gemini      GeminiConfig   `yaml:"gemini"`
-	FrontendURL string         `yaml:"frontend_url"`
+	Server      ServerConfig
+	Database    DatabaseConfig
+	Logger      LoggerConfig
+	JWT         JWTConfig
+	OAuth       OAuthConfig
+	SMTP        SMTPConfig
+	R2          R2Config
+	Gemini      GeminiConfig
+	FrontendURL string
 }
 
-// GeminiConfig holds Google Gemini API configuration for AI-powered review polishing.
-// Backend selects between the Gemini Developer API (generativelanguage.googleapis.com)
-// and Vertex AI (aiplatform.googleapis.com) — both accept a single API key in express mode.
-// Valid values: "gemini-api" (default) or "vertex-ai".
-type GeminiConfig struct {
-	Backend        string `yaml:"backend"`
-	APIKey         string `yaml:"api_key"`
-	Model          string `yaml:"model"`
-	TimeoutSeconds int    `yaml:"timeout_seconds"`
+type GeminiConfig struct { Backend string; APIKey string; Model string; TimeoutSeconds int }
+type SMTPConfig struct { Host string; Port int; Username string; Password string; From string; UseTLS bool }
+type R2Config struct { AccountID string; AccessKeyID string; SecretAccessKey string; BucketName string; PublicURL string }
+type OAuthConfig struct { Google GoogleOAuthConfig }
+type GoogleOAuthConfig struct { ClientID string; ClientSecret string }
+type JWTConfig struct { Secret string; ExpireHour int; RefreshExpireHour int }
+type ServerConfig struct { Address string; Port int; Mode string; APIBasePath string }
+type cloudflareKVProvider struct { client *http.Client; accountID, namespaceID, token, prefix string }
+
+func newCloudflareKVProvider() Provider {
+	account, namespace, token := os.Getenv("CLOUDFLARE_ACCOUNT_ID"), os.Getenv("CLOUDFLARE_KV_NAMESPACE_ID"), os.Getenv("CLOUDFLARE_API_TOKEN")
+	if account == "" || namespace == "" || token == "" { return nil }
+	return &cloudflareKVProvider{http.DefaultClient, account, namespace, token, os.Getenv("CLOUDFLARE_KV_PREFIX")}
+}
+func (p *cloudflareKVProvider) Load(ctx context.Context, keys []string) (map[string]string, error) {
+	values := make(map[string]string)
+	base := "https://api.cloudflare.com/client/v4/accounts/" + p.accountID + "/storage/kv/namespaces/" + p.namespaceID + "/values/"
+	for _, key := range keys {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, base+p.prefix+key, nil); if err != nil { return nil, err }
+		req.Header.Set("Authorization", "Bearer "+p.token)
+		resp, err := p.client.Do(req); if err != nil { return nil, err }
+		body, readErr := io.ReadAll(resp.Body); resp.Body.Close(); if readErr != nil { return nil, readErr }
+		if resp.StatusCode == http.StatusNotFound { continue }
+		if resp.StatusCode != http.StatusOK { return nil, fmt.Errorf("cloudflare KV returned HTTP %d: %s", resp.StatusCode, strings.TrimSpace(string(body))) }
+		values[key] = string(body)
+	}
+	return values, nil
 }
 
-// SMTPConfig holds SMTP email configuration
-type SMTPConfig struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-	From     string `yaml:"from"`
-	UseTLS   bool   `yaml:"use_tls"`
-}
-
-// R2Config holds Cloudflare R2 storage configuration
-type R2Config struct {
-	AccountID       string `yaml:"account_id"`
-	AccessKeyID     string `yaml:"access_key_id"`
-	SecretAccessKey string `yaml:"secret_access_key"`
-	BucketName      string `yaml:"bucket_name"`
-	PublicURL       string `yaml:"public_url"`
-}
-
-// OAuthConfig holds OAuth provider configurations
-type OAuthConfig struct {
-	Google GoogleOAuthConfig `yaml:"google"`
-}
-
-// GoogleOAuthConfig holds Google OAuth configuration
-type GoogleOAuthConfig struct {
-	ClientID     string `yaml:"client_id"`
-	ClientSecret string `yaml:"client_secret"`
-}
-
-// JWTConfig holds JWT configuration
-type JWTConfig struct {
-	Secret            string `yaml:"secret"`
-	ExpireHour        int    `yaml:"expire_hour"`
-	RefreshExpireHour int    `yaml:"refresh_expire_hour"`
-}
-
-// ServerConfig holds server configuration
-type ServerConfig struct {
-	Address     string `yaml:"address"`
-	Port        int    `yaml:"port"`
-	Mode        string `yaml:"mode"`          // debug, release, test
-	APIBasePath string `yaml:"api_base_path"` // API version prefix (e.g., /api/v1)
-}
-
-// DatabaseConfig holds database configuration
-type DatabaseConfig struct {
-	Driver   string `yaml:"driver"`
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Database string `yaml:"database"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-	// AutoMigrate should stay false in production; prefer explicit SQL migrations.
-	AutoMigrate bool `yaml:"auto_migrate"`
-}
-
-// LoggerConfig holds logger configuration
-type LoggerConfig struct {
-	Level  string `yaml:"level"`  // debug, info, warn, error
-	Format string `yaml:"format"` // json, text
-}
-
-// Load reads configuration from file
 func Load() (*Config, error) {
-	configPath := os.Getenv("CONFIG_PATH")
-	if configPath == "" {
-		configPath = "configs/config.yaml"
+	keys := []string{"SERVER_ADDRESS","SERVER_PORT","SERVER_MODE","API_BASE_PATH","DB_DRIVER","DB_HOST","DB_PORT","DB_NAME","DB_USER","DB_PASSWORD","DB_AUTO_MIGRATE","LOG_LEVEL","LOG_FORMAT","JWT_SECRET","JWT_EXPIRE_HOUR","JWT_REFRESH_EXPIRE_HOUR","GOOGLE_CLIENT_ID","GOOGLE_CLIENT_SECRET","FRONTEND_URL","SMTP_HOST","SMTP_PORT","SMTP_USERNAME","SMTP_PASSWORD","SMTP_FROM","SMTP_USE_TLS","R2_ACCOUNT_ID","R2_ACCESS_KEY_ID","R2_SECRET_ACCESS_KEY","R2_BUCKET_NAME","R2_PUBLIC_URL","GEMINI_BACKEND","GEMINI_API_KEY","GEMINI_MODEL","GEMINI_TIMEOUT_SECONDS"}
+	values := make(map[string]string, len(keys))
+	for _, key := range keys { if value, ok := os.LookupEnv(key); ok { values[key] = value } }
+	if provider := newCloudflareKVProvider(); provider != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), providerTimeout()); defer cancel()
+		if remote, err := provider.Load(ctx, keys); err == nil {
+			for key, value := range remote { values[key] = value }
+		}
 	}
+	return decode(values)
+}
 
-	data, err := os.ReadFile(configPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
-	}
-
-	var cfg Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("failed to parse config file: %w", err)
-	}
-
-	// Expand environment variables in JWT secret
-	if strings.HasPrefix(cfg.JWT.Secret, "${") && strings.HasSuffix(cfg.JWT.Secret, "}") {
-		envVar := cfg.JWT.Secret[2 : len(cfg.JWT.Secret)-1]
-		cfg.JWT.Secret = os.Getenv(envVar)
-	}
-
-	// Expand environment variables in database config
-	if strings.HasPrefix(cfg.Database.Host, "${") && strings.HasSuffix(cfg.Database.Host, "}") {
-		envVar := cfg.Database.Host[2 : len(cfg.Database.Host)-1]
-		cfg.Database.Host = os.Getenv(envVar)
-	}
-	if strings.HasPrefix(cfg.Database.Password, "${") && strings.HasSuffix(cfg.Database.Password, "}") {
-		envVar := cfg.Database.Password[2 : len(cfg.Database.Password)-1]
-		cfg.Database.Password = os.Getenv(envVar)
-	}
-
-	// Expand environment variables in OAuth config
-	if strings.HasPrefix(cfg.OAuth.Google.ClientID, "${") && strings.HasSuffix(cfg.OAuth.Google.ClientID, "}") {
-		envVar := cfg.OAuth.Google.ClientID[2 : len(cfg.OAuth.Google.ClientID)-1]
-		cfg.OAuth.Google.ClientID = os.Getenv(envVar)
-	}
-	if strings.HasPrefix(cfg.OAuth.Google.ClientSecret, "${") && strings.HasSuffix(cfg.OAuth.Google.ClientSecret, "}") {
-		envVar := cfg.OAuth.Google.ClientSecret[2 : len(cfg.OAuth.Google.ClientSecret)-1]
-		cfg.OAuth.Google.ClientSecret = os.Getenv(envVar)
-	}
-	if strings.HasPrefix(cfg.FrontendURL, "${") && strings.HasSuffix(cfg.FrontendURL, "}") {
-		envVar := cfg.FrontendURL[2 : len(cfg.FrontendURL)-1]
-		cfg.FrontendURL = os.Getenv(envVar)
-	}
-
-	// Expand environment variables in SMTP config
-	if strings.HasPrefix(cfg.SMTP.Username, "${") && strings.HasSuffix(cfg.SMTP.Username, "}") {
-		envVar := cfg.SMTP.Username[2 : len(cfg.SMTP.Username)-1]
-		cfg.SMTP.Username = os.Getenv(envVar)
-	}
-	if strings.HasPrefix(cfg.SMTP.Password, "${") && strings.HasSuffix(cfg.SMTP.Password, "}") {
-		envVar := cfg.SMTP.Password[2 : len(cfg.SMTP.Password)-1]
-		cfg.SMTP.Password = os.Getenv(envVar)
-	}
-
-	// Expand environment variables in R2 config
-	if strings.HasPrefix(cfg.R2.AccountID, "${") && strings.HasSuffix(cfg.R2.AccountID, "}") {
-		envVar := cfg.R2.AccountID[2 : len(cfg.R2.AccountID)-1]
-		cfg.R2.AccountID = os.Getenv(envVar)
-	}
-	if strings.HasPrefix(cfg.R2.AccessKeyID, "${") && strings.HasSuffix(cfg.R2.AccessKeyID, "}") {
-		envVar := cfg.R2.AccessKeyID[2 : len(cfg.R2.AccessKeyID)-1]
-		cfg.R2.AccessKeyID = os.Getenv(envVar)
-	}
-	if strings.HasPrefix(cfg.R2.SecretAccessKey, "${") && strings.HasSuffix(cfg.R2.SecretAccessKey, "}") {
-		envVar := cfg.R2.SecretAccessKey[2 : len(cfg.R2.SecretAccessKey)-1]
-		cfg.R2.SecretAccessKey = os.Getenv(envVar)
-	}
-	if strings.HasPrefix(cfg.R2.PublicURL, "${") && strings.HasSuffix(cfg.R2.PublicURL, "}") {
-		envVar := cfg.R2.PublicURL[2 : len(cfg.R2.PublicURL)-1]
-		cfg.R2.PublicURL = os.Getenv(envVar)
-	}
-
-	// Expand environment variables in Gemini config
-	if strings.HasPrefix(cfg.Gemini.APIKey, "${") && strings.HasSuffix(cfg.Gemini.APIKey, "}") {
-		envVar := cfg.Gemini.APIKey[2 : len(cfg.Gemini.APIKey)-1]
-		cfg.Gemini.APIKey = os.Getenv(envVar)
-	}
-
-	if strings.TrimSpace(cfg.JWT.Secret) == "" {
-		return nil, fmt.Errorf("jwt.secret is empty: set JWT_SECRET before starting server")
-	}
-
-	return &cfg, nil
+func providerTimeout() time.Duration { if d, err := time.ParseDuration(os.Getenv("CLOUDFLARE_KV_TIMEOUT")); err == nil && d > 0 { return d }; return 5*time.Second }
+func get(v map[string]string, key, fallback string) string { if value, ok := v[key]; ok { return value }; return fallback }
+func integer(v map[string]string, key string, fallback int) (int, error) { raw:=get(v,key,strconv.Itoa(fallback)); n,err:=strconv.Atoi(raw); if err!=nil{return 0,fmt.Errorf("%s: %w",key,err)};return n,nil }
+func boolean(v map[string]string, key string, fallback bool) (bool,error) { raw:=get(v,key,strconv.FormatBool(fallback)); b,err:=strconv.ParseBool(raw);if err!=nil{return false,fmt.Errorf("%s: %w",key,err)};return b,nil }
+func decode(v map[string]string) (*Config,error) {
+	var err error; c:=&Config{}
+	c.Server.Address=get(v,"SERVER_ADDRESS",":8080"); c.Server.Port,err=integer(v,"SERVER_PORT",8080);if err!=nil{return nil,err};c.Server.Mode=get(v,"SERVER_MODE","debug");c.Server.APIBasePath=get(v,"API_BASE_PATH","/api/v1")
+	c.Database.Driver=get(v,"DB_DRIVER","postgres");c.Database.Host=get(v,"DB_HOST","localhost");c.Database.Port,err=integer(v,"DB_PORT",5432);if err!=nil{return nil,err};c.Database.Database=get(v,"DB_NAME","revieu");c.Database.Username=get(v,"DB_USER","postgres");c.Database.Password=get(v,"DB_PASSWORD","");c.Database.AutoMigrate,err=boolean(v,"DB_AUTO_MIGRATE",false);if err!=nil{return nil,err}
+	c.Logger.Level=get(v,"LOG_LEVEL","info");c.Logger.Format=get(v,"LOG_FORMAT","json");c.JWT.Secret=get(v,"JWT_SECRET","");c.JWT.ExpireHour,err=integer(v,"JWT_EXPIRE_HOUR",24);if err!=nil{return nil,err};c.JWT.RefreshExpireHour,err=integer(v,"JWT_REFRESH_EXPIRE_HOUR",168);if err!=nil{return nil,err}
+	c.OAuth.Google.ClientID=get(v,"GOOGLE_CLIENT_ID","");c.OAuth.Google.ClientSecret=get(v,"GOOGLE_CLIENT_SECRET","");c.FrontendURL=get(v,"FRONTEND_URL","")
+	c.SMTP.Host=get(v,"SMTP_HOST","smtp.gmail.com");c.SMTP.Port,err=integer(v,"SMTP_PORT",587);if err!=nil{return nil,err};c.SMTP.Username=get(v,"SMTP_USERNAME","");c.SMTP.Password=get(v,"SMTP_PASSWORD","");c.SMTP.From=get(v,"SMTP_FROM","");c.SMTP.UseTLS,err=boolean(v,"SMTP_USE_TLS",true);if err!=nil{return nil,err}
+	c.R2.AccountID=get(v,"R2_ACCOUNT_ID","");c.R2.AccessKeyID=get(v,"R2_ACCESS_KEY_ID","");c.R2.SecretAccessKey=get(v,"R2_SECRET_ACCESS_KEY","");c.R2.BucketName=get(v,"R2_BUCKET_NAME","revieu-media");c.R2.PublicURL=get(v,"R2_PUBLIC_URL","")
+	c.Gemini.Backend=get(v,"GEMINI_BACKEND","gemini-api");c.Gemini.APIKey=get(v,"GEMINI_API_KEY","");c.Gemini.Model=get(v,"GEMINI_MODEL","gemini-2.5-flash");c.Gemini.TimeoutSeconds,err=integer(v,"GEMINI_TIMEOUT_SECONDS",30);if err!=nil{return nil,err}
+	if strings.TrimSpace(c.JWT.Secret)=="" { return nil,fmt.Errorf("JWT_SECRET is required") }; return c,nil
 }
