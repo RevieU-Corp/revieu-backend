@@ -6,14 +6,14 @@ import (
 	"os"
 	"time"
 
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
-	userservice "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/user/service"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/router"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/logger"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
+	userservice "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/user/service"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/router"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/database"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/logger"
 	"github.com/gin-gonic/gin"
 
-	_ "github.com/RevieU-Corp/revieu-core-api-go/apps/core/docs"
+	_ "github.com/revieu-corp/revieu-core-api-go/apps/core/docs"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )

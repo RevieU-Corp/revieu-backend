@@ -1,10 +1,10 @@
 package order
 
 import (
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/order/handler"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/order/service"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/middleware"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/order/handler"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/order/service"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 

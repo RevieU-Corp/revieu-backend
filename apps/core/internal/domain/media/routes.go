@@ -3,11 +3,11 @@ package media
 import (
 	"log"
 
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/media/handler"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/media/service"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/middleware"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/storage"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/media/handler"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/media/service"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/middleware"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/storage"
 	"github.com/gin-gonic/gin"
 )
 

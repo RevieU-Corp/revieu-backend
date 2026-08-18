@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/ai/dto"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/ai/dto"
 )
 
 func ptrFloat(v float64) *float64 { return &v }

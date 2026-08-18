@@ -1,9 +1,9 @@
 package feed
 
 import (
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/feed/handler"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/feed/service"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/feed/handler"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/feed/service"
 	"github.com/gin-gonic/gin"
 )
 

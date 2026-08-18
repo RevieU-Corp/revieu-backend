@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
 	"github.com/golang-jwt/jwt/v5"
 )
 

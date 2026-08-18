@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/media/dto"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/storage"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/media/dto"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/database"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/storage"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )

@@ -1,34 +1,34 @@
 basePath: /api/v1
 definitions:
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_ai_dto.PolishResponse:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_ai_dto.PolishResponse:
     properties:
       candidates:
         items:
           type: string
         type: array
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.FileRequest:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_media_dto.FileRequest:
     properties:
       content_type:
         type: string
       filename:
         type: string
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.PresignedURLRequest:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_media_dto.PresignedURLRequest:
     properties:
       files:
         items:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.FileRequest'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_media_dto.FileRequest'
         type: array
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.PresignedURLResponse:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_media_dto.PresignedURLResponse:
     properties:
       uploads:
         items:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.UploadInfo'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_media_dto.UploadInfo'
         type: array
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.UploadInfo:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_media_dto.UploadInfo:
     properties:
       expires_at:
         type: string
@@ -39,7 +39,7 @@ definitions:
       upload_url:
         type: string
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_merchant_dto.Merchant:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_merchant_dto.Merchant:
     properties:
       businessName:
         type: string
@@ -62,14 +62,14 @@ definitions:
           type: string
         type: array
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_order_service.CreateOrderInput:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_order_service.CreateOrderInput:
     properties:
       coupon_id:
         type: integer
       quantity:
         type: integer
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_payment_service.CreatePaymentRequest:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_payment_service.CreatePaymentRequest:
     properties:
       amount:
         type: number
@@ -78,7 +78,7 @@ definitions:
       status:
         type: string
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_profile_service.PublicProfileResponse:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_profile_service.PublicProfileResponse:
     properties:
       avatar_url:
         type: string
@@ -103,14 +103,14 @@ definitions:
       user_id:
         type: integer
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_review_dto.CommentRequest:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_review_dto.CommentRequest:
     properties:
       text:
         type: string
     required:
     - text
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_review_dto.Review:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_review_dto.Review:
     properties:
       businessImage:
         type: string
@@ -147,7 +147,7 @@ definitions:
       visitDate:
         type: string
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_store_dto.CreateStoreRequest:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_store_dto.CreateStoreRequest:
     properties:
       address:
         maxLength: 255
@@ -170,7 +170,7 @@ definitions:
         type: string
       hours:
         items:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_store_dto.StoreHourRequest'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_store_dto.StoreHourRequest'
         type: array
       images:
         items:
@@ -200,7 +200,7 @@ definitions:
         maxLength: 20
         type: string
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_store_dto.StoreHourRequest:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_store_dto.StoreHourRequest:
     properties:
       close_time:
         maxLength: 10
@@ -213,7 +213,7 @@ definitions:
         maxLength: 10
         type: string
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_store_dto.UpdateStoreRequest:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_store_dto.UpdateStoreRequest:
     properties:
       address:
         maxLength: 255
@@ -236,7 +236,7 @@ definitions:
         type: string
       hours:
         items:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_store_dto.StoreHourRequest'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_store_dto.StoreHourRequest'
         type: array
       images:
         items:
@@ -266,7 +266,7 @@ definitions:
         maxLength: 20
         type: string
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.AddressItem:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.AddressItem:
     properties:
       address:
         type: string
@@ -287,14 +287,14 @@ definitions:
       province:
         type: string
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.AddressListResponse:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.AddressListResponse:
     properties:
       addresses:
         items:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.AddressItem'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.AddressItem'
         type: array
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.CreateAddressRequest:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.CreateAddressRequest:
     properties:
       address:
         maxLength: 255
@@ -324,19 +324,19 @@ definitions:
     - name
     - phone
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.NotificationSettings:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.NotificationSettings:
     properties:
       email_enabled:
         type: boolean
       push_enabled:
         type: boolean
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.PrivacySettings:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.PrivacySettings:
     properties:
       is_public:
         type: boolean
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.ProfileResponse:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.ProfileResponse:
     properties:
       avatar_url:
         type: string
@@ -349,7 +349,7 @@ definitions:
       user_id:
         type: integer
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.UpdateAddressRequest:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.UpdateAddressRequest:
     properties:
       address:
         type: string
@@ -368,7 +368,7 @@ definitions:
       province:
         type: string
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.UpdateProfileRequest:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.UpdateProfileRequest:
     properties:
       avatar_url:
         type: string
@@ -379,7 +379,7 @@ definitions:
       nickname:
         type: string
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.CreateVoucherRequest:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.CreateVoucherRequest:
     properties:
       code:
         type: string
@@ -388,7 +388,7 @@ definitions:
       userId:
         type: string
     type: object
-  github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.RedeemPreview:
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.RedeemPreview:
     properties:
       can_redeem:
         type: boolean
@@ -702,7 +702,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_ai_dto.PolishResponse'
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_ai_dto.PolishResponse'
         "400":
           description: Bad Request
           schema:
@@ -1264,14 +1264,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.PresignedURLRequest'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_media_dto.PresignedURLRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.PresignedURLResponse'
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_media_dto.PresignedURLResponse'
         "400":
           description: Bad Request
           schema:
@@ -1390,7 +1390,7 @@ paths:
         in: body
         name: request
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_store_dto.CreateStoreRequest'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_store_dto.CreateStoreRequest'
       produces:
       - application/json
       responses:
@@ -1489,7 +1489,7 @@ paths:
         in: body
         name: request
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_store_dto.UpdateStoreRequest'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_store_dto.UpdateStoreRequest'
       produces:
       - application/json
       responses:
@@ -1905,7 +1905,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.RedeemPreview'
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.RedeemPreview'
         "400":
           description: Bad Request
           schema:
@@ -1979,7 +1979,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_merchant_dto.Merchant'
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_merchant_dto.Merchant'
         "400":
           description: Bad Request
           schema:
@@ -2202,7 +2202,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_order_service.CreateOrderInput'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_order_service.CreateOrderInput'
       produces:
       - application/json
       responses:
@@ -2359,7 +2359,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_payment_service.CreatePaymentRequest'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_payment_service.CreatePaymentRequest'
       produces:
       - application/json
       responses:
@@ -2432,14 +2432,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_review_dto.Review'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_review_dto.Review'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_review_dto.Review'
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_review_dto.Review'
         "400":
           description: Bad Request
           schema:
@@ -2482,7 +2482,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_review_dto.Review'
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_review_dto.Review'
         "400":
           description: Bad Request
           schema:
@@ -2514,7 +2514,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_review_dto.CommentRequest'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_review_dto.CommentRequest'
       produces:
       - application/json
       responses:
@@ -2825,7 +2825,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.AddressListResponse'
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.AddressListResponse'
         "401":
           description: Unauthorized
           schema:
@@ -2851,14 +2851,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.CreateAddressRequest'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.CreateAddressRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.AddressItem'
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.AddressItem'
         "400":
           description: Bad Request
           schema:
@@ -2928,7 +2928,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.UpdateAddressRequest'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.UpdateAddressRequest'
       produces:
       - application/json
       responses:
@@ -3186,7 +3186,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.NotificationSettings'
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.NotificationSettings'
         "401":
           description: Unauthorized
           schema:
@@ -3212,7 +3212,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.NotificationSettings'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.NotificationSettings'
       produces:
       - application/json
       responses:
@@ -3287,7 +3287,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.PrivacySettings'
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.PrivacySettings'
         "401":
           description: Unauthorized
           schema:
@@ -3313,7 +3313,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.PrivacySettings'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.PrivacySettings'
       produces:
       - application/json
       responses:
@@ -3353,7 +3353,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.ProfileResponse'
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.ProfileResponse'
         "401":
           description: Unauthorized
           schema:
@@ -3379,7 +3379,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.UpdateProfileRequest'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_user_dto.UpdateProfileRequest'
       produces:
       - application/json
       responses:
@@ -3460,7 +3460,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_profile_service.PublicProfileResponse'
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_profile_service.PublicProfileResponse'
         "400":
           description: Bad Request
           schema:
@@ -3669,7 +3669,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.CreateVoucherRequest'
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.CreateVoucherRequest'
       produces:
       - application/json
       responses:

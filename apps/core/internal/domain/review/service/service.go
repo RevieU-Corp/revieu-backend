@@ -6,9 +6,9 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/review/dto"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/review/dto"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/database"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

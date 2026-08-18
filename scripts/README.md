@@ -51,7 +51,7 @@ Installs Git hooks to prevent committing unencrypted secrets.
 **First-time setup:**
 ```bash
 # Clone the repo
-git clone git@github.com:RevieU-Corp/revieu-core-api-go.git
+git clone git@github.com:revieu-corp/revieu-core-api-go.git
 cd revieu-core-api-go
 
 # Install hooks

@@ -1,6 +1,6 @@
 package auth
 
-import "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+import "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
 
 // RegisterRequest registers a new user.
 type RegisterRequest struct {

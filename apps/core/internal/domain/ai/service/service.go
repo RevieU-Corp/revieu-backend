@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/ai/dto"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/ai/dto"
 )
 
 // candidateCount is the exact number of polished options returned to the client.

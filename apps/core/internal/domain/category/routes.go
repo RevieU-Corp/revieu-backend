@@ -1,9 +1,9 @@
 package category
 
 import (
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/category/handler"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/category/service"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/category/handler"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/category/service"
 	"github.com/gin-gonic/gin"
 )
 

@@ -1,10 +1,10 @@
 package merchant
 
 import (
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/merchant/handler"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/merchant/service"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/middleware"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/merchant/handler"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/merchant/service"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 

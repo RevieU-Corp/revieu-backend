@@ -39,7 +39,7 @@ revieu-core-api-go/
 ### 1. Clone and Setup
 
 ```bash
-git clone git@github.com:RevieU-Corp/revieu-core-api-go.git
+git clone git@github.com:revieu-corp/revieu-core-api-go.git
 cd revieu-core-api-go
 
 # 🔥 重要：安装 Git hooks
@@ -220,7 +220,7 @@ docker run -p 8080:8080 revieu-core-api-go
 - [Database ERD (SVG)](docs/database-erd.svg) - Full database schema with PK/FK markers and FK links
 - [Scripts README](scripts/README.md) - Secrets management and hooks
 - [Core Service](apps/core/) - API documentation
-- [Infrastructure Repo](https://github.com/RevieU-Corp/revieu-infra) - K8s configs
+- [Infrastructure Repo](https://github.com/revieu-corp/revieu-infra) - K8s configs
 
 ### Regenerate Database ERD
 

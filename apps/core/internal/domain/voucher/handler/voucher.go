@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/voucher/dto"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/voucher/service"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/voucher/dto"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/voucher/service"
 	"github.com/gin-gonic/gin"
 )
 

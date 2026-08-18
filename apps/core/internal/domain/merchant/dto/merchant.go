@@ -3,7 +3,7 @@ package dto
 import (
 	"fmt"
 
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
 )
 
 type Merchant struct {

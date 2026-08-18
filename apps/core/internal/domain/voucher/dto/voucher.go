@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
 )
 
 type VoucherResponse struct {

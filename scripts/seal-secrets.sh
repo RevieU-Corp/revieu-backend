@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # GitHub raw URL for public key
-INFRA_REPO_URL="https://raw.githubusercontent.com/RevieU-Corp/revieu-infra/main/secrets/sealed-secrets-prod.pem"
+INFRA_REPO_URL="https://raw.githubusercontent.com/revieu-corp/revieu-infra/main/secrets/sealed-secrets-prod.pem"
 LOCAL_PUB_KEY="/tmp/revieu-sealed-secrets-prod.pem"
 
 # Colors

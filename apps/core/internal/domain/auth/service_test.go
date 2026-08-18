@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/testutil"
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/token"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/testutil"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/token"
 )
 
 var testJWTConfig = config.JWTConfig{

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/logger"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/logger"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 )

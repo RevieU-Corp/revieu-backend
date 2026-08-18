@@ -3,7 +3,7 @@ package testutil
 import (
 	"testing"
 
-	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
