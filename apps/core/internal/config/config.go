@@ -11,6 +11,9 @@ import (
     "time"
 )
 
+type DatabaseConfig struct { Driver string; Host string; Port int; Database string; Username string; Password string; AutoMigrate bool }
+type LoggerConfig struct { Level string; Format string }
+type Provider interface { Load(context.Context, []string) (map[string]string, error) }
 type Config struct {
 	Server      ServerConfig
 	Database    DatabaseConfig
