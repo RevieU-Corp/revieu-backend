@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/content/dto"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/content/dto"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )

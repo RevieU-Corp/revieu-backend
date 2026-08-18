@@ -28,11 +28,11 @@ import (
     "net/http/httptest"
     "testing"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/testutil"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/token"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/testutil"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/token"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
     "github.com/gin-gonic/gin"
 )
 
@@ -82,9 +82,9 @@ Expected: FAIL with 404 status
 package feed
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/feed/handler"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/feed/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/feed/handler"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/feed/service"
     "github.com/gin-gonic/gin"
 )
 
@@ -105,7 +105,7 @@ package handler
 import (
     "net/http"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/feed/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/feed/service"
     "github.com/gin-gonic/gin"
 )
 
@@ -136,8 +136,8 @@ package service
 import (
     "context"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/feed/dto"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/feed/dto"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
     "gorm.io/gorm"
 )
 
@@ -169,7 +169,7 @@ type FeedItem struct {
 ```
 - Update `apps/core/internal/router/router.go`
 ```go
-import "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/feed"
+import "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/feed"
 // ...
 feed.RegisterRoutes(api, cfg)
 ```
@@ -224,9 +224,9 @@ Expected: FAIL with 404
 package merchant
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/merchant/handler"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/merchant/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/merchant/handler"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/merchant/service"
     "github.com/gin-gonic/gin"
 )
 
@@ -249,8 +249,8 @@ package service
 import (
     "context"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
     "gorm.io/gorm"
 )
 
@@ -285,8 +285,8 @@ import (
     "net/http"
     "strconv"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/merchant/dto"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/merchant/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/merchant/dto"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/merchant/service"
     "github.com/gin-gonic/gin"
 )
 
@@ -347,7 +347,7 @@ func (h *MerchantHandler) Reviews(c *gin.Context) {
 ```go
 package dto
 
-import "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+import "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
 
 type Merchant struct {
     ID          string   `json:"id"`
@@ -548,10 +548,10 @@ func (r *ReviewComment) TableName() string {
 package review
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/review/handler"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/review/service"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/middleware"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/review/handler"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/review/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/middleware"
     "github.com/gin-gonic/gin"
 )
 
@@ -577,8 +577,8 @@ import (
     "net/http"
     "strconv"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/review/dto"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/review/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/review/dto"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/review/service"
     "github.com/gin-gonic/gin"
 )
 
@@ -673,9 +673,9 @@ import (
     "context"
     "encoding/json"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/review/dto"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/review/dto"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
     "gorm.io/gorm"
 )
 
@@ -752,7 +752,7 @@ import (
     "errors"
     "strconv"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
 )
 
 type Review struct {
@@ -933,10 +933,10 @@ func (c *Coupon) TableName() string { return "coupons" }
 package coupon
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/coupon/handler"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/coupon/service"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/middleware"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/coupon/handler"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/coupon/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/middleware"
     "github.com/gin-gonic/gin"
 )
 
@@ -960,7 +960,7 @@ import (
     "net/http"
     "strconv"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/coupon/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/coupon/service"
     "github.com/gin-gonic/gin"
 )
 
@@ -1022,8 +1022,8 @@ import (
     "errors"
     "time"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
     "gorm.io/gorm"
 )
 
@@ -1142,10 +1142,10 @@ func (v *Voucher) TableName() string { return "vouchers" }
 package voucher
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/voucher/handler"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/voucher/service"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/middleware"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/voucher/handler"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/voucher/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/middleware"
     "github.com/gin-gonic/gin"
 )
 
@@ -1174,7 +1174,7 @@ import (
     "net/http"
     "strconv"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/voucher/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/voucher/service"
     "github.com/gin-gonic/gin"
 )
 
@@ -1268,8 +1268,8 @@ package service
 import (
     "context"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
     "gorm.io/gorm"
 )
 
@@ -1389,10 +1389,10 @@ func (p *Payment) TableName() string { return "payments" }
 package payment
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/payment/handler"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/payment/service"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/middleware"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/payment/handler"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/payment/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/middleware"
     "github.com/gin-gonic/gin"
 )
 
@@ -1415,7 +1415,7 @@ import (
     "net/http"
     "strconv"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/payment/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/payment/service"
     "github.com/gin-gonic/gin"
 )
 
@@ -1461,8 +1461,8 @@ package service
 import (
     "context"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
     "gorm.io/gorm"
 )
 
@@ -1556,10 +1556,10 @@ func (m *MediaUpload) TableName() string { return "media_uploads" }
 package media
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/media/handler"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/media/service"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/middleware"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/media/handler"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/media/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/middleware"
     "github.com/gin-gonic/gin"
 )
 
@@ -1582,7 +1582,7 @@ import (
     "net/http"
     "strconv"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/media/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/media/service"
     "github.com/gin-gonic/gin"
 )
 
@@ -1623,8 +1623,8 @@ import (
     "context"
     "fmt"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
     "gorm.io/gorm"
 )
 
@@ -1699,10 +1699,10 @@ Expected: FAIL with 404
 package ai
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/ai/handler"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/ai/service"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/middleware"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/ai/handler"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/ai/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/middleware"
     "github.com/gin-gonic/gin"
 )
 
@@ -1723,7 +1723,7 @@ package handler
 import (
     "net/http"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/ai/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/ai/service"
     "github.com/gin-gonic/gin"
 )
 

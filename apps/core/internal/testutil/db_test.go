@@ -3,7 +3,7 @@ package testutil
 import (
 	"testing"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
 )
 
 func TestSetupTestDB(t *testing.T) {

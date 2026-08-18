@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/feed/service"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/feed/service"
 	"github.com/gin-gonic/gin"
 )
 

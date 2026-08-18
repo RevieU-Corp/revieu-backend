@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/testutil"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/testutil"
 )
 
 func setupOrderServiceTest(t *testing.T) (*OrderService, *model.User, *model.Merchant, *model.Store, *model.Coupon) {

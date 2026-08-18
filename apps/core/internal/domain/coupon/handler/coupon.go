@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/coupon/service"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/coupon/service"
 	"github.com/gin-gonic/gin"
 )
 

@@ -1,4 +1,4 @@
-module github.com/RevieU-Corp/revieu-backend/apps/core
+module github.com/RevieU-Corp/revieu-core-api-go/apps/core
 
 go 1.24.0
 

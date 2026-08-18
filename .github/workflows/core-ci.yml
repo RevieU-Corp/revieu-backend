@@ -116,7 +116,7 @@ jobs:
 
       - name: Lowercase repo owner
         run: |
-          echo "IMAGE_NAME_LOWER=$(echo ${{ github.repository_owner }}/revieu-core | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+          echo "IMAGE_NAME_LOWER=$(echo ${{ github.repository_owner }}/revieu-core-api-go | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta

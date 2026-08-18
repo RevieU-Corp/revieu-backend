@@ -758,8 +758,8 @@ import (
     "errors"
     "time"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/dto"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/dto"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
     "gorm.io/gorm"
 )
 
@@ -929,7 +929,7 @@ import (
     "context"
     "errors"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
     "gorm.io/gorm"
 )
 
@@ -1015,7 +1015,7 @@ package service
 import (
     "context"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
     "gorm.io/gorm"
 )
 
@@ -1091,7 +1091,7 @@ package service
 import (
     "context"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
     "gorm.io/gorm"
 )
 

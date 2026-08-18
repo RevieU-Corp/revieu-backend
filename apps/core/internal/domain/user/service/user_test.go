@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	userdto "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/user/dto"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/testutil"
+	userdto "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/user/dto"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/testutil"
 	"gorm.io/gorm"
 )
 

@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/feed/dto"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/feed/dto"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
 	"gorm.io/gorm"
 )
 

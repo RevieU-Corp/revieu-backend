@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

@@ -1,10 +1,10 @@
 package follow
 
 import (
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/follow/handler"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/follow/service"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/middleware"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/follow/handler"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/follow/service"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 

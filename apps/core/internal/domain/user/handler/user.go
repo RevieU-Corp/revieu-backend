@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"strconv"
 
-	contentdto "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/content/dto"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/user/dto"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/user/service"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+	contentdto "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/content/dto"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/user/dto"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/user/service"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )

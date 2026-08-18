@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/ai/dto"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/ai/service"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/logger"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/ai/dto"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/ai/service"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 

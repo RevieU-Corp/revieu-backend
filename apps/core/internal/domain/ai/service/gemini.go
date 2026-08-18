@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/ai/dto"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/ai/dto"
 	"google.golang.org/genai"
 )
 

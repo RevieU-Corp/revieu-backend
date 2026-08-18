@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/order/service"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/order/service"
 	"github.com/gin-gonic/gin"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/ai/dto"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/ai/dto"
 )
 
 // systemInstruction is the role / output-contract preamble sent as Gemini's SystemInstruction.

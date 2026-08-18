@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/ai/dto"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/ai/dto"
 )
 
 // TestPolishReview_LiveSmoke hits the real Gemini API when GEMINI_API_KEY is set.

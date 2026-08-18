@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/token"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/email"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/logger"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/token"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/email"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/logger"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )

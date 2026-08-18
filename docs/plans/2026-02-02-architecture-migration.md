@@ -32,7 +32,7 @@ package router
 import (
     "testing"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
     "github.com/gin-gonic/gin"
 )
 
@@ -82,12 +82,12 @@ type CursorPaginationResponse struct {
 package router
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/auth"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/content"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/follow"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/profile"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/user"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/auth"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/content"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/follow"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/profile"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/user"
     "github.com/gin-gonic/gin"
 )
 
@@ -110,7 +110,7 @@ Create empty route registration stubs (they will be filled in later tasks):
 package auth
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
     "github.com/gin-gonic/gin"
 )
 
@@ -126,7 +126,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 package content
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
     "github.com/gin-gonic/gin"
 )
 
@@ -142,7 +142,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 package user
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
     "github.com/gin-gonic/gin"
 )
 
@@ -158,7 +158,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 package follow
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
     "github.com/gin-gonic/gin"
 )
 
@@ -174,7 +174,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 package profile
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
     "github.com/gin-gonic/gin"
 )
 
@@ -215,7 +215,7 @@ package testutil
 import (
     "testing"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
 )
 
 func TestSetupTestDB(t *testing.T) {
@@ -244,7 +244,7 @@ package testutil
 import (
     "testing"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
     "gorm.io/driver/sqlite"
     "gorm.io/gorm"
 )
@@ -320,8 +320,8 @@ import (
     "context"
     "testing"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
     "gorm.io/driver/sqlite"
     "gorm.io/gorm"
 )
@@ -563,7 +563,7 @@ Move auth service and token logic into the new package, and extract request/resp
 // apps/core/internal/domain/auth/dto.go
 package auth
 
-import "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+import "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
 
 // RegisterRequest registers a new user.
 type RegisterRequest struct {
@@ -617,8 +617,8 @@ import (
     "fmt"
     "time"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
     "github.com/golang-jwt/jwt/v5"
 )
 
@@ -680,11 +680,11 @@ import (
     "fmt"
     "time"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/email"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/logger"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/email"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/logger"
     "github.com/google/uuid"
     "gorm.io/gorm"
 )
@@ -960,8 +960,8 @@ import (
     "net/http"
     "net/url"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/logger"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/logger"
     "github.com/gin-gonic/gin"
 )
 
@@ -1247,8 +1247,8 @@ Update auth routes to use the new handler and middleware:
 package auth
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/middleware"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/middleware"
     "github.com/gin-gonic/gin"
 )
 
@@ -1313,8 +1313,8 @@ import (
     "context"
     "testing"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/testutil"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/testutil"
 )
 
 func TestContentServiceListPosts(t *testing.T) {
@@ -1338,8 +1338,8 @@ import (
     "context"
     "testing"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/testutil"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/testutil"
 )
 
 func TestInteractionServiceLike(t *testing.T) {
@@ -1386,8 +1386,8 @@ package service
 import (
     "context"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
     "gorm.io/gorm"
 )
 
@@ -1477,8 +1477,8 @@ package service
 import (
     "context"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
     "gorm.io/gorm"
 )
 
@@ -1630,9 +1630,9 @@ import (
     "encoding/json"
     "strconv"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/content/dto"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/content/dto"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
     "github.com/gin-gonic/gin"
     "gorm.io/gorm"
 )
@@ -1712,8 +1712,8 @@ package handler
 import (
     "net/http"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/content/dto"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/content/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/content/dto"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/content/service"
     "github.com/gin-gonic/gin"
 )
 
@@ -1803,8 +1803,8 @@ package handler
 import (
     "net/http"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/content/dto"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/content/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/content/dto"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/content/service"
     "github.com/gin-gonic/gin"
 )
 
@@ -1902,9 +1902,9 @@ package handler
 import (
     "net/http"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/content/dto"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/content/service"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/content/dto"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/content/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
     "github.com/gin-gonic/gin"
 )
 
@@ -1995,7 +1995,7 @@ package handler
 import (
     "net/http"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/content/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/content/service"
     "github.com/gin-gonic/gin"
 )
 
@@ -2043,10 +2043,10 @@ Update `apps/core/internal/domain/content/routes.go` to register the new handler
 package content
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/content/handler"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/content/service"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/middleware"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/content/handler"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/content/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/middleware"
     "github.com/gin-gonic/gin"
 )
 
@@ -2130,9 +2130,9 @@ import (
     "context"
     "testing"
 
-    userdto "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/user/dto"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/testutil"
+    userdto "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/user/dto"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/testutil"
 )
 
 func TestUserServiceProfileAndSettings(t *testing.T) {
@@ -2284,9 +2284,9 @@ import (
     "errors"
     "time"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/user/dto"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/user/dto"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
     "gorm.io/gorm"
 )
 
@@ -2480,10 +2480,10 @@ Update `apps/core/internal/domain/user/routes.go` to register the same routes un
 package user
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/user/handler"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/user/service"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/middleware"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/user/handler"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/user/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/middleware"
     "github.com/gin-gonic/gin"
 )
 
@@ -2579,8 +2579,8 @@ import (
     "context"
     "testing"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/testutil"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/testutil"
 )
 
 func TestFollowServiceUserFollow(t *testing.T) {
@@ -2641,8 +2641,8 @@ import (
     "context"
     "errors"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
     "gorm.io/gorm"
 )
 
@@ -2717,7 +2717,7 @@ import (
     "net/http"
     "strconv"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/follow/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/follow/service"
     "github.com/gin-gonic/gin"
 )
 
@@ -2769,7 +2769,7 @@ import (
     "net/http"
     "strconv"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/follow/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/follow/service"
     "github.com/gin-gonic/gin"
 )
 
@@ -2819,10 +2819,10 @@ Update follow routes to register follow handlers under `/users/:id/follow` and `
 package follow
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/follow/handler"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/follow/service"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/middleware"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/follow/handler"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/follow/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/middleware"
     "github.com/gin-gonic/gin"
 )
 
@@ -2911,8 +2911,8 @@ import (
     "context"
     "fmt"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
     "gorm.io/gorm"
 )
 
@@ -2975,9 +2975,9 @@ import (
     "net/http"
     "strconv"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/profile/service"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/profile/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
     "github.com/gin-gonic/gin"
     "gorm.io/gorm"
 )
@@ -3034,8 +3034,8 @@ Update profile routes to expose only `/users/:id` with optional JWT.
 package profile
 
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/profile/service"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/profile/service"
     "github.com/gin-gonic/gin"
 )
 
@@ -3086,7 +3086,7 @@ package main
 import (
     "testing"
 
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
 )
 
 func TestBuildRouter(t *testing.T) {
@@ -3110,7 +3110,7 @@ Update `apps/core/cmd/app/main.go` to use the new router package and the new `bu
 
 ```go
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/router"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/router"
 )
 
 func buildRouter(cfg *config.Config) *gin.Engine {
@@ -3138,7 +3138,7 @@ Update `apps/core/internal/middleware/auth.go` to use the new auth token service
 
 ```go
 import (
-    "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/auth"
+    "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/auth"
 )
 
 // inside JWTAuth:

@@ -254,7 +254,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_dto.PolishResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_ai_dto.PolishResponse"
                         }
                     },
                     "400": {
@@ -1049,7 +1049,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLRequest"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.PresignedURLRequest"
                         }
                     }
                 ],
@@ -1057,7 +1057,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.PresignedURLResponse"
                         }
                     },
                     "400": {
@@ -1308,7 +1308,7 @@ const docTemplate = `{
                         "name": "request",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.CreateStoreRequest"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_store_dto.CreateStoreRequest"
                         }
                     }
                 ],
@@ -1461,7 +1461,7 @@ const docTemplate = `{
                         "name": "request",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.UpdateStoreRequest"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_store_dto.UpdateStoreRequest"
                         }
                     }
                 ],
@@ -2024,7 +2024,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_voucher_service.RedeemPreview"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.RedeemPreview"
                         }
                     },
                     "400": {
@@ -2206,7 +2206,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_merchant_dto.Merchant"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_merchant_dto.Merchant"
                         }
                     },
                     "400": {
@@ -2545,7 +2545,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_order_service.CreateOrderInput"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_order_service.CreateOrderInput"
                         }
                     }
                 ],
@@ -2781,7 +2781,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_payment_service.CreatePaymentRequest"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_payment_service.CreatePaymentRequest"
                         }
                     }
                 ],
@@ -2891,7 +2891,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.Review"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_review_dto.Review"
                         }
                     }
                 ],
@@ -2899,7 +2899,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.Review"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_review_dto.Review"
                         }
                     },
                     "400": {
@@ -2964,7 +2964,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.Review"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_review_dto.Review"
                         }
                     },
                     "400": {
@@ -3015,7 +3015,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.CommentRequest"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_review_dto.CommentRequest"
                         }
                     }
                 ],
@@ -3481,7 +3481,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressListResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.AddressListResponse"
                         }
                     },
                     "401": {
@@ -3523,7 +3523,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.CreateAddressRequest"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.CreateAddressRequest"
                         }
                     }
                 ],
@@ -3531,7 +3531,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.AddressItem"
                         }
                     },
                     "400": {
@@ -3639,7 +3639,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateAddressRequest"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.UpdateAddressRequest"
                         }
                     }
                 ],
@@ -4027,7 +4027,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.NotificationSettings"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.NotificationSettings"
                         }
                     },
                     "401": {
@@ -4069,7 +4069,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.NotificationSettings"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.NotificationSettings"
                         }
                     }
                 ],
@@ -4180,7 +4180,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.PrivacySettings"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.PrivacySettings"
                         }
                     },
                     "401": {
@@ -4222,7 +4222,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.PrivacySettings"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.PrivacySettings"
                         }
                     }
                 ],
@@ -4280,7 +4280,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.ProfileResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.ProfileResponse"
                         }
                     },
                     "401": {
@@ -4322,7 +4322,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateProfileRequest"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.UpdateProfileRequest"
                         }
                     }
                 ],
@@ -4442,7 +4442,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_profile_service.PublicProfileResponse"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_profile_service.PublicProfileResponse"
                         }
                     },
                     "400": {
@@ -4759,7 +4759,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_voucher_service.CreateVoucherRequest"
+                            "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.CreateVoucherRequest"
                         }
                     }
                 ],
@@ -5063,7 +5063,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_ai_dto.PolishResponse": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_ai_dto.PolishResponse": {
             "type": "object",
             "properties": {
                 "candidates": {
@@ -5074,7 +5074,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.FileRequest": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.FileRequest": {
             "type": "object",
             "properties": {
                 "content_type": {
@@ -5085,29 +5085,29 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLRequest": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.PresignedURLRequest": {
             "type": "object",
             "properties": {
                 "files": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.FileRequest"
+                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.FileRequest"
                     }
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.PresignedURLResponse": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.PresignedURLResponse": {
             "type": "object",
             "properties": {
                 "uploads": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.UploadInfo"
+                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.UploadInfo"
                     }
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_media_dto.UploadInfo": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_media_dto.UploadInfo": {
             "type": "object",
             "properties": {
                 "expires_at": {
@@ -5124,7 +5124,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_merchant_dto.Merchant": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_merchant_dto.Merchant": {
             "type": "object",
             "properties": {
                 "businessName": {
@@ -5159,7 +5159,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_order_service.CreateOrderInput": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_order_service.CreateOrderInput": {
             "type": "object",
             "properties": {
                 "coupon_id": {
@@ -5170,7 +5170,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_payment_service.CreatePaymentRequest": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_payment_service.CreatePaymentRequest": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -5184,7 +5184,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_profile_service.PublicProfileResponse": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_profile_service.PublicProfileResponse": {
             "type": "object",
             "properties": {
                 "avatar_url": {
@@ -5222,7 +5222,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.CommentRequest": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_review_dto.CommentRequest": {
             "type": "object",
             "required": [
                 "text"
@@ -5233,7 +5233,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_review_dto.Review": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_review_dto.Review": {
             "type": "object",
             "properties": {
                 "businessImage": {
@@ -5289,7 +5289,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.CreateStoreRequest": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_store_dto.CreateStoreRequest": {
             "type": "object",
             "properties": {
                 "address": {
@@ -5321,7 +5321,7 @@ const docTemplate = `{
                 "hours": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.StoreHourRequest"
+                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_store_dto.StoreHourRequest"
                     }
                 },
                 "images": {
@@ -5364,7 +5364,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.StoreHourRequest": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_store_dto.StoreHourRequest": {
             "type": "object",
             "properties": {
                 "close_time": {
@@ -5383,7 +5383,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.UpdateStoreRequest": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_store_dto.UpdateStoreRequest": {
             "type": "object",
             "properties": {
                 "address": {
@@ -5415,7 +5415,7 @@ const docTemplate = `{
                 "hours": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_store_dto.StoreHourRequest"
+                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_store_dto.StoreHourRequest"
                     }
                 },
                 "images": {
@@ -5458,7 +5458,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.AddressItem": {
             "type": "object",
             "properties": {
                 "address": {
@@ -5490,18 +5490,18 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressListResponse": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.AddressListResponse": {
             "type": "object",
             "properties": {
                 "addresses": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.AddressItem"
+                        "$ref": "#/definitions/github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.AddressItem"
                     }
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.CreateAddressRequest": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.CreateAddressRequest": {
             "type": "object",
             "required": [
                 "address",
@@ -5542,7 +5542,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.NotificationSettings": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.NotificationSettings": {
             "type": "object",
             "properties": {
                 "email_enabled": {
@@ -5553,7 +5553,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.PrivacySettings": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.PrivacySettings": {
             "type": "object",
             "properties": {
                 "is_public": {
@@ -5561,7 +5561,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.ProfileResponse": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.ProfileResponse": {
             "type": "object",
             "properties": {
                 "avatar_url": {
@@ -5581,7 +5581,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateAddressRequest": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.UpdateAddressRequest": {
             "type": "object",
             "properties": {
                 "address": {
@@ -5610,7 +5610,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_user_dto.UpdateProfileRequest": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_user_dto.UpdateProfileRequest": {
             "type": "object",
             "properties": {
                 "avatar_url": {
@@ -5627,7 +5627,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_voucher_service.CreateVoucherRequest": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.CreateVoucherRequest": {
             "type": "object",
             "properties": {
                 "code": {
@@ -5641,7 +5641,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_RevieU-Corp_revieu-backend_apps_core_internal_domain_voucher_service.RedeemPreview": {
+        "github_com_RevieU-Corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.RedeemPreview": {
             "type": "object",
             "properties": {
                 "can_redeem": {

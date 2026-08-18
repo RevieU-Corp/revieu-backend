@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
 )
 
 func TestBuildRouter(t *testing.T) {

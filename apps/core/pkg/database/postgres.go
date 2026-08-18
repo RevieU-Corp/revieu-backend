@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

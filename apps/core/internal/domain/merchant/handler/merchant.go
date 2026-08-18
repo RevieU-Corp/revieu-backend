@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/merchant/dto"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/merchant/service"
-	reviewdto "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/review/dto"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/merchant/dto"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/merchant/service"
+	reviewdto "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/review/dto"
 	"github.com/gin-gonic/gin"
 )
 

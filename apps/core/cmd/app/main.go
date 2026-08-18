@@ -6,14 +6,14 @@ import (
 	"os"
 	"time"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/config"
-	userservice "github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/user/service"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/router"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/logger"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/config"
+	userservice "github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/user/service"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/router"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/logger"
 	"github.com/gin-gonic/gin"
 
-	_ "github.com/RevieU-Corp/revieu-backend/apps/core/docs"
+	_ "github.com/RevieU-Corp/revieu-core-api-go/apps/core/docs"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -45,7 +45,7 @@ func main() {
 
 	// Initialize logger
 	logger.Init(logger.Config{
-		Service: "revieu-core",
+		Service: "revieu-core-api-go",
 		Version: "1.0.0",
 		Level:   cfg.Logger.Level,
 	})

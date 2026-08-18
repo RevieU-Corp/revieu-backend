@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/model"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
 	"gorm.io/gorm"
 )
 

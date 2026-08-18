@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/RevieU-Corp/revieu-backend/apps/core/pkg/database"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/pkg/database"
 	"gorm.io/gorm"
 )
 

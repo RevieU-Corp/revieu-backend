@@ -15,7 +15,7 @@ Backend services for the RevieU platform.
 ## 📂 Project Structure
 
 ```
-revieu-backend/
+revieu-core-api-go/
 ├── apps/
 │   ├── core/              # Core API Service (Go)
 │   └── example-service/   # Placeholder for future services
@@ -39,8 +39,8 @@ revieu-backend/
 ### 1. Clone and Setup
 
 ```bash
-git clone git@github.com:RevieU-Corp/revieu-backend.git
-cd revieu-backend
+git clone git@github.com:RevieU-Corp/revieu-core-api-go.git
+cd revieu-core-api-go
 
 # 🔥 重要：安装 Git hooks
 ./scripts/setup.sh
@@ -209,8 +209,8 @@ go test ./...
 ### Run with Docker
 
 ```bash
-docker build -t revieu-core -f apps/core/build/package/Dockerfile apps/core
-docker run -p 8080:8080 revieu-core
+docker build -t revieu-core-api-go -f apps/core/build/package/Dockerfile apps/core
+docker run -p 8080:8080 revieu-core-api-go
 ```
 
 ---

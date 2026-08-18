@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/media/dto"
-	"github.com/RevieU-Corp/revieu-backend/apps/core/internal/domain/media/service"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/media/dto"
+	"github.com/RevieU-Corp/revieu-core-api-go/apps/core/internal/domain/media/service"
 	"github.com/gin-gonic/gin"
 )
 
