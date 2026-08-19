@@ -44,15 +44,29 @@ func (p *cloudflareKVProvider) Load(ctx context.Context, keys []string) (map[str
 	values := make(map[string]string)
 	base := "https://api.cloudflare.com/client/v4/accounts/" + p.accountID + "/storage/kv/namespaces/" + p.namespaceID + "/values/"
 	for _, key := range keys {
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, base+p.prefix+key, nil); if err != nil { return nil, err }
-		req.Header.Set("Authorization", "Bearer "+p.token)
-		resp, err := p.client.Do(req); if err != nil { return nil, err }
-		body, readErr := io.ReadAll(resp.Body); resp.Body.Close(); if readErr != nil { return nil, readErr }
-		if resp.StatusCode == http.StatusNotFound { continue }
-		if resp.StatusCode != http.StatusOK { return nil, fmt.Errorf("cloudflare KV returned HTTP %d: %s", resp.StatusCode, strings.TrimSpace(string(body))) }
-		values[key] = string(body)
+		value, found, err := p.loadKey(ctx, base, p.prefix+key)
+		if err != nil { return nil, err }
+		if !found && p.prefix != "" {
+			value, found, err = p.loadKey(ctx, base, key)
+			if err != nil { return nil, err }
+		}
+		if found { values[key] = value }
 	}
 	return values, nil
+}
+
+func (p *cloudflareKVProvider) loadKey(ctx context.Context, base, key string) (string, bool, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, base+key, nil)
+	if err != nil { return "", false, err }
+	req.Header.Set("Authorization", "Bearer "+p.token)
+	resp, err := p.client.Do(req)
+	if err != nil { return "", false, err }
+	body, readErr := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if readErr != nil { return "", false, readErr }
+	if resp.StatusCode == http.StatusNotFound { return "", false, nil }
+	if resp.StatusCode != http.StatusOK { return "", false, fmt.Errorf("cloudflare KV returned HTTP %d: %s", resp.StatusCode, strings.TrimSpace(string(body))) }
+	return string(body), true, nil
 }
 
 func Load() (*Config, error) {
