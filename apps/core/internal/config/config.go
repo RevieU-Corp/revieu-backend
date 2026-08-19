@@ -33,16 +33,20 @@ type OAuthConfig struct { Google GoogleOAuthConfig }
 type GoogleOAuthConfig struct { ClientID string; ClientSecret string }
 type JWTConfig struct { Secret string; ExpireHour int; RefreshExpireHour int }
 type ServerConfig struct { Address string; Port int; Mode string; APIBasePath string }
-type cloudflareKVProvider struct { client *http.Client; accountID, namespaceID, token, prefix string }
+type cloudflareKVProvider struct { client *http.Client; accountID, namespaceID, token, prefix, baseURL string }
+
+const cloudflareAPIBase = "https://api.cloudflare.com/client/v4"
 
 func newCloudflareKVProvider() Provider {
 	account, namespace, token := os.Getenv("CLOUDFLARE_ACCOUNT_ID"), os.Getenv("CLOUDFLARE_KV_NAMESPACE_ID"), os.Getenv("CLOUDFLARE_API_TOKEN")
 	if account == "" || namespace == "" || token == "" { return nil }
-	return &cloudflareKVProvider{http.DefaultClient, account, namespace, token, os.Getenv("CLOUDFLARE_KV_PREFIX")}
+	return &cloudflareKVProvider{http.DefaultClient, account, namespace, token, os.Getenv("CLOUDFLARE_KV_PREFIX"), cloudflareAPIBase}
 }
 func (p *cloudflareKVProvider) Load(ctx context.Context, keys []string) (map[string]string, error) {
 	values := make(map[string]string)
-	base := "https://api.cloudflare.com/client/v4/accounts/" + p.accountID + "/storage/kv/namespaces/" + p.namespaceID + "/values/"
+	apiBase := p.baseURL
+	if apiBase == "" { apiBase = cloudflareAPIBase }
+	base := apiBase + "/accounts/" + p.accountID + "/storage/kv/namespaces/" + p.namespaceID + "/values/"
 	for _, key := range keys {
 		value, found, err := p.loadKey(ctx, base, p.prefix+key)
 		if err != nil { return nil, err }

@@ -21,10 +21,10 @@ func TestCloudflareKVOverridesEnvironment(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "Bearer token" { t.Error("missing authorization") }
 		if r.URL.Path == "/accounts/account/storage/kv/namespaces/namespace/values/DB_HOST" { _, _ = w.Write([]byte("remote-db")); return }
-		w.WriteHeader(http.NotFound)
+		w.WriteHeader(http.StatusNotFound)
 	}))
 	defer server.Close()
-	p := &cloudflareKVProvider{client: server.Client(), accountID: "account", namespaceID: "namespace", token: "token"}
+	p := &cloudflareKVProvider{client: server.Client(), accountID: "account", namespaceID: "namespace", token: "token", baseURL: server.URL}
 	values, err := p.Load(context.Background(), []string{"DB_HOST"})
 	if err != nil { t.Fatal(err) }
 	if values["DB_HOST"] != "remote-db" { t.Fatalf("got %q", values["DB_HOST"]) }
