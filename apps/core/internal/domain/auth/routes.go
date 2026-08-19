@@ -6,19 +6,26 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterRoutes registers auth routes.
+// RegisterRoutes registers auth routes: public endpoints for login/register,
+// authenticated endpoints for profile access.
 func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	handler := NewHandler(cfg.JWT, cfg.OAuth, cfg.SMTP, cfg.FrontendURL, cfg.Server.APIBasePath)
 
-	auth := r.Group("/auth")
+	// Public: registration, login, password reset, OAuth callbacks, email verification
+	authPublic := r.Group("/auth")
 	{
-		auth.POST("/register", handler.Register)
-		auth.POST("/login", handler.Login)
-		auth.POST("/refresh", handler.Refresh)
-		auth.POST("/forgot-password", handler.ForgotPassword)
-		auth.GET("/login/google", handler.GoogleLogin)
-		auth.GET("/callback/google", handler.GoogleCallback)
-		auth.GET("/verify", handler.VerifyEmail)
-		auth.GET("/me", middleware.JWTAuth(cfg.JWT), handler.Me)
+		authPublic.POST("/register", handler.Register)
+		authPublic.POST("/login", handler.Login)
+		authPublic.POST("/refresh", handler.Refresh)
+		authPublic.POST("/forgot-password", handler.ForgotPassword)
+		authPublic.GET("/login/google", handler.GoogleLogin)
+		authPublic.GET("/callback/google", handler.GoogleCallback)
+		authPublic.GET("/verify", handler.VerifyEmail)
+	}
+
+	// Authenticated: current user profile
+	authPrivate := r.Group("/auth", middleware.JWTAuth(cfg.JWT))
+	{
+		authPrivate.GET("/me", handler.Me)
 	}
 }

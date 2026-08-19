@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"net/http"
 	"os"
 	"time"
 
@@ -14,8 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	_ "github.com/revieu-corp/revieu-core-api-go/apps/core/docs"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // @title RevieU Core API
@@ -95,15 +92,6 @@ func buildRouter(cfg *config.Config) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(jsonLoggerMiddleware())
-
-	apiGroup := r.Group(cfg.Server.APIBasePath)
-	{
-		apiGroup.GET("/health", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{"status": "ok"})
-		})
-
-		apiGroup.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	}
 
 	router.Setup(r, cfg)
 	return r

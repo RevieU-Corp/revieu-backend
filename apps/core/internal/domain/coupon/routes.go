@@ -8,29 +8,26 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterRoutes registers coupon and package routes.
+// RegisterRoutes registers coupon and package routes. Store-scoped coupon
+// routes live in the stores domain, which owns the /stores prefix.
 func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	svc := service.NewCouponService(nil)
 	h := handler.NewCouponHandler(svc)
 
-	coupons := r.Group("/coupons")
+	// Public: validate and initiate payment
+	couponsPublic := r.Group("/coupons")
 	{
-		coupons.POST("/:id/validate", h.Validate)
-		coupons.POST("/:id/payment/initiate", h.InitiatePayment)
-		coupons.POST("/:id/redeem", middleware.JWTAuth(cfg.JWT), h.Redeem)
+		couponsPublic.POST("/:id/validate", h.Validate)
+		couponsPublic.POST("/:id/payment/initiate", h.InitiatePayment)
 	}
 
-	stores := r.Group("/stores")
+	// Authenticated: redeem coupons
+	couponsAuth := r.Group("/coupons", middleware.JWTAuth(cfg.JWT))
 	{
-		stores.GET("/:id/coupons", h.ListStoreCoupons)
+		couponsAuth.POST("/:id/redeem", h.Redeem)
 	}
 
-	merchantStores := r.Group("/merchant/stores", middleware.JWTAuth(cfg.JWT))
-	{
-		merchantStores.POST("/:id/coupons", h.CreateStoreCoupon)
-		merchantStores.DELETE("/:id/coupons/:couponId", h.DeleteStoreCoupon)
-	}
-
+	// Public: packages
 	packages := r.Group("/packages")
 	{
 		packages.GET("", h.ListPackages)

@@ -8,18 +8,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterRoutes registers merchant routes.
+// RegisterRoutes registers the current merchant's own account routes. Public
+// /merchants routes live in the merchants domain, which owns that prefix.
 func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	svc := service.NewMerchantService(nil)
 	h := handler.NewMerchantHandler(svc)
 
-	merchants := r.Group("/merchants")
-	{
-		merchants.GET("", h.List)
-		merchants.GET("/:id", h.Detail)
-		merchants.GET("/:id/reviews", h.Reviews)
-	}
-
+	// Authenticated: current merchant's account
 	merchantPrivate := r.Group("/merchant", middleware.JWTAuth(cfg.JWT))
 	{
 		merchantPrivate.DELETE("/me", h.DeleteMe)

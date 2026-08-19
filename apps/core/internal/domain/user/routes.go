@@ -2,6 +2,8 @@ package user
 
 import (
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
+	contentHandler "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/content/handler"
+	contentService "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/content/service"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/user/handler"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/user/service"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/middleware"
@@ -12,6 +14,12 @@ import (
 func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	userSvc := service.NewUserService(nil)
 	userHandler := handler.NewUserHandler(userSvc)
+
+	contentSvc := contentService.NewContentService(nil)
+	postHandler := contentHandler.NewPostHandler(contentSvc)
+	reviewHandler := contentHandler.NewReviewHandler(contentSvc)
+	favHandler := contentHandler.NewFavoriteHandler(contentSvc)
+	likeHandler := contentHandler.NewLikeHandler(contentSvc)
 
 	user := r.Group("/user", middleware.JWTAuth(cfg.JWT))
 	{
@@ -58,5 +66,11 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 			account.POST("/export", userHandler.RequestAccountExport)
 			account.DELETE("", userHandler.RequestAccountDeletion)
 		}
+
+		// Current user's content, delegated to the content domain's handlers.
+		user.GET("/posts", postHandler.ListMyPosts)
+		user.GET("/reviews", reviewHandler.ListMyReviews)
+		user.GET("/favorites", favHandler.ListMyFavorites)
+		user.GET("/likes", likeHandler.ListMyLikes)
 	}
 }

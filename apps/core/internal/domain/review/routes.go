@@ -8,16 +8,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterRoutes registers review routes.
+// RegisterRoutes registers review routes: public reads and authenticated writes.
 func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	svc := service.NewReviewService(nil)
 	h := handler.NewReviewHandler(svc)
 
-	reviews := r.Group("/reviews")
+	// Public: anyone can read review details
+	reviewsPublic := r.Group("/reviews")
 	{
-		reviews.POST("", middleware.JWTAuth(cfg.JWT), h.Create)
-		reviews.GET("/:id", h.Detail)
-		reviews.POST("/:id/like", middleware.JWTAuth(cfg.JWT), h.Like)
-		reviews.POST("/:id/comments", middleware.JWTAuth(cfg.JWT), h.Comment)
+		reviewsPublic.GET("/:id", h.Detail)
+	}
+
+	// Authenticated: create reviews, like, and comment
+	reviewsAuth := r.Group("/reviews", middleware.JWTAuth(cfg.JWT))
+	{
+		reviewsAuth.POST("", h.Create)
+		reviewsAuth.POST("/:id/like", h.Like)
+		reviewsAuth.POST("/:id/comments", h.Comment)
 	}
 }
