@@ -1,7 +1,9 @@
 package config
 
 import (
+    "bytes"
     "context"
+    "encoding/json"
     "fmt"
     "io"
     "net/http"
@@ -47,30 +49,59 @@ func (p *cloudflareKVProvider) Load(ctx context.Context, keys []string) (map[str
 	apiBase := p.baseURL
 	if apiBase == "" { apiBase = cloudflareAPIBase }
 	base := apiBase + "/accounts/" + p.accountID + "/storage/kv/namespaces/" + p.namespaceID + "/values/"
-	for _, key := range keys {
-		value, found, err := p.loadKey(ctx, base, p.prefix+key)
+
+	// Prefixed keys first (e.g. cluster/DB_HOST). Bulk-get them in one request.
+	prefixed := make([]string, 0, len(keys))
+	for _, k := range keys {
+		if p.prefix != "" { prefixed = append(prefixed, p.prefix+k) }
+	}
+	if len(prefixed) > 0 {
+		got, err := p.loadKeysBulk(ctx, base, prefixed)
 		if err != nil { return nil, err }
-		if !found && p.prefix != "" {
-			value, found, err = p.loadKey(ctx, base, key)
-			if err != nil { return nil, err }
+		for k, v := range got {
+			values[strings.TrimPrefix(k, p.prefix)] = v
 		}
-		if found { values[key] = value }
+	}
+
+	// Fall back to unprefixed keys for anything not found above.
+	var missing []string
+	for _, k := range keys {
+		if _, ok := values[k]; !ok { missing = append(missing, k) }
+	}
+	if len(missing) > 0 {
+		got, err := p.loadKeysBulk(ctx, base, missing)
+		if err != nil { return nil, err }
+		for k, v := range got { values[k] = v }
 	}
 	return values, nil
 }
 
-func (p *cloudflareKVProvider) loadKey(ctx context.Context, base, key string) (string, bool, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, base+key, nil)
-	if err != nil { return "", false, err }
+// loadKeysBulk fetches multiple keys in one Cloudflare KV bulk-get call,
+// returning only the keys that exist.
+func (p *cloudflareKVProvider) loadKeysBulk(ctx context.Context, base string, keys []string) (map[string]string, error) {
+	result := make(map[string]string)
+	body, err := json.Marshal(map[string][]string{"keys": keys})
+	if err != nil { return nil, err }
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, base+"bulk/get", bytes.NewReader(body))
+	if err != nil { return nil, err }
 	req.Header.Set("Authorization", "Bearer "+p.token)
+	req.Header.Set("Content-Type", "application/json")
 	resp, err := p.client.Do(req)
-	if err != nil { return "", false, err }
-	body, readErr := io.ReadAll(resp.Body)
-	resp.Body.Close()
-	if readErr != nil { return "", false, readErr }
-	if resp.StatusCode == http.StatusNotFound { return "", false, nil }
-	if resp.StatusCode != http.StatusOK { return "", false, fmt.Errorf("cloudflare KV returned HTTP %d: %s", resp.StatusCode, strings.TrimSpace(string(body))) }
-	return string(body), true, nil
+	if err != nil { return nil, err }
+	defer resp.Body.Close()
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil { return nil, err }
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("cloudflare KV bulk/get returned HTTP %d: %s", resp.StatusCode, strings.TrimSpace(string(raw)))
+	}
+	var parsed struct {
+		Result struct {
+			Values map[string]string `json:"values"`
+		} `json:"result"`
+	}
+	if err := json.Unmarshal(raw, &parsed); err != nil { return nil, err }
+	for k, v := range parsed.Result.Values { result[k] = v }
+	return result, nil
 }
 
 func Load() (*Config, error) {
