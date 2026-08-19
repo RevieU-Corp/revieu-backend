@@ -82,8 +82,7 @@ func TestRefreshHandlerSuccess(t *testing.T) {
 	}
 }
 
-func TestRefreshHandlerInvalidToken(t *testing.T) {
-	gin.SetMode(gin.TestMode)
+func TestRefreshHandlerInvalidToken(t *testing.T) {	gin.SetMode(gin.TestMode)
 	h := &Handler{
 		svc: stubAuthService{
 			refreshFn: func(_ context.Context, refreshToken string) (LoginTokens, error) {
@@ -104,5 +103,27 @@ func TestRefreshHandlerInvalidToken(t *testing.T) {
 
 	if rec.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+}
+
+func TestRequestSchemePrefersFrontendHTTPS(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	h := &Handler{frontendURL: "https://revieu.liweijun.com"}
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/auth/login/google", nil)
+	c.Request.Header.Set("X-Forwarded-Proto", "http")
+	if s := h.requestScheme(c); s != "https" {
+		t.Fatalf("requestScheme=%q, want https", s)
+	}
+}
+
+func TestRequestSchemeFallsBackToProto(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	h := &Handler{frontendURL: ""}
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+	c.Request.Header.Set("X-Forwarded-Proto", "https")
+	if s := h.requestScheme(c); s != "https" {
+		t.Fatalf("requestScheme=%q, want https", s)
 	}
 }

@@ -28,6 +28,31 @@ func NewHandler(jwtCfg config.JWTConfig, oauthCfg config.OAuthConfig, smtpCfg co
 	}
 }
 
+// requestScheme returns the external protocol for building OAuth
+// redirect_uri. Prefer the configured frontend URL's scheme (always https
+// in production) because X-Forwarded-Proto is unreliable behind the
+// Cloudflare tunnel + traefik path, which sets it to http for the internal
+// hop. Fall back to X-Forwarded-Proto / TLS detection for local dev.
+func (h *Handler) requestScheme(c *gin.Context) string {
+	if u, err := url.Parse(h.frontendURL); err == nil && u.Scheme == "https" {
+		return "https"
+	}
+	if proto := c.GetHeader("X-Forwarded-Proto"); proto == "https" {
+		return "https"
+	}
+	if c.Request.TLS != nil {
+		return "https"
+	}
+	return "http"
+}
+
+// googleRedirectURI builds the callback URL for Google OAuth. It must match
+// the Authorized redirect URI registered in Google Cloud Console exactly.
+func (h *Handler) googleRedirectURI(c *gin.Context) string {
+	scheme := h.requestScheme(c)
+	return fmt.Sprintf("%s://%s%s/auth/callback/google", scheme, c.Request.Host, h.apiBasePath)
+}
+
 // Register godoc
 // @Summary Register a new user
 // @Description Register a new user with username, email and password
@@ -132,13 +157,7 @@ func (h *Handler) GoogleLogin(c *gin.Context) {
 		}
 	}
 
-	scheme := "http"
-	if proto := c.GetHeader("X-Forwarded-Proto"); proto == "https" {
-		scheme = "https"
-	} else if c.Request.TLS != nil {
-		scheme = "https"
-	}
-	redirectURI := fmt.Sprintf("%s://%s%s/auth/callback/google", scheme, c.Request.Host, h.apiBasePath)
+	redirectURI := h.googleRedirectURI(c)
 
 	state := url.QueryEscape(frontendURL)
 
@@ -183,13 +202,7 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
 		frontendURL = "http://localhost:3000"
 	}
 
-	scheme := "http"
-	if proto := c.GetHeader("X-Forwarded-Proto"); proto == "https" {
-		scheme = "https"
-	} else if c.Request.TLS != nil {
-		scheme = "https"
-	}
-	redirectURI := fmt.Sprintf("%s://%s%s/auth/callback/google", scheme, c.Request.Host, h.apiBasePath)
+	redirectURI := h.googleRedirectURI(c)
 
 	tokenResp, err := http.PostForm("https://oauth2.googleapis.com/token", url.Values{
 		"code":          {code},
