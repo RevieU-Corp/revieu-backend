@@ -1,11 +1,11 @@
 package coupon
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/authorization"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/coupon/handler"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/coupon/service"
-	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/middleware"
-	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registers coupon and package routes. Store-scoped coupon
@@ -22,7 +22,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	}
 
 	// Authenticated: redeem coupons
-	couponsAuth := r.Group("/coupons", middleware.JWTAuth(cfg.JWT))
+	couponsAuth := r.Group("/coupons", authorization.JWTAuth(cfg.JWT))
 	{
 		couponsAuth.POST("/:id/redeem", h.Redeem)
 	}

@@ -4,12 +4,12 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/gin-gonic/gin"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/authorization"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/ai/handler"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/ai/service"
-	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/middleware"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/logger"
-	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registers AI routes. The Gemini client is constructed eagerly so a
@@ -27,7 +27,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	svc := service.NewAIService(client, cfg.Gemini)
 	h := handler.NewAIHandler(svc, cfg.Gemini)
 
-	ai := r.Group("/ai", middleware.JWTAuth(cfg.JWT))
+	ai := r.Group("/ai", authorization.JWTAuth(cfg.JWT))
 	{
 		ai.POST("/reviews/suggestions", h.Suggestions)
 	}

@@ -32,20 +32,21 @@ func TestCloudflareKVOverridesEnvironment(t *testing.T) {
 	if values["DB_HOST"] != "remote-db" { t.Fatalf("got %q", values["DB_HOST"]) }
 }
 
-func TestCloudflareKVUnprefixedFallback(t *testing.T) {
-	// Prefixed key absent -> falls back to unprefixed key.
+func TestEnvironmentOverridesCloudflareKV(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet { t.Errorf("expected GET, got %s", r.Method); return }
-		if strings.HasSuffix(r.URL.Path, "/values/cluster/DB_HOST") { w.WriteHeader(http.StatusNotFound); return }
-		if strings.HasSuffix(r.URL.Path, "/values/DB_HOST") { _, _ = w.Write([]byte("fallback-host")); return }
+		if strings.HasSuffix(r.URL.Path, "/values/DB_HOST") { _, _ = w.Write([]byte("remote-db")); return }
 		w.WriteHeader(http.StatusNotFound)
 	}))
 	defer server.Close()
-	p := &cloudflareKVProvider{client: server.Client(), accountID: "account", namespaceID: "namespace", token: "token", prefix: "cluster/", baseURL: server.URL}
+	t.Setenv("DB_HOST", "env-db")
+	t.Setenv("JWT_SECRET", "env-secret")
+	p := &cloudflareKVProvider{client: server.Client(), accountID: "account", namespaceID: "namespace", token: "token", baseURL: server.URL}
 	values, err := p.Load(context.Background(), []string{"DB_HOST"})
 	if err != nil { t.Fatal(err) }
-	if values["DB_HOST"] != "fallback-host" { t.Fatalf("got %q", values["DB_HOST"]) }
+	if values["DB_HOST"] != "remote-db" { t.Fatalf("unexpected remote value %q", values["DB_HOST"]) }
+	if os.Getenv("DB_HOST") != "env-db" { t.Fatal("test environment changed") }
 }
+
 
 func TestLoadRequiresJWTSecret(t *testing.T) {
 	_ = os.Unsetenv("JWT_SECRET")

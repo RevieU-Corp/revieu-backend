@@ -1,11 +1,11 @@
 package merchant
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/authorization"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/merchant/handler"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/merchant/service"
-	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/middleware"
-	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registers the current merchant's own account routes. Public
@@ -15,7 +15,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	h := handler.NewMerchantHandler(svc)
 
 	// Authenticated: current merchant's account
-	merchantPrivate := r.Group("/merchant", middleware.JWTAuth(cfg.JWT))
+	merchantPrivate := r.Group("/merchant", authorization.JWTAuth(cfg.JWT))
 	{
 		merchantPrivate.DELETE("/me", h.DeleteMe)
 	}

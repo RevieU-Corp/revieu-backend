@@ -1,13 +1,13 @@
 package merchants
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/authorization"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
 	followHandler "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/follow/handler"
 	followService "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/follow/service"
 	merchantHandler "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/merchant/handler"
 	merchantService "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/merchant/service"
-	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/middleware"
-	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes consolidates all /merchants routes from merchant and follow
@@ -28,7 +28,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	}
 
 	// Authenticated: follow/unfollow merchants
-	merchantsAuth := r.Group("/merchants", middleware.JWTAuth(cfg.JWT))
+	merchantsAuth := r.Group("/merchants", authorization.JWTAuth(cfg.JWT))
 	{
 		merchantsAuth.POST("/:id/follow", followMerchantH.FollowMerchant)
 		merchantsAuth.DELETE("/:id/follow", followMerchantH.UnfollowMerchant)

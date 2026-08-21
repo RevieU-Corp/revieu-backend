@@ -3,12 +3,12 @@ package media
 import (
 	"log"
 
+	"github.com/gin-gonic/gin"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/authorization"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/media/handler"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/media/service"
-	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/middleware"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/storage"
-	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registers media routes.
@@ -28,7 +28,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	svc := service.NewMediaService(nil, r2Client)
 	h := handler.NewMediaHandler(svc)
 
-	media := r.Group("/media", middleware.JWTAuth(cfg.JWT))
+	media := r.Group("/media", authorization.JWTAuth(cfg.JWT))
 	{
 		media.POST("/uploads", h.CreateUpload)
 		media.POST("/presigned-urls", h.CreatePresignedURLs)

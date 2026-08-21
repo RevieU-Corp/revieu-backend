@@ -1,11 +1,11 @@
 package review
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/authorization"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/review/handler"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/review/service"
-	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/middleware"
-	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registers review routes: public reads and authenticated writes.
@@ -20,7 +20,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	}
 
 	// Authenticated: create reviews, like, and comment
-	reviewsAuth := r.Group("/reviews", middleware.JWTAuth(cfg.JWT))
+	reviewsAuth := r.Group("/reviews", authorization.JWTAuth(cfg.JWT))
 	{
 		reviewsAuth.POST("", h.Create)
 		reviewsAuth.POST("/:id/like", h.Like)

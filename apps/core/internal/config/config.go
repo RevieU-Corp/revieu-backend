@@ -33,14 +33,14 @@ type OAuthConfig struct { Google GoogleOAuthConfig }
 type GoogleOAuthConfig struct { ClientID string; ClientSecret string }
 type JWTConfig struct { Secret string; ExpireHour int; RefreshExpireHour int }
 type ServerConfig struct { Address string; Port int; Mode string; APIBasePath string }
-type cloudflareKVProvider struct { client *http.Client; accountID, namespaceID, token, prefix, baseURL string }
+type cloudflareKVProvider struct { client *http.Client; accountID, namespaceID, token, baseURL string }
 
 const cloudflareAPIBase = "https://api.cloudflare.com/client/v4"
 
 func newCloudflareKVProvider() Provider {
 	account, namespace, token := os.Getenv("CLOUDFLARE_ACCOUNT_ID"), os.Getenv("CLOUDFLARE_KV_NAMESPACE_ID"), os.Getenv("CLOUDFLARE_API_TOKEN")
 	if account == "" || namespace == "" || token == "" { return nil }
-	return &cloudflareKVProvider{http.DefaultClient, account, namespace, token, os.Getenv("CLOUDFLARE_KV_PREFIX"), cloudflareAPIBase}
+	return &cloudflareKVProvider{http.DefaultClient, account, namespace, token, cloudflareAPIBase}
 }
 func (p *cloudflareKVProvider) Load(ctx context.Context, keys []string) (map[string]string, error) {
 	values := make(map[string]string)
@@ -48,39 +48,18 @@ func (p *cloudflareKVProvider) Load(ctx context.Context, keys []string) (map[str
 	if apiBase == "" { apiBase = cloudflareAPIBase }
 	base := apiBase + "/accounts/" + p.accountID + "/storage/kv/namespaces/" + p.namespaceID + "/values/"
 
-	// Fetch every requested key concurrently. Each key first tries the
-	// prefixed form (e.g. cluster/DB_HOST), falling back to the unprefixed
-	// key. A dedicated context per request with the provider timeout keeps
-	// the whole batch bounded even though N requests run in parallel.
-	type result struct {
-		key     string
-		value   string
-		found   bool
-		err     error
+	// Fetch every requested key concurrently from the environment's namespace.
+	type result struct { key, value string; found bool; err error }
+	results := make(chan result, len(keys))
+	for _, key := range keys {
+		go func(key string) {
+			ctx, cancel := context.WithTimeout(ctx, providerTimeout()); defer cancel()
+			value, found, err := p.loadKey(ctx, base, key); results <- result{key, value, found, err}
+		}(key)
 	}
-	reqKeys := make([]struct{ want, lookup string }, 0, len(keys)*2)
-	for _, k := range keys {
-		reqKeys = append(reqKeys, struct{ want, lookup string }{k, p.prefix + k})
-		if p.prefix != "" { reqKeys = append(reqKeys, struct{ want, lookup string }{k, k}) }
-	}
-
-	results := make(chan result, len(reqKeys))
-	for _, rk := range reqKeys {
-		go func(rk struct{ want, lookup string }) {
-			ctx, cancel := context.WithTimeout(ctx, providerTimeout())
-			defer cancel()
-			value, found, err := p.loadKey(ctx, base, rk.lookup)
-			results <- result{rk.want, value, found, err}
-		}(rk)
-	}
-	for range reqKeys {
-		r := <-results
-		if r.err != nil { return nil, r.err }
-		if r.found && values[r.key] == "" { values[r.key] = r.value }
-	}
+	for range keys { r := <-results; if r.err != nil { return nil, r.err }; if r.found { values[r.key] = r.value } }
 	return values, nil
 }
-
 func (p *cloudflareKVProvider) loadKey(ctx context.Context, base, key string) (string, bool, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, base+key, nil)
 	if err != nil { return "", false, err }
@@ -98,16 +77,15 @@ func (p *cloudflareKVProvider) loadKey(ctx context.Context, base, key string) (s
 func Load() (*Config, error) {
 	keys := []string{"SERVER_ADDRESS","SERVER_PORT","SERVER_MODE","API_BASE_PATH","DB_DRIVER","DB_HOST","DB_PORT","DB_NAME","DB_USER","DB_PASSWORD","DB_AUTO_MIGRATE","LOG_LEVEL","LOG_FORMAT","JWT_SECRET","JWT_EXPIRE_HOUR","JWT_REFRESH_EXPIRE_HOUR","GOOGLE_CLIENT_ID","GOOGLE_CLIENT_SECRET","FRONTEND_URL","SMTP_HOST","SMTP_PORT","SMTP_USERNAME","SMTP_PASSWORD","SMTP_FROM","SMTP_USE_TLS","R2_ACCOUNT_ID","R2_ACCESS_KEY_ID","R2_SECRET_ACCESS_KEY","R2_BUCKET_NAME","R2_PUBLIC_URL","GEMINI_BACKEND","GEMINI_API_KEY","GEMINI_MODEL","GEMINI_TIMEOUT_SECONDS"}
 	values := make(map[string]string, len(keys))
-	for _, key := range keys { if value, ok := os.LookupEnv(key); ok { values[key] = value } }
+	for _, key := range keys { if value, ok := os.LookupEnv(key); ok && strings.TrimSpace(value) != "" { values[key] = value } }
 	if provider := newCloudflareKVProvider(); provider != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), providerTimeout()); defer cancel()
 		if remote, err := provider.Load(ctx, keys); err == nil {
-			for key, value := range remote { values[key] = value }
+			for key, value := range remote { if _, exists := values[key]; !exists { values[key] = value } }
 		}
 	}
 	return decode(values)
 }
-
 func providerTimeout() time.Duration { if d, err := time.ParseDuration(os.Getenv("CLOUDFLARE_KV_TIMEOUT")); err == nil && d > 0 { return d }; return 5*time.Second }
 func get(v map[string]string, key, fallback string) string { if value, ok := v[key]; ok { return value }; return fallback }
 func integer(v map[string]string, key string, fallback int) (int, error) { raw:=get(v,key,strconv.Itoa(fallback)); n,err:=strconv.Atoi(raw); if err!=nil{return 0,fmt.Errorf("%s: %w",key,err)};return n,nil }

@@ -1,13 +1,13 @@
 package stores
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/authorization"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
 	couponHandler "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/coupon/handler"
 	couponService "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/coupon/service"
 	storeHandler "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/store/handler"
 	storeService "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/store/service"
-	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/middleware"
-	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes consolidates all /stores and /merchant/stores routes from store
@@ -32,7 +32,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	}
 
 	// Authenticated: merchant store and coupon management
-	merchantStoresAuth := r.Group("/merchant/stores", middleware.JWTAuth(cfg.JWT))
+	merchantStoresAuth := r.Group("/merchant/stores", authorization.JWTAuth(cfg.JWT))
 	{
 		merchantStoresAuth.GET("", storeH.ListMine)
 		merchantStoresAuth.POST("", storeH.Create)

@@ -1,11 +1,11 @@
 package voucher
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/authorization"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/voucher/handler"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/voucher/service"
-	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/middleware"
-	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registers voucher routes.
@@ -13,7 +13,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	svc := service.NewVoucherService(nil)
 	h := handler.NewVoucherHandler(svc, cfg.FrontendURL)
 
-	vouchers := r.Group("/vouchers", middleware.JWTAuth(cfg.JWT))
+	vouchers := r.Group("/vouchers", authorization.JWTAuth(cfg.JWT))
 	{
 		vouchers.POST("", h.Create)
 		vouchers.GET("", h.List)
@@ -25,7 +25,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 		vouchers.POST("/share/sms", h.ShareSMS)
 	}
 
-	merchantVouchers := r.Group("/merchant/vouchers", middleware.JWTAuth(cfg.JWT))
+	merchantVouchers := r.Group("/merchant/vouchers", authorization.JWTAuth(cfg.JWT))
 	{
 		merchantVouchers.GET("/scan", h.ScanPreview)
 		merchantVouchers.POST("/redeem-by-token", h.RedeemByToken)

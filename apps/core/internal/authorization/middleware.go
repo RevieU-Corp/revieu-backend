@@ -1,12 +1,12 @@
-package middleware
+package authorization
 
 import (
 	"net/http"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/token"
-	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -17,35 +17,24 @@ const (
 	UserRoleKey         = "user_role"
 )
 
+// JWTAuth authenticates a bearer token and installs its principal in Gin context.
 func JWTAuth(jwtCfg config.JWTConfig) gin.HandlerFunc {
 	tokenService := token.New(jwtCfg)
-
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader(AuthorizationHeader)
 		if authHeader == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "missing authorization header",
-			})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
 			return
 		}
-
 		if !strings.HasPrefix(authHeader, BearerPrefix) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "invalid authorization header format",
-			})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization header format"})
 			return
 		}
-
-		tokenString := strings.TrimPrefix(authHeader, BearerPrefix)
-		claims, err := tokenService.ValidateToken(tokenString)
+		claims, err := tokenService.ValidateToken(strings.TrimPrefix(authHeader, BearerPrefix))
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "invalid or expired token",
-			})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
 			return
 		}
-
-		// Set user info in context
 		if sub, ok := claims["sub"].(float64); ok {
 			c.Set(UserIDKey, int64(sub))
 		}
@@ -55,7 +44,6 @@ func JWTAuth(jwtCfg config.JWTConfig) gin.HandlerFunc {
 		if role, ok := claims["role"].(string); ok {
 			c.Set(UserRoleKey, role)
 		}
-
 		c.Next()
 	}
 }

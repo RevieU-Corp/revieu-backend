@@ -1,13 +1,13 @@
 package user
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/authorization"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
 	contentHandler "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/content/handler"
 	contentService "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/content/service"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/user/handler"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/user/service"
-	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/middleware"
-	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registers user routes.
@@ -21,7 +21,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	favHandler := contentHandler.NewFavoriteHandler(contentSvc)
 	likeHandler := contentHandler.NewLikeHandler(contentSvc)
 
-	user := r.Group("/user", middleware.JWTAuth(cfg.JWT))
+	user := r.Group("/user", authorization.JWTAuth(cfg.JWT))
 	{
 		profile := user.Group("/profile")
 		{

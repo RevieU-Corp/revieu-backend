@@ -1,6 +1,8 @@
 package users
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/authorization"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
 	contentHandler "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/content/handler"
 	contentService "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/content/service"
@@ -8,8 +10,6 @@ import (
 	followService "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/follow/service"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/profile"
 	profileService "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/profile/service"
-	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/middleware"
-	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes consolidates all /users routes from profile, content, and follow
@@ -38,7 +38,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	}
 
 	// Authenticated: follow/unfollow users
-	usersAuth := r.Group("/users", middleware.JWTAuth(cfg.JWT))
+	usersAuth := r.Group("/users", authorization.JWTAuth(cfg.JWT))
 	{
 		usersAuth.POST("/:id/follow", followUserH.FollowUser)
 		usersAuth.DELETE("/:id/follow", followUserH.UnfollowUser)

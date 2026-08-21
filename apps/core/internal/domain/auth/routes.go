@@ -1,9 +1,9 @@
 package auth
 
 import (
-	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
-	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/middleware"
 	"github.com/gin-gonic/gin"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/authorization"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
 )
 
 // RegisterRoutes registers auth routes: public endpoints for login/register,
@@ -24,7 +24,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	}
 
 	// Authenticated: current user profile
-	authPrivate := r.Group("/auth", middleware.JWTAuth(cfg.JWT))
+	authPrivate := r.Group("/auth", authorization.JWTAuth(cfg.JWT))
 	{
 		authPrivate.GET("/me", handler.Me)
 	}
