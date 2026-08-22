@@ -25,15 +25,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Validate PR Source Branch
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           # 如果目标是 main，必须来自 dev
-          if [[ "${{ github.base_ref }}" == "main" && "${{ github.head_ref }}" != "dev" ]]; then
+          if [[ "$BASE_REF" == "main" && "$HEAD_REF" != "dev" ]]; then
             echo "Error: Pull Requests to 'main' must originate from the 'dev' branch."
             exit 1
           fi
 
           # 如果目标是 dev，不能直接来自 main
-          if [[ "${{ github.base_ref }}" == "dev" && "${{ github.head_ref }}" == "main" ]]; then
+          if [[ "$BASE_REF" == "dev" && "$HEAD_REF" == "main" ]]; then
             echo "Error: You cannot merge 'main' into 'dev' via PR."
             exit 1
           fi
