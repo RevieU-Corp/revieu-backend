@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 	"time"
@@ -34,16 +35,22 @@ var (
 )
 
 type CreateStoreCouponInput struct {
-	Title         string
-	Description   string
-	Type          string
-	Price         float64
-	TotalQuantity int
-	MaxPerUser    int
-	ValidFrom     *time.Time
-	ValidUntil    *time.Time
-	Terms         string
-	Status        string
+	Title              string
+	Description        string
+	Type               string
+	CouponType         string
+	Price              float64
+	OriginalPrice      float64
+	SalePrice          float64
+	DiscountPercentage float64
+	ImageURL           string
+	DishIDs            []int64
+	TotalQuantity      int
+	MaxPerUser         int
+	ValidFrom          *time.Time
+	ValidUntil         *time.Time
+	Terms              string
+	Status             string
 }
 
 type ValidateInput struct {
@@ -110,17 +117,39 @@ func (s *CouponService) CreateForStore(ctx context.Context, userID, storeID int6
 		return nil, ErrStoreNotPublished
 	}
 
+	imageURL := strings.TrimSpace(input.ImageURL)
+	if imageURL == "" && len(input.DishIDs) == 1 {
+		var dish model.Dish
+		if err := s.db.WithContext(ctx).Where("id = ? AND merchant_id = ?", input.DishIDs[0], merchant.ID).First(&dish).Error; err == nil {
+			imageURL = dish.ImageURL
+		}
+	}
+	dishIDs := input.DishIDs
+	if dishIDs == nil {
+		dishIDs = []int64{}
+	}
+	dishIDsJSON, err := json.Marshal(dishIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	coupon := model.Coupon{
-		MerchantID:    store.MerchantID,
-		StoreID:       &store.ID,
-		Title:         title,
-		Description:   input.Description,
-		Type:          couponType,
-		Price:         input.Price,
-		TotalQuantity: input.TotalQuantity,
-		MaxPerUser:    input.MaxPerUser,
-		Terms:         input.Terms,
-		Status:        couponStatusActive,
+		MerchantID:         store.MerchantID,
+		StoreID:            &store.ID,
+		Title:              title,
+		Description:        input.Description,
+		Type:               couponType,
+		CouponType:         input.CouponType,
+		Price:              input.Price,
+		OriginalPrice:      input.OriginalPrice,
+		SalePrice:          input.SalePrice,
+		DiscountPercentage: input.DiscountPercentage,
+		ImageURL:           imageURL,
+		DishIDs:            string(dishIDsJSON),
+		TotalQuantity:      input.TotalQuantity,
+		MaxPerUser:         input.MaxPerUser,
+		Terms:              input.Terms,
+		Status:             couponStatusActive,
 	}
 	if strings.TrimSpace(input.Status) != "" {
 		coupon.Status = strings.TrimSpace(input.Status)

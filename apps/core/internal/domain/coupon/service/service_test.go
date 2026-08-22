@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
@@ -23,6 +24,7 @@ func setupCouponTestDB(t *testing.T) *gorm.DB {
 		&model.Merchant{},
 		&model.Store{},
 		&model.Coupon{},
+		&model.Dish{},
 	); err != nil {
 		t.Fatalf("failed to migrate test db: %v", err)
 	}
@@ -158,5 +160,87 @@ func TestCouponServiceDeleteForStoreRejectsCouponOutsideStore(t *testing.T) {
 	err := svc.DeleteForStore(context.Background(), ownerID, storeA.ID, coupon.ID)
 	if !errors.Is(err, ErrCouponNotFound) {
 		t.Fatalf("expected ErrCouponNotFound for coupon-store mismatch, got %v", err)
+	}
+}
+
+func TestCouponServiceCreateForStorePopulatesPricingAndDishes(t *testing.T) {
+	db := setupCouponTestDB(t)
+	svc := NewCouponService(db)
+
+	ownerID := int64(901)
+	if err := db.Create(&model.User{ID: ownerID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create owner: %v", err)
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Store", Status: storeStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	dish := model.Dish{MerchantID: merchant.ID, Name: "Burger", OriginalPrice: 15, ImageURL: "https://example.com/burger.jpg", Status: "active"}
+	if err := db.Create(&dish).Error; err != nil {
+		t.Fatalf("failed to create dish: %v", err)
+	}
+
+	coupon, err := svc.CreateForStore(context.Background(), ownerID, store.ID, CreateStoreCouponInput{
+		Title:              "20% OFF Burger",
+		Type:               "percentage",
+		CouponType:         "normal",
+		OriginalPrice:      15,
+		SalePrice:          12,
+		DiscountPercentage: 20,
+		TotalQuantity:      100,
+		MaxPerUser:         1,
+		DishIDs:            []int64{dish.ID},
+	})
+	if err != nil {
+		t.Fatalf("create returned error: %v", err)
+	}
+	if coupon.OriginalPrice != 15 || coupon.SalePrice != 12 || coupon.DiscountPercentage != 20 {
+		t.Fatalf("expected pricing fields to be populated, got %+v", coupon)
+	}
+	if coupon.CouponType != "normal" {
+		t.Fatalf("expected coupon type normal, got %q", coupon.CouponType)
+	}
+	if coupon.DishIDs != fmt.Sprintf("[%d]", dish.ID) {
+		t.Fatalf("expected dish_ids to encode [%d], got %q", dish.ID, coupon.DishIDs)
+	}
+	if coupon.ImageURL != dish.ImageURL {
+		t.Fatalf("expected coupon image to default to the single associated dish's image, got %q", coupon.ImageURL)
+	}
+}
+
+func TestCouponServiceCreateForStoreKeepsExplicitImageOverDishImage(t *testing.T) {
+	db := setupCouponTestDB(t)
+	svc := NewCouponService(db)
+
+	ownerID := int64(902)
+	if err := db.Create(&model.User{ID: ownerID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create owner: %v", err)
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Store", Status: storeStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	dish := model.Dish{MerchantID: merchant.ID, Name: "Burger", OriginalPrice: 15, ImageURL: "https://example.com/burger.jpg", Status: "active"}
+	if err := db.Create(&dish).Error; err != nil {
+		t.Fatalf("failed to create dish: %v", err)
+	}
+
+	coupon, err := svc.CreateForStore(context.Background(), ownerID, store.ID, CreateStoreCouponInput{
+		Title: "Custom Image Coupon", Type: "percentage", TotalQuantity: 10, MaxPerUser: 1,
+		DishIDs: []int64{dish.ID}, ImageURL: "https://example.com/custom.jpg",
+	})
+	if err != nil {
+		t.Fatalf("create returned error: %v", err)
+	}
+	if coupon.ImageURL != "https://example.com/custom.jpg" {
+		t.Fatalf("expected explicit ImageURL to be kept, got %q", coupon.ImageURL)
 	}
 }
