@@ -123,6 +123,7 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push Docker image
+        id: image
         uses: docker/build-push-action@v5
         with:
           context: ./apps/core
@@ -138,6 +139,65 @@ jobs:
             COMMIT=${{ github.sha }}
             BUILD_TIME=${{ github.event.head_commit.timestamp }}
 
+      - name: Create infra promotion pull request
+        env:
+          GH_TOKEN: ${{ secrets.INFRA_UPDATE_TOKEN }}
+          INFRA_REPOSITORY: LosFurina/infra
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+          IMAGE_TAG: ${{ github.ref_name == 'main' && 'latest' || 'dev' }}
+          WORKLOAD_FILE: ${{ github.ref_name == 'main' && 'workloads/revieu-prod/core-api.yaml' || 'workloads/revieu-dev/core-api.yaml' }}
+          PROMOTION_BRANCH: automation/revieu-core-api-${{ github.ref_name }}-${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$GH_TOKEN" ]; then
+            echo "INFRA_UPDATE_TOKEN is not configured."
+            exit 1
+          fi
+          if [ -z "$IMAGE_DIGEST" ]; then
+            echo "Docker build did not return an image digest."
+            exit 1
+          fi
+
+          rm -rf infra
+          git clone --branch main "https://x-access-token:${GH_TOKEN}@github.com/${INFRA_REPOSITORY}.git" infra
+          cd infra
+          git checkout -b "$PROMOTION_BRANCH"
+
+          python3 - "$WORKLOAD_FILE" "$IMAGE_TAG" "$IMAGE_DIGEST" <<'PY'
+          from pathlib import Path
+          import re
+          import sys
+
+          path = Path(sys.argv[1])
+          image_tag = sys.argv[2]
+          digest = sys.argv[3]
+          text = path.read_text()
+          pattern = r"(ghcr\.io/revieu-corp/revieu-core-api-go:)[^@\s]+@sha256:[a-f0-9]+"
+          replacement = rf"\g<1>{image_tag}@{digest}"
+          updated, count = re.subn(pattern, replacement, text)
+          if count != 1:
+              raise SystemExit(f"expected one core API image reference in {path}, found {count}")
+          path.write_text(updated)
+          PY
+
+          if git diff --quiet -- "$WORKLOAD_FILE"; then
+            echo "Infra already references $IMAGE_TAG@$IMAGE_DIGEST."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$WORKLOAD_FILE"
+          git commit -m "chore(revieu-${{ github.ref_name }}): promote core api image"
+          git push origin "$PROMOTION_BRANCH"
+
+          gh pr create \
+            --repo "$INFRA_REPOSITORY" \
+            --base main \
+            --head "$PROMOTION_BRANCH" \
+            --title "chore(revieu-${{ github.ref_name }}): promote core api image" \
+            --body "Promote core API image digest from commit ${{ github.sha }}. CI run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
       - name: Notify Discord
         if: always()
         env:
