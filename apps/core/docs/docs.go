@@ -2315,6 +2315,15 @@ const docTemplate = `{
                         "name": "couponId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Update store coupon request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_coupon_handler.UpdateStoreCouponRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -6622,6 +6631,65 @@ const docTemplate = `{
             ],
             "properties": {
                 "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_coupon_handler.UpdateStoreCouponRequest": {
+            "type": "object",
+            "properties": {
+                "clear_valid_from": {
+                    "type": "boolean"
+                },
+                "clear_valid_until": {
+                    "type": "boolean"
+                },
+                "coupon_type": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount_percentage": {
+                    "type": "number"
+                },
+                "dish_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "max_per_user": {
+                    "type": "integer"
+                },
+                "original_price": {
+                    "type": "number"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "sale_price": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "terms": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "total_quantity": {
+                    "type": "integer"
+                },
+                "valid_from": {
+                    "type": "string"
+                },
+                "valid_until": {
                     "type": "string"
                 }
             }

@@ -537,6 +537,45 @@ definitions:
     required:
     - userId
     type: object
+  internal_domain_coupon_handler.UpdateStoreCouponRequest:
+    properties:
+      clear_valid_from:
+        type: boolean
+      clear_valid_until:
+        type: boolean
+      coupon_type:
+        type: string
+      description:
+        type: string
+      discount_percentage:
+        type: number
+      dish_ids:
+        items:
+          type: integer
+        type: array
+      image_url:
+        type: string
+      max_per_user:
+        type: integer
+      original_price:
+        type: number
+      price:
+        type: number
+      sale_price:
+        type: number
+      status:
+        type: string
+      terms:
+        type: string
+      title:
+        type: string
+      total_quantity:
+        type: integer
+      valid_from:
+        type: string
+      valid_until:
+        type: string
+    type: object
   internal_domain_coupon_handler.ValidateCouponRequest:
     properties:
       quantity:
@@ -2056,6 +2095,12 @@ paths:
         name: couponId
         required: true
         type: integer
+      - description: Update store coupon request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_coupon_handler.UpdateStoreCouponRequest'
       produces:
       - application/json
       responses:

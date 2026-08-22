@@ -527,6 +527,63 @@ func TestCouponServiceUpdateForStoreRejectsInvertedDateRange(t *testing.T) {
 	}
 }
 
+func TestCouponServiceUpdateForStoreClearsCouponDates(t *testing.T) {
+	db := setupCouponTestDB(t)
+	svc := NewCouponService(db)
+
+	ownerID := int64(993)
+	if err := db.Create(&model.User{ID: ownerID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create owner: %v", err)
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Store", Status: storeStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	storeID := store.ID
+	validFrom := time.Date(2026, 8, 21, 10, 0, 0, 0, time.UTC)
+	validUntil := time.Date(2026, 8, 25, 10, 0, 0, 0, time.UTC)
+	coupon := model.Coupon{
+		MerchantID:    merchant.ID,
+		StoreID:       &storeID,
+		Title:         "Clear Dates Coupon",
+		Type:          "cash",
+		TotalQuantity: 10,
+		MaxPerUser:    1,
+		Status:        couponStatusActive,
+		ValidFrom:     &validFrom,
+		ValidUntil:    &validUntil,
+		ExpiryDate:    validUntil,
+	}
+	if err := db.Create(&coupon).Error; err != nil {
+		t.Fatalf("failed to create coupon: %v", err)
+	}
+
+	clearFrom := (*time.Time)(nil)
+	clearUntil := (*time.Time)(nil)
+	updated, err := svc.UpdateForStore(context.Background(), ownerID, store.ID, coupon.ID, UpdateStoreCouponInput{
+		ValidFrom:  &clearFrom,
+		ValidUntil: &clearUntil,
+	})
+	if err != nil {
+		t.Fatalf("clear dates returned error: %v", err)
+	}
+	if updated.ValidFrom != nil || updated.ValidUntil != nil {
+		t.Fatalf("expected dates to be cleared, got from=%v until=%v", updated.ValidFrom, updated.ValidUntil)
+	}
+
+	var refreshed model.Coupon
+	if err := db.First(&refreshed, coupon.ID).Error; err != nil {
+		t.Fatalf("failed to re-fetch coupon: %v", err)
+	}
+	if refreshed.ValidFrom != nil || refreshed.ValidUntil != nil || !refreshed.ExpiryDate.IsZero() {
+		t.Fatalf("expected persisted dates and expiry to be cleared, got from=%v until=%v expiry=%v", refreshed.ValidFrom, refreshed.ValidUntil, refreshed.ExpiryDate)
+	}
+}
+
 func TestCouponServiceUpdateForStoreRejectsInvalidStatus(t *testing.T) {
 	db := setupCouponTestDB(t)
 	svc := NewCouponService(db)

@@ -1372,5 +1372,7 @@ components:
         max_per_user: { type: integer, minimum: 1 }
         valid_from: { type: string, format: date-time }
         valid_until: { type: string, format: date-time }
+        clear_valid_from: { type: boolean, description: Explicitly clear valid_from when true }
+        clear_valid_until: { type: boolean, description: Explicitly clear valid_until and expiry_date when true }
         terms: { type: string }
         status: { type: string, enum: [draft, active, disabled] }

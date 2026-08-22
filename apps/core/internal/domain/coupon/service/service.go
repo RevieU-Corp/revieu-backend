@@ -437,6 +437,8 @@ func (s *CouponService) UpdateForStore(ctx context.Context, userID, storeID, cou
 		updates["valid_until"] = *input.ValidUntil
 		if *input.ValidUntil != nil {
 			updates["expiry_date"] = **input.ValidUntil
+		} else {
+			updates["expiry_date"] = nil
 		}
 	}
 	if input.Terms != nil {
