@@ -25,7 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Validate PR Source Branch
-        if: github.event_name == 'pull_request'
         run: |
           # 如果目标是 main，必须来自 dev
           if [[ "${{ github.base_ref }}" == "main" && "${{ github.head_ref }}" != "dev" ]]; then
@@ -37,15 +36,6 @@ jobs:
           if [[ "${{ github.base_ref }}" == "dev" && "${{ github.head_ref }}" == "main" ]]; then
             echo "Error: You cannot merge 'main' into 'dev' via PR."
             exit 1
-          fi
-
-          # 如果是直接 push 到 main，且不是 merge commit，则报错
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_name }}" == "main" ]]; then
-            # 检查当前提交是否为合并提交 (具有多个父节点)
-            if [[ $(git show -s --format=%P HEAD | wc -w) -le 1 ]]; then
-              echo "Error: Direct pushes to 'main' are not allowed. Please use a Pull Request from 'dev'."
-              exit 1
-            fi
           fi
 
       - uses: actions/checkout@v4
@@ -71,14 +61,14 @@ jobs:
       - name: Install golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          version: v1.64.8
           working-directory: apps/core
           args: --timeout=5m
 
       - name: Check Swagger docs are up to date
         working-directory: apps/core
         run: |
-          go install github.com/swaggo/swag/cmd/swag@latest
+          go install github.com/swaggo/swag/cmd/swag@v1.16.4
           swag init -g cmd/app/main.go -o docs --parseInternal --parseDependency
           if [ -n "$(git diff --name-only docs/)" ]; then
             echo "Error: Swagger docs are out of date. Please run 'swag init -g cmd/app/main.go -o docs --parseInternal --parseDependency' and commit the changes."
@@ -91,6 +81,7 @@ jobs:
         env:
           CGO_ENABLED: 1
         run: go test -v -race -coverprofile=coverage.out ./...
+
 
   build-and-push:
     name: Build and Push Image
