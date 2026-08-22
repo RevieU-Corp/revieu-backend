@@ -6,6 +6,7 @@
 # Temporary and worktree files
 *.txt
 .worktrees/
+.runtime/
 
 # Secrets policy: ignore plaintext secrets, keep sealed secrets tracked
 apps/**/configs/*secrets*.yaml
