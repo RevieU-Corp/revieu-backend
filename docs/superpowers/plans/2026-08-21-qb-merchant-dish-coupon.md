@@ -614,7 +614,7 @@ Claude-Session: https://claude.ai/code/session_016sLjSF1N1rdSSxTtXV43LD"
 **Files:**
 - Create: `apps/core/internal/domain/dish/handler/dish.go`
 - Create: `apps/core/internal/domain/dish/routes.go`
-- Modify: `apps/core/internal/router/router.go` (or wherever domain `RegisterRoutes` functions are wired — run `grep -rn "merchant.RegisterRoutes\|coupon.RegisterRoutes" apps/core/internal` first to find the exact call site before editing)
+- Modify: `apps/core/internal/router/router.go`
 
 **Interfaces:**
 - Consumes: `dishService.NewDishService`, `service.CreateDishInput`/`UpdateDishInput` (Task 3).
@@ -875,13 +875,19 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 
 - [ ] **Step 3: Wire it into the router**
 
-Run `grep -rn "merchant.RegisterRoutes(" apps/core/internal` to find where domain `RegisterRoutes` functions are called (likely a central `router.go` or `server.go`). Add the dish domain alongside the existing ones, e.g.:
+Domain routes are registered in `apps/core/internal/router/router.go`. Add the import in alphabetical order with the other `internal/domain/*` imports:
 
 ```go
-	dish.RegisterRoutes(apiGroup, cfg)
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/dish"
 ```
 
-with the matching import `"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/dish"` added next to the other domain imports in that file. Match whatever variable name that file already uses for the router group (`apiGroup`, `v1`, etc.) — don't introduce a new one.
+(it sorts between `"internal/domain/coupon"` and `"internal/domain/feed"`).
+
+Then add the registration call next to `merchant.RegisterRoutes(api, cfg)` (the router group variable in this file is named `api`):
+
+```go
+	dish.RegisterRoutes(api, cfg)
+```
 
 - [ ] **Step 4: Verify it builds and the full test suite still passes**
 
@@ -2279,8 +2285,10 @@ Claude-Session: https://claude.ai/code/session_016sLjSF1N1rdSSxTtXV43LD"
 
 **Files:**
 - Create: `revieu-web/src/features/merchant/dishes/pages/DishManagementPage.tsx`
+- Create: `revieu-web/src/features/merchant/dishes/index.ts`
+- Modify: `revieu-web/src/features/merchant/index.ts`
 - Modify: `revieu-web/src/routes/paths.ts`
-- Modify: `revieu-web/src/app/App.tsx` (or wherever `MERCHANT.*` routes are mounted — run `grep -n "MERCHANT.ANALYTICS\|MERCHANT.ADS" src/app/App.tsx` first to find the exact route-mounting block and mirror it)
+- Modify: `revieu-web/src/app/App.tsx`
 - Modify: `revieu-web/src/features/merchant/dashboard/pages/MerchantDashboard.tsx`
 
 **Interfaces:**
@@ -2481,13 +2489,44 @@ Note: check `ConfirmationDialog`'s actual prop names first (`grep -n "interface.
 
 - [ ] **Step 3: Mount the route**
 
-Find the block that mounts `PATHS.MERCHANT.ANALYTICS` in `revieu-web/src/app/App.tsx` (or wherever it lives — confirmed via the `grep` above) and add a sibling `<Route>`:
+This codebase re-exports every merchant page through barrel files, not by importing page files directly in `App.tsx` — `StoreAnalytics`/`AdManager` come from `revieu-web/src/features/merchant/dashboard/index.ts`, `StoreProfile` from `revieu-web/src/features/merchant/profile/index.ts`, both re-exported again from `revieu-web/src/features/merchant/index.ts`, which is what `App.tsx` actually imports from. Follow the same chain for the new page:
+
+Create `revieu-web/src/features/merchant/dishes/index.ts`:
+
+```ts
+export { default as DishManagementPage } from './pages/DishManagementPage';
+```
+
+In `revieu-web/src/features/merchant/index.ts`, add a line under the existing `// Features` re-exports (next to `export * from './marketing';`):
+
+```ts
+export * from './dishes';
+```
+
+In `revieu-web/src/app/App.tsx`, add `DishManagementPage` to the existing destructured import block from `'../features/merchant'` (the one starting `import { MerchantLayout, MerchantDashboard, ... } from '../features/merchant';`):
+
+```tsx
+import {
+  MerchantLayout,
+  MerchantDashboard,
+  VerificationPage,
+  PostCreation,
+  StoreAnalytics,
+  AdManager,
+  StoreProfile,
+  DishManagementPage,
+  Messages,
+  ChatDetail,
+  SearchMessages,
+  Notifications
+} from '../features/merchant';
+```
+
+Then add a sibling `<Route>` next to the existing `<Route path={PATHS.MERCHANT.ANALYTICS} element={<StoreAnalytics />} />` line:
 
 ```tsx
 <Route path={PATHS.MERCHANT.DISHES} element={<DishManagementPage />} />
 ```
-
-with `import DishManagementPage from '../features/merchant/dishes/pages/DishManagementPage';` (adjust the relative path to match the file's actual location relative to `App.tsx`).
 
 - [ ] **Step 4: Add a Dashboard entry point**
 
@@ -2521,7 +2560,7 @@ With the dev server running, click the new card from the dashboard, confirm it n
 
 ```bash
 cd /home/paul2/workspace/repos/revieu-web
-git add src/features/merchant/dishes/pages/DishManagementPage.tsx src/routes/paths.ts src/app/App.tsx src/features/merchant/dashboard/pages/MerchantDashboard.tsx
+git add src/features/merchant/dishes/pages/DishManagementPage.tsx src/features/merchant/dishes/index.ts src/features/merchant/index.ts src/routes/paths.ts src/app/App.tsx src/features/merchant/dashboard/pages/MerchantDashboard.tsx
 git commit -m "feat(dish): add dish management page + dashboard entry point (#225)
 
 Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
