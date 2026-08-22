@@ -81,20 +81,24 @@ Use SQL migrations managed by Goose:
 
 ```bash
 # install goose (one-time)
-go install github.com/pressly/goose/v3/cmd/goose@latest
+go install github.com/pressly/goose/v3/cmd/goose@v3.27.3
 
 # create a new migration file template (no DB change yet)
 make migrate-create name=add_coupon_scope_fields
 # then edit apps/core/migrations/<new>.sql (-- +goose Up / -- +goose Down)
 
+# validate migration files without changing a database
+make migrate-validate GOOSE="$(go env GOPATH)/bin/goose"
+
 # apply all migrations
-make migrate-up DB_DSN='postgres://postgres:postgres@localhost:5432/revieu?sslmode=disable'
+make migrate-up GOOSE="$(go env GOPATH)/bin/goose" DB_DSN='postgres://postgres:postgres@localhost:5432/revieu?sslmode=disable'
 
 # check status
 make migrate-status DB_DSN='postgres://postgres:postgres@localhost:5432/revieu?sslmode=disable'
 ```
 
 `make migrate-create` only generates the SQL migration file. The database schema changes when `make migrate-up` runs.
+CI also applies the complete migration chain to a clean PostgreSQL service on pull requests and before `dev`/`main` image builds. The real dev/production database still requires the documented, explicit `migrate-up` step.
 
 ### Docker
 

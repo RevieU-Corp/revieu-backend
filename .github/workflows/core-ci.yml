@@ -2,7 +2,7 @@ name: Core Service CI/CD
 
 on:
   pull_request:
-    branches: [main, dev]
+    branches: [main, dev, feature/qb-merchant-dish-coupon]
     paths:
       - "apps/core/**"
       - ".github/workflows/core-ci.yml"
@@ -18,6 +18,46 @@ permissions:
   pull-requests: read
 
 jobs:
+  migration_smoke:
+    name: Validate and apply SQL migrations
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'))
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: revieu
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d revieu"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Install Goose
+        run: go install github.com/pressly/goose/v3/cmd/goose@v3.27.3
+
+      - name: Validate and apply all migrations on a clean PostgreSQL
+        working-directory: apps/core
+        env:
+          PGPASSWORD: postgres
+        run: |
+          GOOSE_BIN="$(go env GOPATH)/bin/goose"
+          DB_DSN="host=127.0.0.1 port=5432 user=postgres dbname=revieu sslmode=disable"
+          make migrate-validate GOOSE="$GOOSE_BIN"
+          make migrate-up GOOSE="$GOOSE_BIN" DB_DSN="$DB_DSN"
+          make migrate-status GOOSE="$GOOSE_BIN" DB_DSN="$DB_DSN"
+
   validate:
     name: Validate and Lint
     # 只在 PR 时运行验证，merge 后跳过（因为 PR 已经验证过了）
@@ -89,7 +129,8 @@ jobs:
   build-and-push:
     name: Build and Push Image
     # 只有推送到 main 或 dev 分支时才触发
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    needs: migration_smoke
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev') && needs.migration_smoke.result == 'success'
     runs-on: ubuntu-latest
     env:
       REGISTRY: ghcr.io

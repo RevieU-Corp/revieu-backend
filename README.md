@@ -65,8 +65,9 @@ export JWT_SECRET="<JWT_SECRET>"
 cd apps/core
 
 # (first time / schema changes) apply DB migrations
-go install github.com/pressly/goose/v3/cmd/goose@latest
-make migrate-up GOOSE="" DB_DSN=""
+go install github.com/pressly/goose/v3/cmd/goose@v3.27.3
+make migrate-validate GOOSE="$(go env GOPATH)/bin/goose"
+make migrate-up GOOSE="$(go env GOPATH)/bin/goose" DB_DSN='postgres://postgres:postgres@localhost:5432/revieu?sslmode=disable'
 
 # start API service
 go run cmd/app/main.go
@@ -82,7 +83,7 @@ go run cmd/app/main.go
 
 ```bash
 cd apps/core
-go install github.com/pressly/goose/v3/cmd/goose@latest
+go install github.com/pressly/goose/v3/cmd/goose@v3.27.3
 ```
 
 ### 1. Set connection variables
@@ -108,12 +109,16 @@ make migrate-create name=add_coupon_scope_fields
 # - write rollback SQL under -- +goose Down
 
 # apply migration to dev DB (this step changes DB schema)
+make migrate-validate GOOSE="$GOOSE"
 make migrate-up GOOSE="$GOOSE" DB_DSN="$DEV_DSN"
 ```
 
 Notes:
 - `make migrate-create` only creates a SQL file template.
+- `make migrate-validate` checks Goose file structure without changing a database.
 - Database schema changes happen when `make migrate-up` runs.
+
+Every pull request and every `dev`/`main` image build runs the complete migration set against a clean PostgreSQL service in CI. This proves that the checked-in migration chain can build a new database; it does not modify the real dev or production database.
 
 ### 3. Standard release flow
 
