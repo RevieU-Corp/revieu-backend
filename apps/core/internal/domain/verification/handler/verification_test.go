@@ -209,3 +209,66 @@ func TestVerificationHandlerStatusRejectsNonMerchant(t *testing.T) {
 		t.Fatalf("expected status 403 for regular user, got %d: %s", recorder.Code, recorder.Body.String())
 	}
 }
+
+func TestVerificationHandlerStatusReturnsUnverifiedWhenNoSubmissionExists(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	db := setupVerificationTestDB(t)
+	if err := db.Create(&model.User{ID: 707, Role: "merchant", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create merchant user: %v", err)
+	}
+
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Request = httptest.NewRequest(http.MethodGet, "/merchant/verification", nil)
+	c.Set("user_id", int64(707))
+
+	NewVerificationHandler(service.NewVerificationService(db)).Status(c)
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200 for an active merchant without a submission, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+
+	var response struct {
+		Data struct {
+			Status         string `json:"status"`
+			MerchantStatus string `json:"merchant_status"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+	if response.Data.Status != "unverified" || response.Data.MerchantStatus != "unverified" {
+		t.Fatalf("expected unverified status pair, got status=%q merchant_status=%q", response.Data.Status, response.Data.MerchantStatus)
+	}
+
+	var verificationCount int64
+	if err := db.Model(&model.MerchantVerification{}).Count(&verificationCount).Error; err != nil {
+		t.Fatalf("failed to count verification records: %v", err)
+	}
+	if verificationCount != 0 {
+		t.Fatalf("status lookup must not create a verification submission, got %d", verificationCount)
+	}
+}
+
+func TestVerificationHandlerStatusRejectsUnknownUser(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	db := setupVerificationTestDB(t)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Request = httptest.NewRequest(http.MethodGet, "/merchant/verification", nil)
+	c.Set("user_id", int64(9999))
+
+	NewVerificationHandler(service.NewVerificationService(db)).Status(c)
+	if recorder.Code != http.StatusForbidden {
+		t.Fatalf("expected status 403 for an unknown user, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+
+	var merchantCount int64
+	if err := db.Model(&model.Merchant{}).Count(&merchantCount).Error; err != nil {
+		t.Fatalf("failed to count merchants: %v", err)
+	}
+	if merchantCount != 0 {
+		t.Fatalf("unknown user status lookup must not create a merchant, got %d", merchantCount)
+	}
+}
