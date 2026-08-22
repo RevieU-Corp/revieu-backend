@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/coupon/service"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
-	"github.com/gin-gonic/gin"
 )
 
 type CouponHandler struct {
@@ -340,6 +340,14 @@ func (h *CouponHandler) setStoreCouponEnabled(c *gin.Context, enabled bool) {
 // @Summary Enable store coupon
 // @Tags coupon
 // @Produce json
+// @Param id path int true "Store ID"
+// @Param couponId path int true "Coupon ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
 // @Security BearerAuth
 // @Router /merchant/stores/{id}/coupons/{couponId}/enable [post]
 func (h *CouponHandler) EnableStoreCoupon(c *gin.Context) { h.setStoreCouponEnabled(c, true) }
@@ -348,6 +356,14 @@ func (h *CouponHandler) EnableStoreCoupon(c *gin.Context) { h.setStoreCouponEnab
 // @Summary Disable store coupon
 // @Tags coupon
 // @Produce json
+// @Param id path int true "Store ID"
+// @Param couponId path int true "Coupon ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
 // @Security BearerAuth
 // @Router /merchant/stores/{id}/coupons/{couponId}/disable [post]
 func (h *CouponHandler) DisableStoreCoupon(c *gin.Context) { h.setStoreCouponEnabled(c, false) }
