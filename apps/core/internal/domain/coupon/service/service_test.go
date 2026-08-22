@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
 	"gorm.io/driver/sqlite"
@@ -242,5 +243,90 @@ func TestCouponServiceCreateForStoreKeepsExplicitImageOverDishImage(t *testing.T
 	}
 	if coupon.ImageURL != "https://example.com/custom.jpg" {
 		t.Fatalf("expected explicit ImageURL to be kept, got %q", coupon.ImageURL)
+	}
+}
+
+func TestComputeStatus(t *testing.T) {
+	now := time.Date(2026, 8, 21, 12, 0, 0, 0, time.UTC)
+	past := now.Add(-time.Hour)
+	future := now.Add(time.Hour)
+
+	cases := []struct {
+		name   string
+		coupon model.Coupon
+		want   string
+	}{
+		{"sold out beats everything else", model.Coupon{Status: couponStatusActive, TotalQuantity: 10, ClaimedCount: 10, ValidUntil: &future}, "sold_out"},
+		{"expired when ValidUntil passed", model.Coupon{Status: couponStatusActive, TotalQuantity: 10, ClaimedCount: 1, ValidUntil: &past}, "expired"},
+		{"scheduled when ValidFrom in future", model.Coupon{Status: couponStatusActive, TotalQuantity: 10, ClaimedCount: 1, ValidFrom: &future}, "scheduled"},
+		{"active with no date bounds", model.Coupon{Status: couponStatusActive, TotalQuantity: 10, ClaimedCount: 1}, "active"},
+		{"draft stays draft even if dates would say scheduled", model.Coupon{Status: "draft", TotalQuantity: 10, ClaimedCount: 0, ValidFrom: &future}, "draft"},
+		{"disabled stays disabled even if dates would say active", model.Coupon{Status: "disabled", TotalQuantity: 10, ClaimedCount: 1}, "disabled"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := ComputeStatus(tc.coupon, now); got != tc.want {
+				t.Fatalf("ComputeStatus() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestCouponServiceListForMerchantIncludesAllStatuses(t *testing.T) {
+	db := setupCouponTestDB(t)
+	svc := NewCouponService(db)
+
+	ownerID := int64(941)
+	if err := db.Create(&model.User{ID: ownerID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create owner: %v", err)
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Store", Status: storeStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	storeID := store.ID
+	for _, status := range []string{"draft", couponStatusActive, "disabled"} {
+		if err := db.Create(&model.Coupon{MerchantID: merchant.ID, StoreID: &storeID, Title: status + " coupon", Type: "cash", TotalQuantity: 1, MaxPerUser: 1, Status: status}).Error; err != nil {
+			t.Fatalf("failed to seed %s coupon: %v", status, err)
+		}
+	}
+
+	coupons, err := svc.ListForMerchant(context.Background(), ownerID, store.ID)
+	if err != nil {
+		t.Fatalf("list returned error: %v", err)
+	}
+	if len(coupons) != 3 {
+		t.Fatalf("expected all 3 coupons regardless of status, got %d", len(coupons))
+	}
+}
+
+func TestCouponServiceListForMerchantForbiddenForNonOwner(t *testing.T) {
+	db := setupCouponTestDB(t)
+	svc := NewCouponService(db)
+
+	ownerID := int64(951)
+	otherID := int64(952)
+	if err := db.Create(&model.User{ID: ownerID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create owner: %v", err)
+	}
+	if err := db.Create(&model.User{ID: otherID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create other: %v", err)
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Store", Status: storeStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+
+	_, err := svc.ListForMerchant(context.Background(), otherID, store.ID)
+	if !errors.Is(err, ErrStoreForbidden) {
+		t.Fatalf("expected ErrStoreForbidden, got %v", err)
 	}
 }

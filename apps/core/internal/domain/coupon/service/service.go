@@ -13,8 +13,11 @@ import (
 )
 
 const (
-	storeStatusPublished int16 = 1
-	couponStatusActive         = "active"
+	storeStatusPublished  int16 = 1
+	couponStatusActive          = "active"
+	couponStatusSoldOut         = "sold_out"
+	couponStatusExpired         = "expired"
+	couponStatusScheduled       = "scheduled"
 )
 
 var (
@@ -80,6 +83,28 @@ func NewCouponService(db *gorm.DB) *CouponService {
 		db = database.DB
 	}
 	return &CouponService{db: db}
+}
+
+// ComputeStatus derives the effective, display-facing status for a coupon.
+// draft/disabled are terminal, merchant-controlled states and are never
+// overridden by quantity or date checks. now is passed in explicitly so
+// this stays a pure, deterministically testable function. Exported because
+// the handler package uses it to compute the status shown in API responses
+// without persisting it (see Task 9).
+func ComputeStatus(coupon model.Coupon, now time.Time) string {
+	if coupon.Status == "draft" || coupon.Status == "disabled" {
+		return coupon.Status
+	}
+	if coupon.TotalQuantity > 0 && coupon.ClaimedCount >= coupon.TotalQuantity {
+		return couponStatusSoldOut
+	}
+	if coupon.ValidUntil != nil && coupon.ValidUntil.Before(now) {
+		return couponStatusExpired
+	}
+	if coupon.ValidFrom != nil && coupon.ValidFrom.After(now) {
+		return couponStatusScheduled
+	}
+	return coupon.Status
 }
 
 func (s *CouponService) CreateForStore(ctx context.Context, userID, storeID int64, input CreateStoreCouponInput) (*model.Coupon, error) {
@@ -205,6 +230,36 @@ func (s *CouponService) DeleteForStore(ctx context.Context, userID, storeID, cou
 	}
 
 	return s.db.WithContext(ctx).Where("id = ?", couponID).Delete(&model.Coupon{}).Error
+}
+
+func (s *CouponService) ListForMerchant(ctx context.Context, userID, storeID int64) ([]model.Coupon, error) {
+	var merchant model.Merchant
+	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&merchant).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrStoreForbidden
+		}
+		return nil, err
+	}
+
+	var store model.Store
+	if err := s.db.WithContext(ctx).First(&store, storeID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrStoreNotFound
+		}
+		return nil, err
+	}
+	if store.MerchantID != merchant.ID {
+		return nil, ErrStoreForbidden
+	}
+
+	var coupons []model.Coupon
+	if err := s.db.WithContext(ctx).
+		Where("store_id = ?", storeID).
+		Order("id desc").
+		Find(&coupons).Error; err != nil {
+		return nil, err
+	}
+	return coupons, nil
 }
 
 func (s *CouponService) ListPublishedByStore(ctx context.Context, storeID int64) ([]model.Coupon, error) {
