@@ -482,7 +482,4 @@ func TestCouponServiceUpdateForStoreRejectsInvertedDateRange(t *testing.T) {
 	if !errors.Is(err, ErrInvalidCouponInput) {
 		t.Fatalf("expected ErrInvalidCouponInput for inverted date range, got %v", err)
 	}
-	if !errors.Is(err, ErrInvalidCouponInput) {
-		t.Fatalf("expected ErrInvalidCouponInput for inverted date range, got %v", err)
-	}
 }
