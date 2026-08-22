@@ -9,7 +9,9 @@ LOG_FILE="$RUNTIME_DIR/dev-db-tunnel.log"
 SSH_TARGET=${REVIEU_DB_SSH_TARGET:-CC}
 LOCAL_HOST=${REVIEU_DB_LOCAL_HOST:-127.0.0.1}
 LOCAL_PORT=${REVIEU_DB_LOCAL_PORT:-15432}
-REMOTE_HOST=${REVIEU_DB_REMOTE_HOST:-revieu-postgres.revieu-dev.svc.cluster.local}
+REMOTE_NAMESPACE=${REVIEU_DB_REMOTE_NAMESPACE:-revieu-dev}
+REMOTE_SERVICE=${REVIEU_DB_REMOTE_SERVICE:-revieu-postgres}
+REMOTE_FORWARD_PORT=${REVIEU_DB_REMOTE_FORWARD_PORT:-25432}
 REMOTE_PORT=${REVIEU_DB_REMOTE_PORT:-5432}
 
 usage() {
@@ -17,11 +19,14 @@ usage() {
 Usage: $0 {up|down|status|restart}
 
 Environment overrides:
-  REVIEU_DB_SSH_TARGET  SSH host alias (default: CC)
-  REVIEU_DB_LOCAL_HOST  Local bind address (default: 127.0.0.1)
-  REVIEU_DB_LOCAL_PORT  Local port (default: 15432)
-  REVIEU_DB_REMOTE_HOST Cluster PostgreSQL DNS (default: $REMOTE_HOST)
-  REVIEU_DB_REMOTE_PORT Cluster PostgreSQL port (default: 5432)
+  REVIEU_DB_SSH_TARGET       SSH host alias (default: CC)
+  REVIEU_DB_LOCAL_HOST       Local bind address (default: 127.0.0.1)
+  REVIEU_DB_LOCAL_PORT       Local port (default: 15432)
+  REVIEU_DB_REMOTE_NAMESPACE Kubernetes namespace (default: $REMOTE_NAMESPACE)
+  REVIEU_DB_REMOTE_SERVICE   Kubernetes service (default: $REMOTE_SERVICE)
+  REVIEU_DB_REMOTE_FORWARD_PORT
+                              Port opened on CC for kubectl port-forward (default: $REMOTE_FORWARD_PORT)
+  REVIEU_DB_REMOTE_PORT      PostgreSQL service port (default: $REMOTE_PORT)
 EOF
 }
 
@@ -66,18 +71,23 @@ up() {
   rm -f "$PID_FILE"
 
   ssh \
+    -T \
     -o ExitOnForwardFailure=yes \
     -o ServerAliveInterval=30 \
     -o ServerAliveCountMax=3 \
     -o BatchMode=yes \
-    -N \
-    -L "$LOCAL_HOST:$LOCAL_PORT:$REMOTE_HOST:$REMOTE_PORT" \
-    "$SSH_TARGET" >"$LOG_FILE" 2>&1 &
+    -L "$LOCAL_HOST:$LOCAL_PORT:127.0.0.1:$REMOTE_FORWARD_PORT" \
+    "$SSH_TARGET" \
+    kubectl --namespace "$REMOTE_NAMESPACE" port-forward \
+      --address 127.0.0.1 \
+      "service/$REMOTE_SERVICE" \
+      "$REMOTE_FORWARD_PORT:$REMOTE_PORT" \
+    >"$LOG_FILE" 2>&1 &
   echo $! >"$PID_FILE"
 
   for _ in {1..20}; do
     if ! is_running; then
-      echo "error: SSH tunnel failed; see $LOG_FILE" >&2
+      echo "error: SSH/Kubernetes port-forward failed; see $LOG_FILE" >&2
       rm -f "$PID_FILE"
       exit 1
     fi
