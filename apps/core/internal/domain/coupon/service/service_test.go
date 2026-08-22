@@ -330,3 +330,110 @@ func TestCouponServiceListForMerchantForbiddenForNonOwner(t *testing.T) {
 		t.Fatalf("expected ErrStoreForbidden, got %v", err)
 	}
 }
+
+func TestCouponServiceUpdateForStoreAppliesPartialFields(t *testing.T) {
+	db := setupCouponTestDB(t)
+	svc := NewCouponService(db)
+
+	ownerID := int64(961)
+	if err := db.Create(&model.User{ID: ownerID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create owner: %v", err)
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Store", Status: storeStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	storeID := store.ID
+	coupon := model.Coupon{MerchantID: merchant.ID, StoreID: &storeID, Title: "Original", Type: "cash", TotalQuantity: 10, MaxPerUser: 1, Status: couponStatusActive}
+	if err := db.Create(&coupon).Error; err != nil {
+		t.Fatalf("failed to create coupon: %v", err)
+	}
+
+	newTitle := "Updated Title"
+	newQuantity := 50
+	updated, err := svc.UpdateForStore(context.Background(), ownerID, store.ID, coupon.ID, UpdateStoreCouponInput{
+		Title:         &newTitle,
+		TotalQuantity: &newQuantity,
+	})
+	if err != nil {
+		t.Fatalf("update returned error: %v", err)
+	}
+	if updated.Title != newTitle || updated.TotalQuantity != newQuantity {
+		t.Fatalf("expected updated fields to apply, got %+v", updated)
+	}
+}
+
+func TestCouponServiceUpdateForStoreForbiddenForNonOwner(t *testing.T) {
+	db := setupCouponTestDB(t)
+	svc := NewCouponService(db)
+
+	ownerID := int64(971)
+	otherID := int64(972)
+	for _, id := range []int64{ownerID, otherID} {
+		if err := db.Create(&model.User{ID: id, Role: "user", Status: 0}).Error; err != nil {
+			t.Fatalf("failed to create user %d: %v", id, err)
+		}
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Store", Status: storeStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	storeID := store.ID
+	coupon := model.Coupon{MerchantID: merchant.ID, StoreID: &storeID, Title: "Protected", Type: "cash", TotalQuantity: 10, MaxPerUser: 1, Status: couponStatusActive}
+	if err := db.Create(&coupon).Error; err != nil {
+		t.Fatalf("failed to create coupon: %v", err)
+	}
+
+	newTitle := "Hacked"
+	_, err := svc.UpdateForStore(context.Background(), otherID, store.ID, coupon.ID, UpdateStoreCouponInput{Title: &newTitle})
+	if !errors.Is(err, ErrStoreForbidden) {
+		t.Fatalf("expected ErrStoreForbidden, got %v", err)
+	}
+}
+
+func TestCouponServiceSetEnabledTogglesStatus(t *testing.T) {
+	db := setupCouponTestDB(t)
+	svc := NewCouponService(db)
+
+	ownerID := int64(981)
+	if err := db.Create(&model.User{ID: ownerID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create owner: %v", err)
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Store", Status: storeStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	storeID := store.ID
+	coupon := model.Coupon{MerchantID: merchant.ID, StoreID: &storeID, Title: "Toggle Me", Type: "cash", TotalQuantity: 10, MaxPerUser: 1, Status: couponStatusActive}
+	if err := db.Create(&coupon).Error; err != nil {
+		t.Fatalf("failed to create coupon: %v", err)
+	}
+
+	disabled, err := svc.SetEnabled(context.Background(), ownerID, store.ID, coupon.ID, false)
+	if err != nil {
+		t.Fatalf("disable returned error: %v", err)
+	}
+	if disabled.Status != "disabled" {
+		t.Fatalf("expected status disabled, got %q", disabled.Status)
+	}
+
+	enabled, err := svc.SetEnabled(context.Background(), ownerID, store.ID, coupon.ID, true)
+	if err != nil {
+		t.Fatalf("enable returned error: %v", err)
+	}
+	if enabled.Status != couponStatusActive {
+		t.Fatalf("expected status active, got %q", enabled.Status)
+	}
+}
