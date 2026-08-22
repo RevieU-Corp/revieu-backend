@@ -389,7 +389,11 @@ func (s *CouponService) UpdateForStore(ctx context.Context, userID, storeID, cou
 		updates["terms"] = *input.Terms
 	}
 	if input.Status != nil {
-		updates["status"] = *input.Status
+		status := strings.TrimSpace(*input.Status)
+		if status != "draft" && status != couponStatusActive && status != "disabled" {
+			return nil, ErrInvalidCouponInput
+		}
+		updates["status"] = status
 	}
 	if len(updates) == 0 {
 		return coupon, nil

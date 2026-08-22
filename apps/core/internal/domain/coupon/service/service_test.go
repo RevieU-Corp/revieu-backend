@@ -483,3 +483,35 @@ func TestCouponServiceUpdateForStoreRejectsInvertedDateRange(t *testing.T) {
 		t.Fatalf("expected ErrInvalidCouponInput for inverted date range, got %v", err)
 	}
 }
+
+func TestCouponServiceUpdateForStoreRejectsInvalidStatus(t *testing.T) {
+	db := setupCouponTestDB(t)
+	svc := NewCouponService(db)
+
+	ownerID := int64(992)
+	if err := db.Create(&model.User{ID: ownerID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create owner: %v", err)
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Store", Status: storeStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	storeID := store.ID
+	coupon := model.Coupon{MerchantID: merchant.ID, StoreID: &storeID, Title: "Status Validation", Type: "cash", TotalQuantity: 10, MaxPerUser: 1, Status: couponStatusActive}
+	if err := db.Create(&coupon).Error; err != nil {
+		t.Fatalf("failed to create coupon: %v", err)
+	}
+
+	// Try to update status to a derived-only value
+	invalidStatus := "sold_out"
+	_, err := svc.UpdateForStore(context.Background(), ownerID, store.ID, coupon.ID, UpdateStoreCouponInput{
+		Status: &invalidStatus,
+	})
+	if !errors.Is(err, ErrInvalidCouponInput) {
+		t.Fatalf("expected ErrInvalidCouponInput for invalid status, got %v", err)
+	}
+}
