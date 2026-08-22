@@ -61,6 +61,7 @@ type UpdateStoreCouponInput struct {
 	Description        *string
 	CouponType         *string
 	ImageURL           *string
+	Price              *float64
 	OriginalPrice      *float64
 	SalePrice          *float64
 	DiscountPercentage *float64
@@ -347,6 +348,9 @@ func (s *CouponService) UpdateForStore(ctx context.Context, userID, storeID, cou
 	}
 	if input.ImageURL != nil {
 		updates["image_url"] = *input.ImageURL
+	}
+	if input.Price != nil {
+		updates["price"] = *input.Price
 	}
 	if input.OriginalPrice != nil {
 		updates["original_price"] = *input.OriginalPrice

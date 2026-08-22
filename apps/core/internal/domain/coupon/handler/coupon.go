@@ -47,6 +47,7 @@ type UpdateStoreCouponRequest struct {
 	Description        *string    `json:"description"`
 	CouponType         *string    `json:"coupon_type"`
 	ImageURL           *string    `json:"image_url"`
+	Price              *float64   `json:"price"`
 	OriginalPrice      *float64   `json:"original_price"`
 	SalePrice          *float64   `json:"sale_price"`
 	DiscountPercentage *float64   `json:"discount_percentage"`
@@ -304,7 +305,7 @@ func (h *CouponHandler) UpdateStoreCoupon(c *gin.Context) {
 	}
 	coupon, err := h.svc.UpdateForStore(c.Request.Context(), userID, storeID, couponID, service.UpdateStoreCouponInput{
 		Title: req.Title, Description: req.Description, CouponType: req.CouponType, ImageURL: req.ImageURL,
-		OriginalPrice: req.OriginalPrice, SalePrice: req.SalePrice, DiscountPercentage: req.DiscountPercentage,
+		Price: req.Price, OriginalPrice: req.OriginalPrice, SalePrice: req.SalePrice, DiscountPercentage: req.DiscountPercentage,
 		DishIDs: req.DishIDs, TotalQuantity: req.TotalQuantity, MaxPerUser: req.MaxPerUser,
 		ValidFrom: validFrom, ValidUntil: validUntil, Terms: req.Terms, Status: req.Status,
 	})

@@ -367,6 +367,49 @@ func TestCouponServiceUpdateForStoreAppliesPartialFields(t *testing.T) {
 	}
 }
 
+func TestCouponServiceUpdateForStoreAppliesPriceField(t *testing.T) {
+	db := setupCouponTestDB(t)
+	svc := NewCouponService(db)
+
+	ownerID := int64(962)
+	if err := db.Create(&model.User{ID: ownerID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create owner: %v", err)
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Store", Status: storeStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	storeID := store.ID
+	coupon := model.Coupon{MerchantID: merchant.ID, StoreID: &storeID, Title: "Price Test Coupon", Type: "cash", Price: 0, TotalQuantity: 10, MaxPerUser: 1, Status: couponStatusActive}
+	if err := db.Create(&coupon).Error; err != nil {
+		t.Fatalf("failed to create coupon: %v", err)
+	}
+
+	newPrice := 29.99
+	updated, err := svc.UpdateForStore(context.Background(), ownerID, store.ID, coupon.ID, UpdateStoreCouponInput{
+		Price: &newPrice,
+	})
+	if err != nil {
+		t.Fatalf("update returned error: %v", err)
+	}
+	if updated.Price != newPrice {
+		t.Fatalf("expected price to be updated to %f, got %f", newPrice, updated.Price)
+	}
+
+	// Re-fetch from database to ensure the change persisted
+	var refreshed model.Coupon
+	if err := db.First(&refreshed, coupon.ID).Error; err != nil {
+		t.Fatalf("failed to re-fetch coupon: %v", err)
+	}
+	if refreshed.Price != newPrice {
+		t.Fatalf("expected persisted price to be %f, got %f", newPrice, refreshed.Price)
+	}
+}
+
 func TestCouponServiceUpdateForStoreForbiddenForNonOwner(t *testing.T) {
 	db := setupCouponTestDB(t)
 	svc := NewCouponService(db)
