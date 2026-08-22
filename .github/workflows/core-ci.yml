@@ -192,12 +192,19 @@ jobs:
           git commit -m "chore(revieu-${{ github.ref_name }}): promote core api image"
           git push origin "$PROMOTION_BRANCH"
 
-          gh pr create \
+          PR_URL=$(gh pr create \
             --repo "$INFRA_REPOSITORY" \
             --base main \
             --head "$PROMOTION_BRANCH" \
             --title "chore(revieu-${{ github.ref_name }}): promote core api image" \
-            --body "Promote core API image digest from commit ${{ github.sha }}. CI run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            --body "Promote core API image digest from commit ${{ github.sha }}. CI run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}")
+
+          if [ "${{ github.ref_name }}" = "dev" ]; then
+            gh pr merge "$PR_URL" \
+              --repo "$INFRA_REPOSITORY" \
+              --auto \
+              --squash
+          fi
       - name: Notify Discord
         if: always()
         env:
