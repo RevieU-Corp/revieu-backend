@@ -318,6 +318,19 @@ func (s *CouponService) UpdateForStore(ctx context.Context, userID, storeID, cou
 		return nil, err
 	}
 
+	// Validate that ValidFrom is not after ValidUntil (considering effective post-update values)
+	effectiveFrom := coupon.ValidFrom
+	if input.ValidFrom != nil {
+		effectiveFrom = *input.ValidFrom
+	}
+	effectiveUntil := coupon.ValidUntil
+	if input.ValidUntil != nil {
+		effectiveUntil = *input.ValidUntil
+	}
+	if effectiveFrom != nil && effectiveUntil != nil && effectiveFrom.After(*effectiveUntil) {
+		return nil, ErrInvalidCouponInput
+	}
+
 	updates := map[string]interface{}{}
 	if input.Title != nil {
 		trimmed := strings.TrimSpace(*input.Title)

@@ -437,3 +437,52 @@ func TestCouponServiceSetEnabledTogglesStatus(t *testing.T) {
 		t.Fatalf("expected status active, got %q", enabled.Status)
 	}
 }
+
+func TestCouponServiceUpdateForStoreRejectsInvertedDateRange(t *testing.T) {
+	db := setupCouponTestDB(t)
+	svc := NewCouponService(db)
+
+	ownerID := int64(991)
+	if err := db.Create(&model.User{ID: ownerID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create owner: %v", err)
+	}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Store", Status: storeStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	storeID := store.ID
+
+	validFrom := time.Date(2026, 8, 21, 10, 0, 0, 0, time.UTC)
+	validUntil := time.Date(2026, 8, 25, 10, 0, 0, 0, time.UTC)
+	coupon := model.Coupon{
+		MerchantID:    merchant.ID,
+		StoreID:       &storeID,
+		Title:         "Date Range Coupon",
+		Type:          "cash",
+		TotalQuantity: 10,
+		MaxPerUser:    1,
+		Status:        couponStatusActive,
+		ValidFrom:     &validFrom,
+		ValidUntil:    &validUntil,
+	}
+	if err := db.Create(&coupon).Error; err != nil {
+		t.Fatalf("failed to create coupon: %v", err)
+	}
+
+	// Try to update ValidFrom to after the existing ValidUntil
+	newFrom := time.Date(2026, 8, 26, 10, 0, 0, 0, time.UTC)
+	newFromPtr := &newFrom
+	_, err := svc.UpdateForStore(context.Background(), ownerID, store.ID, coupon.ID, UpdateStoreCouponInput{
+		ValidFrom: &newFromPtr,
+	})
+	if !errors.Is(err, ErrInvalidCouponInput) {
+		t.Fatalf("expected ErrInvalidCouponInput for inverted date range, got %v", err)
+	}
+	if !errors.Is(err, ErrInvalidCouponInput) {
+		t.Fatalf("expected ErrInvalidCouponInput for inverted date range, got %v", err)
+	}
+}
