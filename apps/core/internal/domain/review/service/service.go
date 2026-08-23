@@ -8,6 +8,7 @@ import (
 
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/review/dto"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/visibility"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/database"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -33,7 +34,25 @@ func (s *ReviewService) Detail(ctx context.Context, id int64) (*model.Review, er
 	if err := s.db.WithContext(ctx).Preload("Merchant").Preload("Store").First(&review, id).Error; err != nil {
 		return nil, err
 	}
+	if review.Status != reviewStatusActive {
+		return nil, gorm.ErrRecordNotFound
+	}
 	return &review, nil
+}
+
+func (s *ReviewService) DetailForViewer(ctx context.Context, id, viewerID int64) (*model.Review, error) {
+	review, err := s.Detail(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	allowed, err := visibility.CanViewUserContent(ctx, s.db, review.UserID, viewerID)
+	if err != nil {
+		return nil, err
+	}
+	if !allowed {
+		return nil, visibility.ErrPrivateContent
+	}
+	return review, nil
 }
 
 func (s *ReviewService) Create(ctx context.Context, userID int64, req dto.Review) (model.Review, error) {
@@ -162,7 +181,7 @@ func syncMerchantReviewAggregates(tx *gorm.DB, merchantID int64) error {
 	var agg aggregate
 	if err := tx.Model(&model.Review{}).
 		Select("COUNT(*) AS count, COALESCE(AVG(rating), 0) AS avg").
-		Where("merchant_id = ?", merchantID).
+		Where("merchant_id = ? AND status = ?", merchantID, reviewStatusActive).
 		Scan(&agg).Error; err != nil {
 		return err
 	}
@@ -182,7 +201,7 @@ func syncStoreReviewAggregates(tx *gorm.DB, storeID int64) error {
 	var agg aggregate
 	if err := tx.Model(&model.Review{}).
 		Select("COUNT(*) AS count, COALESCE(AVG(rating), 0) AS avg").
-		Where("store_id = ?", storeID).
+		Where("store_id = ? AND status = ?", storeID, reviewStatusActive).
 		Scan(&agg).Error; err != nil {
 		return err
 	}

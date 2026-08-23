@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/content/dto"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/content/service"
-	"github.com/gin-gonic/gin"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/visibility"
 )
 
 type PostHandler struct {
@@ -39,8 +41,12 @@ func (h *PostHandler) ListUserPosts(c *gin.Context) {
 		return
 	}
 	cursor, limit := parseCursorLimit(c)
-	posts, total, err := h.svc.ListUserPosts(c.Request.Context(), targetID, cursor, limit)
+	posts, total, next, err := h.svc.ListVisibleUserPosts(c.Request.Context(), targetID, c.GetInt64("user_id"), cursor, limit)
 	if err != nil {
+		if errors.Is(err, visibility.ErrPrivateContent) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "content is private"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -64,7 +70,7 @@ func (h *PostHandler) ListUserPosts(c *gin.Context) {
 			CreatedAt: post.CreatedAt,
 		})
 	}
-	c.JSON(http.StatusOK, dto.PostListResponse{Posts: items, Total: int(total), Cursor: nextCursor(posts)})
+	c.JSON(http.StatusOK, dto.PostListResponse{Posts: items, Total: int(total), Cursor: next})
 }
 
 // ListMyPosts godoc
@@ -82,7 +88,7 @@ func (h *PostHandler) ListUserPosts(c *gin.Context) {
 func (h *PostHandler) ListMyPosts(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	cursor, limit := parseCursorLimit(c)
-	posts, total, err := h.svc.ListUserPosts(c.Request.Context(), userID, cursor, limit)
+	posts, total, next, err := h.svc.ListUserPosts(c.Request.Context(), userID, cursor, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -107,5 +113,5 @@ func (h *PostHandler) ListMyPosts(c *gin.Context) {
 			CreatedAt: post.CreatedAt,
 		})
 	}
-	c.JSON(http.StatusOK, dto.PostListResponse{Posts: items, Total: int(total), Cursor: nextCursor(posts)})
+	c.JSON(http.StatusOK, dto.PostListResponse{Posts: items, Total: int(total), Cursor: next})
 }
