@@ -13,8 +13,15 @@ type DishHandler struct {
 	svc *service.DishService
 }
 
+func NewDishHandler(svc *service.DishService) *DishHandler {
+	if svc == nil {
+		svc = service.NewDishService(nil)
+	}
+	return &DishHandler{svc: svc}
+}
+
 type UpsertDishRequest struct {
-	Name          string  `json:"name" binding:"required"`
+	Name          string  `json:"name"`
 	ImageURL      string  `json:"image_url"`
 	Description   string  `json:"description"`
 	OriginalPrice float64 `json:"original_price"`
@@ -29,27 +36,32 @@ type UpdateDishRequest struct {
 	Category      *string  `json:"category"`
 }
 
-func NewDishHandler(svc *service.DishService) *DishHandler {
-	if svc == nil {
-		svc = service.NewDishService(nil)
+func dishErrorStatus(err error) (int, string) {
+	switch {
+	case errors.Is(err, service.ErrDishNotFound):
+		return http.StatusNotFound, "not found"
+	case errors.Is(err, service.ErrDishForbidden):
+		return http.StatusForbidden, "forbidden"
+	case errors.Is(err, service.ErrInvalidDishInput):
+		return http.StatusBadRequest, "invalid dish input"
+	default:
+		return http.StatusInternalServerError, "internal error"
 	}
-	return &DishHandler{svc: svc}
 }
 
-func (h *DishHandler) List(c *gin.Context) {
-	userID := c.GetInt64("user_id")
-	if userID == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	dishes, err := h.svc.ListMine(c.Request.Context(), userID)
-	if err != nil {
-		h.writeError(c, err)
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"data": dishes})
-}
-
+// CreateDish godoc
+// @Summary Create dish
+// @Tags dish
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /merchant/dishes [post]
 func (h *DishHandler) Create(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	if userID == 0 {
@@ -61,26 +73,75 @@ func (h *DishHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	dish, err := h.svc.Create(c.Request.Context(), userID, service.UpsertDishInput{
+	dish, err := h.svc.Create(c.Request.Context(), userID, service.CreateDishInput{
 		Name: req.Name, ImageURL: req.ImageURL, Description: req.Description,
 		OriginalPrice: req.OriginalPrice, Category: req.Category,
 	})
 	if err != nil {
-		h.writeError(c, err)
+		status, msg := dishErrorStatus(err)
+		c.JSON(status, gin.H{"error": msg})
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"data": dish})
 }
 
+// ListMine godoc
+// @Summary List my dishes
+// @Tags dish
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /merchant/dishes [get]
+func (h *DishHandler) ListMine(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	dishes, err := h.svc.ListMine(c.Request.Context(), userID)
+	if err != nil {
+		status, msg := dishErrorStatus(err)
+		c.JSON(status, gin.H{"error": msg})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": dishes})
+}
+
+func parseDishID(c *gin.Context) (int64, bool) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid dish id"})
+		return 0, false
+	}
+	return id, true
+}
+
+// Update godoc
+// @Summary Update dish
+// @Tags dish
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Dish ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /merchant/dishes/{id} [patch]
 func (h *DishHandler) Update(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	if userID == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	dishID, err := parseID(c)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid dish id"})
+	dishID, ok := parseDishID(c)
+	if !ok {
 		return
 	}
 	var req UpdateDishRequest
@@ -93,66 +154,89 @@ func (h *DishHandler) Update(c *gin.Context) {
 		OriginalPrice: req.OriginalPrice, Category: req.Category,
 	})
 	if err != nil {
-		h.writeError(c, err)
+		status, msg := dishErrorStatus(err)
+		c.JSON(status, gin.H{"error": msg})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": dish})
 }
 
+// Delete godoc
+// @Summary Delete dish
+// @Tags dish
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Dish ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /merchant/dishes/{id} [delete]
 func (h *DishHandler) Delete(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	if userID == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	dishID, err := parseID(c)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid dish id"})
+	dishID, ok := parseDishID(c)
+	if !ok {
 		return
 	}
 	if err := h.svc.Delete(c.Request.Context(), userID, dishID); err != nil {
-		h.writeError(c, err)
+		status, msg := dishErrorStatus(err)
+		c.JSON(status, gin.H{"error": msg})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
-func (h *DishHandler) Enable(c *gin.Context) { h.setStatus(c, service.DishStatusActive) }
-
-func (h *DishHandler) Disable(c *gin.Context) { h.setStatus(c, service.DishStatusDisabled) }
-
-func (h *DishHandler) setStatus(c *gin.Context, status string) {
+func (h *DishHandler) setStatus(c *gin.Context, targetStatus string) {
 	userID := c.GetInt64("user_id")
 	if userID == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	dishID, err := parseID(c)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid dish id"})
+	dishID, ok := parseDishID(c)
+	if !ok {
 		return
 	}
-	dish, err := h.svc.SetStatus(c.Request.Context(), userID, dishID, status)
+	dish, err := h.svc.SetStatus(c.Request.Context(), userID, dishID, targetStatus)
 	if err != nil {
-		h.writeError(c, err)
+		status, msg := dishErrorStatus(err)
+		c.JSON(status, gin.H{"error": msg})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": dish})
 }
 
-func parseID(c *gin.Context) (int64, error) {
-	return strconv.ParseInt(c.Param("id"), 10, 64)
-}
+// Enable godoc
+// @Summary Enable dish
+// @Tags dish
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Dish ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /merchant/dishes/{id}/enable [post]
+func (h *DishHandler) Enable(c *gin.Context) { h.setStatus(c, service.DishStatusActive) }
 
-func (h *DishHandler) writeError(c *gin.Context, err error) {
-	switch {
-	case errors.Is(err, service.ErrMerchantNotFound), errors.Is(err, service.ErrDishForbidden):
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-	case errors.Is(err, service.ErrDishNotFound):
-		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
-	case errors.Is(err, service.ErrInvalidDishInput):
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid dish input"})
-	default:
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
-	}
-}
+// Disable godoc
+// @Summary Disable dish
+// @Tags dish
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Dish ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /merchant/dishes/{id}/disable [post]
+func (h *DishHandler) Disable(c *gin.Context) { h.setStatus(c, service.DishStatusDisabled) }

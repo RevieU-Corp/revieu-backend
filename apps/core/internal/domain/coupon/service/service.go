@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math"
 	"strings"
 	"time"
 
@@ -13,10 +14,13 @@ import (
 )
 
 const (
-	storeStatusPublished int16 = 1
-	couponStatusActive         = "active"
-	couponStatusDraft          = "draft"
-	couponStatusDisabled       = "disabled"
+	storeStatusPublished  int16 = 1
+	couponStatusActive          = "active"
+	couponStatusDraft           = "draft"
+	couponStatusDisabled        = "disabled"
+	couponStatusSoldOut         = "sold_out"
+	couponStatusExpired         = "expired"
+	couponStatusScheduled       = "scheduled"
 )
 
 var (
@@ -43,9 +47,9 @@ type CreateStoreCouponInput struct {
 	Type               string
 	CouponType         string
 	Price              float64
-	OriginalPrice      *float64
-	SalePrice          *float64
-	DiscountPercentage *float64
+	OriginalPrice      float64
+	SalePrice          float64
+	DiscountPercentage float64
 	ImageURL           string
 	DishIDs            []int64
 	TotalQuantity      int
@@ -59,18 +63,17 @@ type CreateStoreCouponInput struct {
 type UpdateStoreCouponInput struct {
 	Title              *string
 	Description        *string
-	Type               *string
 	CouponType         *string
+	ImageURL           *string
 	Price              *float64
 	OriginalPrice      *float64
 	SalePrice          *float64
 	DiscountPercentage *float64
-	ImageURL           *string
 	DishIDs            *[]int64
 	TotalQuantity      *int
 	MaxPerUser         *int
-	ValidFrom          *time.Time
-	ValidUntil         *time.Time
+	ValidFrom          **time.Time
+	ValidUntil         **time.Time
 	Terms              *string
 	Status             *string
 }
@@ -196,8 +199,7 @@ func (s *CouponService) UpdateForMerchant(ctx context.Context, userID, couponID 
 	return s.UpdateForStore(ctx, userID, *coupon.StoreID, coupon.ID, input)
 }
 
-// SetStatusForMerchant applies the explicit activate/deactivate lifecycle
-// actions and makes activation a verified-merchant operation.
+// SetStatusForMerchant applies explicit activate/deactivate lifecycle actions.
 func (s *CouponService) SetStatusForMerchant(ctx context.Context, userID, couponID int64, status string) (*model.Coupon, error) {
 	status = strings.ToLower(strings.TrimSpace(status))
 	if status != couponStatusActive && status != couponStatusDisabled {
@@ -251,31 +253,44 @@ func (s *CouponService) SetStatusForMerchant(ctx context.Context, userID, coupon
 	return &coupon, nil
 }
 
+// ComputeStatus derives effective display status for a coupon.
+func ComputeStatus(coupon model.Coupon, now time.Time) string {
+	if coupon.Status == couponStatusDraft || coupon.Status == couponStatusDisabled {
+		return coupon.Status
+	}
+	if coupon.TotalQuantity > 0 && coupon.ClaimedCount >= coupon.TotalQuantity {
+		return couponStatusSoldOut
+	}
+	if coupon.ValidUntil != nil && coupon.ValidUntil.Before(now) {
+		return couponStatusExpired
+	}
+	if coupon.ValidFrom != nil && coupon.ValidFrom.After(now) {
+		return couponStatusScheduled
+	}
+	return coupon.Status
+}
+
 func (s *CouponService) CreateForStore(ctx context.Context, userID, storeID int64, input CreateStoreCouponInput) (*model.Coupon, error) {
 	title := strings.TrimSpace(input.Title)
 	couponType := strings.TrimSpace(input.Type)
-	merchantCouponType := strings.TrimSpace(input.CouponType)
-	if merchantCouponType == "" {
-		merchantCouponType = "normal"
-	}
-	if title == "" || couponType == "" || input.TotalQuantity <= 0 || input.Price < 0 {
+	if title == "" || couponType == "" || input.TotalQuantity <= 0 {
 		return nil, ErrInvalidCouponInput
 	}
 	if input.MaxPerUser <= 0 {
 		return nil, ErrInvalidCouponInput
 	}
-	if merchantCouponType != "normal" && merchantCouponType != "limited_time" {
-		return nil, ErrInvalidCouponInput
-	}
-	if merchantCouponType == "limited_time" && (input.ValidFrom == nil || input.ValidUntil == nil) {
-		return nil, ErrInvalidCouponInput
+	if err := validateCouponPricing(input.Price, input.OriginalPrice, input.SalePrice, input.DiscountPercentage); err != nil {
+		return nil, err
 	}
 	if input.ValidFrom != nil && input.ValidUntil != nil && input.ValidFrom.After(*input.ValidUntil) {
 		return nil, ErrInvalidCouponInput
 	}
-	originalPrice, salePrice, discountPercentage, err := resolveCouponPrices(input.Price, input.OriginalPrice, input.SalePrice, input.DiscountPercentage)
-	if err != nil {
-		return nil, err
+	status := strings.TrimSpace(input.Status)
+	if status == "" {
+		status = couponStatusActive
+	}
+	if !isMerchantControlledCouponStatus(status) {
+		return nil, ErrInvalidCouponInput
 	}
 
 	var merchant model.Merchant
@@ -299,13 +314,29 @@ func (s *CouponService) CreateForStore(ctx context.Context, userID, storeID int6
 	if store.Status != storeStatusPublished {
 		return nil, ErrStoreNotPublished
 	}
-	dishIDs, err := encodeOwnedDishIDs(ctx, s.db, merchant.ID, input.DishIDs)
-	if err != nil {
+	if err := s.validateDishIDs(ctx, merchant.ID, input.DishIDs); err != nil {
 		return nil, err
 	}
-	status := normalizeCouponStatus(input.Status)
-	if status == "" {
-		return nil, ErrInvalidCouponInput
+	if input.Price == 0 && input.SalePrice > 0 {
+		// Price is the legacy mirror of sale_price. Keep old callers that only
+		// send sale_price compatible while storing one consistent value.
+		input.Price = input.SalePrice
+	}
+
+	imageURL := strings.TrimSpace(input.ImageURL)
+	if imageURL == "" && len(input.DishIDs) == 1 {
+		var dish model.Dish
+		if err := s.db.WithContext(ctx).Where("id = ? AND merchant_id = ?", input.DishIDs[0], merchant.ID).First(&dish).Error; err == nil {
+			imageURL = dish.ImageURL
+		}
+	}
+	dishIDs := input.DishIDs
+	if dishIDs == nil {
+		dishIDs = []int64{}
+	}
+	dishIDsJSON, err := json.Marshal(dishIDs)
+	if err != nil {
+		return nil, err
 	}
 
 	coupon := model.Coupon{
@@ -314,13 +345,13 @@ func (s *CouponService) CreateForStore(ctx context.Context, userID, storeID int6
 		Title:              title,
 		Description:        input.Description,
 		Type:               couponType,
-		Price:              salePrice,
-		CouponType:         merchantCouponType,
-		ImageURL:           strings.TrimSpace(input.ImageURL),
-		OriginalPrice:      originalPrice,
-		SalePrice:          salePrice,
-		DiscountPercentage: discountPercentage,
-		DishIDs:            dishIDs,
+		CouponType:         input.CouponType,
+		Price:              input.Price,
+		OriginalPrice:      input.OriginalPrice,
+		SalePrice:          input.SalePrice,
+		DiscountPercentage: input.DiscountPercentage,
+		ImageURL:           imageURL,
+		DishIDs:            string(dishIDsJSON),
 		TotalQuantity:      input.TotalQuantity,
 		MaxPerUser:         input.MaxPerUser,
 		Terms:              input.Terms,
@@ -339,177 +370,6 @@ func (s *CouponService) CreateForStore(ctx context.Context, userID, storeID int6
 	if err := s.db.WithContext(ctx).Create(&coupon).Error; err != nil {
 		return nil, err
 	}
-	return &coupon, nil
-}
-
-// ListForStore returns every live coupon owned by the merchant, including
-// drafts and disabled coupons that the merchant must be able to edit.
-func (s *CouponService) ListForStore(ctx context.Context, userID, storeID int64) ([]model.Coupon, error) {
-	merchantID, err := s.ensureOwnedStore(ctx, userID, storeID)
-	if err != nil {
-		return nil, err
-	}
-	var coupons []model.Coupon
-	if err := s.db.WithContext(ctx).
-		Where("merchant_id = ? AND store_id = ?", merchantID, storeID).
-		Order("id DESC").
-		Find(&coupons).Error; err != nil {
-		return nil, err
-	}
-	return coupons, nil
-}
-
-func (s *CouponService) UpdateForStore(ctx context.Context, userID, storeID, couponID int64, input UpdateStoreCouponInput) (*model.Coupon, error) {
-	merchantID, err := s.ensureOwnedStore(ctx, userID, storeID)
-	if err != nil {
-		return nil, err
-	}
-	var coupon model.Coupon
-	if err := s.db.WithContext(ctx).Where("id = ? AND merchant_id = ? AND store_id = ?", couponID, merchantID, storeID).First(&coupon).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrCouponStoreMismatch
-		}
-		return nil, err
-	}
-
-	updates := map[string]interface{}{}
-	if input.Title != nil {
-		if strings.TrimSpace(*input.Title) == "" {
-			return nil, ErrInvalidCouponInput
-		}
-		updates["title"] = strings.TrimSpace(*input.Title)
-	}
-	if input.Description != nil {
-		updates["description"] = *input.Description
-	}
-	if input.Type != nil {
-		if strings.TrimSpace(*input.Type) == "" {
-			return nil, ErrInvalidCouponInput
-		}
-		updates["type"] = strings.TrimSpace(*input.Type)
-	}
-	if input.CouponType != nil {
-		couponType := strings.TrimSpace(*input.CouponType)
-		if couponType != "normal" && couponType != "limited_time" {
-			return nil, ErrInvalidCouponInput
-		}
-		updates["coupon_type"] = couponType
-	}
-	if input.Price != nil {
-		if *input.Price < 0 {
-			return nil, ErrInvalidCouponInput
-		}
-		updates["price"] = *input.Price
-	}
-	if input.OriginalPrice != nil {
-		if *input.OriginalPrice < 0 {
-			return nil, ErrInvalidCouponInput
-		}
-		updates["original_price"] = *input.OriginalPrice
-	}
-	if input.SalePrice != nil {
-		if *input.SalePrice < 0 {
-			return nil, ErrInvalidCouponInput
-		}
-		updates["sale_price"] = *input.SalePrice
-		updates["price"] = *input.SalePrice
-	}
-	if input.DiscountPercentage != nil {
-		if *input.DiscountPercentage < 0 || *input.DiscountPercentage > 100 {
-			return nil, ErrInvalidCouponInput
-		}
-		updates["discount_percentage"] = *input.DiscountPercentage
-	}
-	if input.ImageURL != nil {
-		updates["image_url"] = strings.TrimSpace(*input.ImageURL)
-	}
-	if input.DishIDs != nil {
-		dishIDs, encodeErr := encodeOwnedDishIDs(ctx, s.db, merchantID, *input.DishIDs)
-		if encodeErr != nil {
-			return nil, encodeErr
-		}
-		updates["dish_ids"] = dishIDs
-	}
-	if input.TotalQuantity != nil {
-		if *input.TotalQuantity <= 0 {
-			return nil, ErrInvalidCouponInput
-		}
-		updates["total_quantity"] = *input.TotalQuantity
-	}
-	if input.MaxPerUser != nil {
-		if *input.MaxPerUser <= 0 {
-			return nil, ErrInvalidCouponInput
-		}
-		updates["max_per_user"] = *input.MaxPerUser
-	}
-	if input.ValidFrom != nil {
-		updates["valid_from"] = input.ValidFrom
-		updates["expiry_date"] = input.ValidUntil
-	}
-	if input.ValidUntil != nil {
-		updates["valid_until"] = input.ValidUntil
-		updates["expiry_date"] = input.ValidUntil
-	}
-	if input.Terms != nil {
-		updates["terms"] = *input.Terms
-	}
-	if input.Status != nil {
-		status := normalizeCouponStatus(*input.Status)
-		if status == "" {
-			return nil, ErrInvalidCouponInput
-		}
-		updates["status"] = status
-	}
-
-	finalCouponType := coupon.CouponType
-	if input.CouponType != nil {
-		finalCouponType = strings.TrimSpace(*input.CouponType)
-	}
-	finalFrom, finalUntil := coupon.ValidFrom, coupon.ValidUntil
-	if input.ValidFrom != nil {
-		finalFrom = input.ValidFrom
-	}
-	if input.ValidUntil != nil {
-		finalUntil = input.ValidUntil
-	}
-	if finalCouponType == "limited_time" && (finalFrom == nil || finalUntil == nil) {
-		return nil, ErrInvalidCouponInput
-	}
-	if finalFrom != nil && finalUntil != nil && finalFrom.After(*finalUntil) {
-		return nil, ErrInvalidCouponInput
-	}
-	if len(updates) > 0 {
-		if err := s.db.WithContext(ctx).Model(&model.Coupon{}).Where("id = ?", coupon.ID).Updates(updates).Error; err != nil {
-			return nil, err
-		}
-	}
-	var updated model.Coupon
-	if err := s.db.WithContext(ctx).First(&updated, coupon.ID).Error; err != nil {
-		return nil, err
-	}
-	return &updated, nil
-}
-
-func (s *CouponService) SetStatusForStore(ctx context.Context, userID, storeID, couponID int64, status string) (*model.Coupon, error) {
-	status = normalizeCouponStatus(status)
-	if status != couponStatusActive && status != couponStatusDisabled {
-		return nil, ErrInvalidCouponInput
-	}
-	merchantID, err := s.ensureOwnedStore(ctx, userID, storeID)
-	if err != nil {
-		return nil, err
-	}
-	var coupon model.Coupon
-	if err := s.db.WithContext(ctx).Where("id = ? AND merchant_id = ? AND store_id = ?", couponID, merchantID, storeID).First(&coupon).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrCouponStoreMismatch
-		}
-		return nil, err
-	}
-	if err := s.db.WithContext(ctx).Model(&model.Coupon{}).Where("id = ?", coupon.ID).Update("status", status).Error; err != nil {
-		return nil, err
-	}
-	coupon.Status = status
 	return &coupon, nil
 }
 
@@ -550,25 +410,34 @@ func (s *CouponService) DeleteForStore(ctx context.Context, userID, storeID, cou
 	return s.db.WithContext(ctx).Where("id = ?", couponID).Delete(&model.Coupon{}).Error
 }
 
-func (s *CouponService) ensureOwnedStore(ctx context.Context, userID, storeID int64) (int64, error) {
+func (s *CouponService) ListForStore(ctx context.Context, userID, storeID int64) ([]model.Coupon, error) {
 	var merchant model.Merchant
 	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&merchant).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return 0, ErrStoreForbidden
+			return nil, ErrStoreForbidden
 		}
-		return 0, err
+		return nil, err
 	}
+
 	var store model.Store
 	if err := s.db.WithContext(ctx).First(&store, storeID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return 0, ErrStoreNotFound
+			return nil, ErrStoreNotFound
 		}
-		return 0, err
+		return nil, err
 	}
 	if store.MerchantID != merchant.ID {
-		return 0, ErrStoreForbidden
+		return nil, ErrStoreForbidden
 	}
-	return merchant.ID, nil
+
+	var coupons []model.Coupon
+	if err := s.db.WithContext(ctx).
+		Where("store_id = ?", storeID).
+		Order("id desc").
+		Find(&coupons).Error; err != nil {
+		return nil, err
+	}
+	return coupons, nil
 }
 
 func (s *CouponService) ensureMerchantPrincipal(ctx context.Context, userID int64, requireVerified bool) (*model.Merchant, error) {
@@ -636,31 +505,175 @@ func resolveCouponPrices(price float64, original, sale, discount *float64) (floa
 	return originalPrice, salePrice, discountPercentage, nil
 }
 
-func normalizeCouponStatus(status string) string {
-	switch strings.TrimSpace(status) {
-	case "", couponStatusActive:
-		return couponStatusActive
-	case couponStatusDraft, couponStatusDisabled:
-		return strings.TrimSpace(status)
-	default:
-		return ""
+func (s *CouponService) loadOwnedCoupon(ctx context.Context, userID, storeID, couponID int64) (*model.Merchant, *model.Coupon, error) {
+	var merchant model.Merchant
+	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&merchant).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil, ErrStoreForbidden
+		}
+		return nil, nil, err
 	}
+
+	var store model.Store
+	if err := s.db.WithContext(ctx).First(&store, storeID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil, ErrStoreNotFound
+		}
+		return nil, nil, err
+	}
+	if store.MerchantID != merchant.ID {
+		return nil, nil, ErrStoreForbidden
+	}
+
+	var coupon model.Coupon
+	if err := s.db.WithContext(ctx).First(&coupon, couponID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil, ErrCouponNotFound
+		}
+		return nil, nil, err
+	}
+	if coupon.StoreID == nil || *coupon.StoreID != storeID || coupon.MerchantID != merchant.ID {
+		return nil, nil, ErrCouponNotFound
+	}
+	return &merchant, &coupon, nil
 }
 
-func encodeOwnedDishIDs(ctx context.Context, db *gorm.DB, merchantID int64, ids []int64) (string, error) {
-	if len(ids) == 0 {
-		encoded, err := json.Marshal([]int64{})
-		return string(encoded), err
+func (s *CouponService) UpdateForStore(ctx context.Context, userID, storeID, couponID int64, input UpdateStoreCouponInput) (*model.Coupon, error) {
+	merchant, coupon, err := s.loadOwnedCoupon(ctx, userID, storeID, couponID)
+	if err != nil {
+		return nil, err
 	}
-	var count int64
-	if err := db.WithContext(ctx).Model(&model.Dish{}).Where("merchant_id = ? AND id IN ?", merchantID, ids).Count(&count).Error; err != nil {
-		return "", err
+
+	// Validate that ValidFrom is not after ValidUntil (considering effective post-update values)
+	effectiveFrom := coupon.ValidFrom
+	if input.ValidFrom != nil {
+		effectiveFrom = *input.ValidFrom
 	}
-	if count != int64(len(ids)) {
-		return "", ErrInvalidCouponInput
+	effectiveUntil := coupon.ValidUntil
+	if input.ValidUntil != nil {
+		effectiveUntil = *input.ValidUntil
 	}
-	encoded, err := json.Marshal(ids)
-	return string(encoded), err
+	if effectiveFrom != nil && effectiveUntil != nil && effectiveFrom.After(*effectiveUntil) {
+		return nil, ErrInvalidCouponInput
+	}
+
+	effectivePrice := coupon.Price
+	if input.Price != nil {
+		effectivePrice = *input.Price
+	}
+	effectiveOriginalPrice := coupon.OriginalPrice
+	if input.OriginalPrice != nil {
+		effectiveOriginalPrice = *input.OriginalPrice
+	}
+	effectiveSalePrice := coupon.SalePrice
+	if input.SalePrice != nil {
+		effectiveSalePrice = *input.SalePrice
+	}
+	if input.SalePrice != nil && input.Price == nil {
+		effectivePrice = effectiveSalePrice
+	}
+	effectiveDiscount := coupon.DiscountPercentage
+	if input.DiscountPercentage != nil {
+		effectiveDiscount = *input.DiscountPercentage
+	}
+	if err := validateCouponPricing(effectivePrice, effectiveOriginalPrice, effectiveSalePrice, effectiveDiscount); err != nil {
+		return nil, err
+	}
+	if input.DishIDs != nil {
+		if err := s.validateDishIDs(ctx, merchant.ID, *input.DishIDs); err != nil {
+			return nil, err
+		}
+	}
+
+	updates := map[string]interface{}{}
+	if input.Title != nil {
+		trimmed := strings.TrimSpace(*input.Title)
+		if trimmed == "" {
+			return nil, ErrInvalidCouponInput
+		}
+		updates["title"] = trimmed
+	}
+	if input.Description != nil {
+		updates["description"] = *input.Description
+	}
+	if input.CouponType != nil {
+		updates["coupon_type"] = *input.CouponType
+	}
+	if input.ImageURL != nil {
+		updates["image_url"] = *input.ImageURL
+	}
+	if input.Price != nil {
+		updates["price"] = *input.Price
+	}
+	if input.OriginalPrice != nil {
+		updates["original_price"] = *input.OriginalPrice
+	}
+	if input.SalePrice != nil {
+		updates["sale_price"] = *input.SalePrice
+		if input.Price == nil {
+			// Keep the legacy price mirror in sync for partial sale-price edits.
+			updates["price"] = *input.SalePrice
+		}
+	}
+	if input.DiscountPercentage != nil {
+		updates["discount_percentage"] = *input.DiscountPercentage
+	}
+	if input.DishIDs != nil {
+		dishIDsJSON, err := json.Marshal(*input.DishIDs)
+		if err != nil {
+			return nil, err
+		}
+		updates["dish_ids"] = string(dishIDsJSON)
+	}
+	if input.TotalQuantity != nil {
+		if *input.TotalQuantity <= 0 || *input.TotalQuantity < coupon.ClaimedCount {
+			return nil, ErrInvalidCouponInput
+		}
+		updates["total_quantity"] = *input.TotalQuantity
+	}
+	if input.MaxPerUser != nil {
+		if *input.MaxPerUser <= 0 {
+			return nil, ErrInvalidCouponInput
+		}
+		updates["max_per_user"] = *input.MaxPerUser
+	}
+	if input.ValidFrom != nil {
+		updates["valid_from"] = *input.ValidFrom
+	}
+	if input.ValidUntil != nil {
+		updates["valid_until"] = *input.ValidUntil
+		if *input.ValidUntil != nil {
+			updates["expiry_date"] = **input.ValidUntil
+		} else {
+			updates["expiry_date"] = nil
+		}
+	}
+	if input.Terms != nil {
+		updates["terms"] = *input.Terms
+	}
+	if input.Status != nil {
+		status := strings.TrimSpace(*input.Status)
+		if !isMerchantControlledCouponStatus(status) {
+			return nil, ErrInvalidCouponInput
+		}
+		updates["status"] = status
+	}
+	if len(updates) == 0 {
+		return coupon, nil
+	}
+	if err := s.db.WithContext(ctx).Model(&model.Coupon{}).Where("id = ?", couponID).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+	_, refreshed, err := s.loadOwnedCoupon(ctx, userID, storeID, couponID)
+	return refreshed, err
+}
+
+func (s *CouponService) SetEnabled(ctx context.Context, userID, storeID, couponID int64, enabled bool) (*model.Coupon, error) {
+	status := "disabled"
+	if enabled {
+		status = couponStatusActive
+	}
+	return s.UpdateForStore(ctx, userID, storeID, couponID, UpdateStoreCouponInput{Status: &status})
 }
 
 func (s *CouponService) ListPublishedByStore(ctx context.Context, storeID int64) ([]model.Coupon, error) {
@@ -681,7 +694,17 @@ func (s *CouponService) ListPublishedByStore(ctx context.Context, storeID int64)
 		Find(&coupons).Error; err != nil {
 		return nil, err
 	}
-	return coupons, nil
+
+	// The persisted status is merchant-controlled. Filter derived states here
+	// as well, otherwise a sold-out row can remain publicly advertised until a
+	// background job rewrites its status.
+	published := coupons[:0]
+	for _, coupon := range coupons {
+		if ComputeStatus(coupon, now) == couponStatusActive {
+			published = append(published, coupon)
+		}
+	}
+	return published, nil
 }
 
 func (s *CouponService) Validate(ctx context.Context, id int64, input ValidateInput) (*ValidateResult, error) {
@@ -726,9 +749,54 @@ func (s *CouponService) Validate(ctx context.Context, id int64, input ValidateIn
 		Price:       coupon.Price,
 		MaxPerUser:  coupon.MaxPerUser,
 		IsValid:     true,
-		Status:      coupon.Status,
+		Status:      ComputeStatus(*coupon, time.Now()),
 		Description: coupon.Description,
 	}, nil
+}
+
+func isMerchantControlledCouponStatus(status string) bool {
+	return status == couponStatusDraft || status == couponStatusActive || status == couponStatusDisabled
+}
+
+func validateCouponPricing(price, originalPrice, salePrice, discountPercentage float64) error {
+	if price < 0 || originalPrice < 0 || salePrice < 0 || discountPercentage < 0 || discountPercentage > 100 {
+		return ErrInvalidCouponInput
+	}
+	if originalPrice > 0 && salePrice > originalPrice {
+		return ErrInvalidCouponInput
+	}
+	if price > 0 && salePrice > 0 && math.Abs(price-salePrice) > 0.0001 {
+		return ErrInvalidCouponInput
+	}
+	return nil
+}
+
+func (s *CouponService) validateDishIDs(ctx context.Context, merchantID int64, dishIDs []int64) error {
+	if len(dishIDs) == 0 {
+		return nil
+	}
+	seen := make(map[int64]struct{}, len(dishIDs))
+	for _, dishID := range dishIDs {
+		if dishID <= 0 {
+			return ErrInvalidCouponInput
+		}
+		if _, exists := seen[dishID]; exists {
+			return ErrInvalidCouponInput
+		}
+		seen[dishID] = struct{}{}
+	}
+
+	var count int64
+	if err := s.db.WithContext(ctx).
+		Model(&model.Dish{}).
+		Where("merchant_id = ? AND id IN ?", merchantID, dishIDs).
+		Count(&count).Error; err != nil {
+		return err
+	}
+	if count != int64(len(dishIDs)) {
+		return ErrInvalidCouponInput
+	}
+	return nil
 }
 
 func (s *CouponService) InitiatePayment(ctx context.Context, couponID int64, userID string) error {
