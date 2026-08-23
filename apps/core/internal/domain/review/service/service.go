@@ -45,6 +45,9 @@ func (s *ReviewService) Detail(ctx context.Context, id int64) (*model.Review, er
 		First(&review, id).Error; err != nil {
 		return nil, err
 	}
+	if review.Status != reviewStatusActive {
+		return nil, gorm.ErrRecordNotFound
+	}
 	return &review, nil
 }
 
@@ -290,7 +293,7 @@ func syncMerchantReviewAggregates(tx *gorm.DB, merchantID int64) error {
 	var agg aggregate
 	if err := tx.Model(&model.Review{}).
 		Select("COUNT(*) AS count, COALESCE(AVG(rating), 0) AS avg").
-		Where("merchant_id = ?", merchantID).
+		Where("merchant_id = ? AND status = ?", merchantID, reviewStatusActive).
 		Scan(&agg).Error; err != nil {
 		return err
 	}
@@ -310,7 +313,7 @@ func syncStoreReviewAggregates(tx *gorm.DB, storeID int64) error {
 	var agg aggregate
 	if err := tx.Model(&model.Review{}).
 		Select("COUNT(*) AS count, COALESCE(AVG(rating), 0) AS avg").
-		Where("store_id = ?", storeID).
+		Where("store_id = ? AND status = ?", storeID, reviewStatusActive).
 		Scan(&agg).Error; err != nil {
 		return err
 	}
