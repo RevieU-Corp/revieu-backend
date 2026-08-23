@@ -243,8 +243,8 @@ jobs:
           if [ "${{ github.ref_name }}" = "dev" ]; then
             gh pr merge "$PR_URL" \
               --repo "$INFRA_REPOSITORY" \
-              --auto \
-              --squash
+              --squash \
+              --delete-branch
           fi
       - name: Notify Discord
         if: always()
