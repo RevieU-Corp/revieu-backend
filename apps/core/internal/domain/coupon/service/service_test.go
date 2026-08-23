@@ -77,7 +77,7 @@ func TestCouponServiceMerchantCRUDAndStatus(t *testing.T) {
 	if err != nil || updated.Title != newTitle {
 		t.Fatalf("update coupon returned %+v, err=%v", updated, err)
 	}
-	active, err := svc.SetStatusForStore(context.Background(), ownerID, store.ID, coupon.ID, couponStatusActive)
+	active, err := svc.SetEnabled(context.Background(), ownerID, store.ID, coupon.ID, true)
 	if err != nil || active.Status != couponStatusActive {
 		t.Fatalf("enable coupon returned %+v, err=%v", active, err)
 	}
