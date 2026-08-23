@@ -48,7 +48,7 @@ func (s *ContentService) ListVisibleUserPosts(ctx context.Context, userID, viewe
 }
 
 func (s *ContentService) ListUserReviews(ctx context.Context, userID int64, cursor *int64, limit int) ([]model.Review, int64, *int64, error) {
-	baseQuery := s.db.WithContext(ctx).Model(&model.Review{}).Where("user_id = ?", userID)
+	baseQuery := s.db.WithContext(ctx).Model(&model.Review{}).Where("user_id = ? AND status = ?", userID, 0)
 	var total int64
 	if err := baseQuery.Count(&total).Error; err != nil {
 		return nil, 0, nil, err
