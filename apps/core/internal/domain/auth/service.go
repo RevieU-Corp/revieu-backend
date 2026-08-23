@@ -223,17 +223,52 @@ func (s *service) RefreshAccessToken(ctx context.Context, refreshToken string) (
 	if err := s.hydrateMerchantRole(ctx, &user); err != nil {
 		return LoginTokens{}, err
 	}
-
 	var tokens LoginTokens
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&model.RefreshToken{}).
+		var stored model.RefreshToken
+		if err := tx.Where("token_hash = ? AND revoked_at IS NULL", tokenHash).First(&stored).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return errors.New("invalid refresh token")
+			}
+			return err
+		}
+		if !now.Before(stored.ExpiresAt) {
+			return errors.New("invalid refresh token")
+		}
+
+		var user model.User
+		if err := tx.First(&user, stored.UserID).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return errors.New("invalid refresh token")
+			}
+			return err
+		}
+		if user.Status != 0 {
+			return errors.New("invalid refresh token")
+		}
+
+		var auth model.UserAuth
+		if err := tx.Where("user_id = ? AND identity_type = ?", stored.UserID, "email").First(&auth).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return errors.New("invalid refresh token")
+			}
+			return err
+		}
+
+		result := tx.Model(&model.RefreshToken{}).
 			Where("id = ? AND revoked_at IS NULL", stored.ID).
 			Updates(map[string]interface{}{
 				"revoked_at":   now,
 				"last_used_at": now,
 				"updated_at":   now,
-			}).Error; err != nil {
-			return err
+			})
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected != 1 {
+			// A concurrent request may have rotated the same token between
+			// the lookup and the update. Do not issue a second token pair.
+			return errors.New("invalid refresh token")
 		}
 
 		issued, err := s.issueTokensInTx(tx, &user, &auth)
@@ -260,6 +295,9 @@ func (s *service) LoginOrRegisterOAuthUser(ctx context.Context, email, name, pro
 		}
 		if err := s.hydrateMerchantRole(ctx, &user); err != nil {
 			return "", err
+		}
+		if user.Status != 0 {
+			return "", errors.New("user is inactive")
 		}
 
 		now := time.Now().UTC()
