@@ -39,6 +39,15 @@ definitions:
           type: string
         type: array
     type: object
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_coupon_service.CouponPage:
+    properties:
+      cursor:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Coupon'
+        type: array
+    type: object
   github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_coupon_service.PackagePage:
     properties:
       cursor:
@@ -2029,6 +2038,212 @@ paths:
       summary: Create media upload
       tags:
       - media
+  /merchant/coupons:
+    get:
+      description: Lists coupons owned by the authenticated active merchant
+      parameters:
+      - description: 'Coupon status: draft, active, or disabled'
+        in: query
+        name: status
+        type: string
+      - description: Filter by owned store ID
+        in: query
+        name: store_id
+        type: integer
+      - description: RFC3339 validity start upper bound
+        in: query
+        name: valid_from_before
+        type: string
+      - description: RFC3339 validity end lower bound
+        in: query
+        name: valid_until_after
+        type: string
+      - default: 20
+        description: Page size (1-100)
+        in: query
+        name: limit
+        type: integer
+      - description: ID cursor for the next page
+        in: query
+        name: cursor
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_coupon_service.CouponPage'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List merchant coupons
+      tags:
+      - coupon
+  /merchant/coupons/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Updates editable fields for an owned coupon; lifecycle changes
+        use activate/deactivate
+      parameters:
+      - description: Coupon ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update coupon request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_coupon_handler.UpdateStoreCouponRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update merchant coupon
+      tags:
+      - coupon
+  /merchant/coupons/{id}/activate:
+    post:
+      description: Publishes an owned coupon for customer purchase
+      parameters:
+      - description: Coupon ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Activate merchant coupon
+      tags:
+      - coupon
+  /merchant/coupons/{id}/deactivate:
+    post:
+      description: Hides an owned coupon from customer purchase
+      parameters:
+      - description: Coupon ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Deactivate merchant coupon
+      tags:
+      - coupon
   /merchant/dishes:
     get:
       produces:
