@@ -10,12 +10,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/testutil"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/token"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/database"
-	"github.com/gin-gonic/gin"
 )
 
 func setupAPITest(t *testing.T) (*gin.Engine, string) {
@@ -26,7 +26,7 @@ func setupAPITest(t *testing.T) (*gin.Engine, string) {
 	database.DB = db
 
 	cfg := &config.Config{
-		Server:      config.ServerConfig{APIBasePath: "/api/v1"},
+		Server:      config.ServerConfig{APIBasePath: "/api/v1", Mode: "debug"},
 		JWT:         config.JWTConfig{Secret: "test-secret", ExpireHour: 24},
 		FrontendURL: "https://merchant.revieu.test",
 	}
@@ -81,6 +81,39 @@ func TestMerchantsList(t *testing.T) {
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
+	}
+}
+
+func TestCategoriesListReturnsHierarchy(t *testing.T) {
+	r, _ := setupAPITest(t)
+	db := database.DB
+	root := model.Category{Name: "Food"}
+	if err := db.Create(&root).Error; err != nil {
+		t.Fatalf("failed to create root category: %v", err)
+	}
+	child := model.Category{Name: "Cafe", ParentID: &root.ID}
+	if err := db.Create(&child).Error; err != nil {
+		t.Fatalf("failed to create child category: %v", err)
+	}
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/categories", nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	var response struct {
+		Data []model.Category `json:"data"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+		t.Fatalf("failed to decode categories response: %v", err)
+	}
+	if len(response.Data) != 1 || response.Data[0].Name != "Food" {
+		t.Fatalf("expected one root category, got %#v", response.Data)
+	}
+	if len(response.Data[0].Children) != 1 || response.Data[0].Children[0].Name != "Cafe" {
+		t.Fatalf("expected nested Cafe category, got %#v", response.Data[0].Children)
 	}
 }
 
@@ -210,6 +243,7 @@ func TestMerchantReviewsReturnsNotFoundWhenMerchantMissingOrNotPublic(t *testing
 
 func TestStoreCreateActivateAndPublicVisibility(t *testing.T) {
 	r, tok := setupAPITest(t)
+	db := database.DB
 
 	createBody := strings.NewReader(`{"name":"Draft Store","address":"Austin"}`)
 	w := httptest.NewRecorder()
@@ -229,6 +263,9 @@ func TestStoreCreateActivateAndPublicVisibility(t *testing.T) {
 	}
 	if created.Data.Status != 0 {
 		t.Fatalf("expected created store status 0(draft), got %d", created.Data.Status)
+	}
+	if err := db.Model(&model.Merchant{}).Where("id = ?", created.Data.MerchantID).Update("verification_status", "verified").Error; err != nil {
+		t.Fatalf("failed to approve merchant fixture: %v", err)
 	}
 
 	w = httptest.NewRecorder()
@@ -367,6 +404,9 @@ func TestStoreCreateWithCategoriesReflectedInCategoryFilter(t *testing.T) {
 	}
 	if err := json.Unmarshal(w.Body.Bytes(), &created); err != nil {
 		t.Fatalf("failed to decode create response: %v", err)
+	}
+	if err := db.Model(&model.Merchant{}).Where("id = ?", created.Data.MerchantID).Update("verification_status", "verified").Error; err != nil {
+		t.Fatalf("failed to approve merchant fixture: %v", err)
 	}
 
 	w = httptest.NewRecorder()
@@ -845,7 +885,7 @@ func TestReviewsCreateAndDetail(t *testing.T) {
 	m := model.Merchant{Name: "Cafe"}
 	_ = db.Create(&m).Error
 
-	body := strings.NewReader(fmt.Sprintf(`{"merchantId":"%d","rating":4.5,"text":"nice"}`, m.ID))
+	body := strings.NewReader(fmt.Sprintf(`{"merchantId":"%d","rating":4.5,"ratingEnv":4,"ratingFood":5,"locationVerified":true,"tags":["#fresh","quick"],"text":"nice"}`, m.ID))
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPost, "/api/v1/reviews", body)
 	req.Header.Set("Authorization", "Bearer "+tok)
@@ -854,6 +894,47 @@ func TestReviewsCreateAndDetail(t *testing.T) {
 
 	if w.Code != http.StatusCreated {
 		t.Fatalf("expected 201, got %d", w.Code)
+	}
+	var response struct {
+		RatingEnv        *float64 `json:"ratingEnv"`
+		RatingFood       *float64 `json:"ratingFood"`
+		LocationVerified bool     `json:"locationVerified"`
+		Tags             []string `json:"tags"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+		t.Fatalf("failed to decode create response: %v", err)
+	}
+	if response.RatingEnv == nil || *response.RatingEnv != 4 {
+		t.Fatalf("expected environment rating in response, got %#v", response.RatingEnv)
+	}
+	if response.RatingFood == nil || *response.RatingFood != 5 {
+		t.Fatalf("expected food rating in response, got %#v", response.RatingFood)
+	}
+	if !response.LocationVerified {
+		t.Fatalf("expected location verification in response")
+	}
+	if len(response.Tags) != 2 || response.Tags[0] != "#fresh" || response.Tags[1] != "quick" {
+		t.Fatalf("expected persisted tags in response, got %#v", response.Tags)
+	}
+}
+
+func TestReviewsCreateRejectsOutOfRangeRating(t *testing.T) {
+	r, tok := setupAPITest(t)
+	db := database.DB
+	merchant := model.Merchant{Name: "Cafe"}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+
+	body := strings.NewReader(fmt.Sprintf(`{"merchantId":"%d","rating":6,"text":"invalid"}`, merchant.ID))
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/reviews", body)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", w.Code)
 	}
 }
 
@@ -999,7 +1080,7 @@ func TestStoreCouponCreateListAndValidate(t *testing.T) {
 	}
 	ownerID := ownerAuth.UserID
 
-	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID, VerificationStatus: "verified"}
 	if err := db.Create(&merchant).Error; err != nil {
 		t.Fatalf("failed to create merchant: %v", err)
 	}
@@ -1067,7 +1148,7 @@ func TestCouponOrderPayAndMerchantRedeemFlow(t *testing.T) {
 	}
 	ownerID := ownerAuth.UserID
 
-	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID}
+	merchant := model.Merchant{Name: "Owner Merchant", UserID: &ownerID, VerificationStatus: "verified"}
 	if err := db.Create(&merchant).Error; err != nil {
 		t.Fatalf("failed to create merchant: %v", err)
 	}
@@ -1195,8 +1276,33 @@ func TestCouponOrderPayAndMerchantRedeemFlow(t *testing.T) {
 
 func TestVoucherCreateAndList(t *testing.T) {
 	r, tok := setupAPITest(t)
+	db := database.DB
+	var ownerAuth model.UserAuth
+	if err := db.Where("identifier = ?", "user@example.com").First(&ownerAuth).Error; err != nil {
+		t.Fatalf("failed to load owner auth: %v", err)
+	}
+	merchant := model.Merchant{Name: "Free Coupon Merchant", UserID: &ownerAuth.UserID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Free Coupon Store", Status: 1}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	coupon := model.Coupon{
+		MerchantID:    merchant.ID,
+		StoreID:       &store.ID,
+		Title:         "Free Coupon",
+		Type:          "free",
+		TotalQuantity: 5,
+		MaxPerUser:    1,
+		Status:        "active",
+	}
+	if err := db.Create(&coupon).Error; err != nil {
+		t.Fatalf("failed to create coupon: %v", err)
+	}
 
-	body := strings.NewReader(`{"couponId":"1","userId":"1","code":"ABC"}`)
+	body := strings.NewReader(fmt.Sprintf(`{"couponId":"%d","userId":"999999","code":"FORGED"}`, coupon.ID))
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPost, "/api/v1/vouchers", body)
 	req.Header.Set("Authorization", "Bearer "+tok)
@@ -1204,6 +1310,16 @@ func TestVoucherCreateAndList(t *testing.T) {
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusCreated {
 		t.Fatalf("expected 201, got %d", w.Code)
+	}
+	var created model.Voucher
+	if err := db.Order("id DESC").First(&created).Error; err != nil {
+		t.Fatalf("failed to load created voucher: %v", err)
+	}
+	if created.UserID != ownerAuth.UserID {
+		t.Fatalf("expected authenticated owner %d, got %d", ownerAuth.UserID, created.UserID)
+	}
+	if created.Code == "FORGED" {
+		t.Fatal("expected server-generated voucher code")
 	}
 
 	w = httptest.NewRecorder()
@@ -1401,7 +1517,7 @@ func TestMerchantVoucherScanPreviewFlow(t *testing.T) {
 		t.Fatalf("failed to create buyer: %v", err)
 	}
 
-	merchant := model.Merchant{Name: "Preview Flow Merchant", UserID: &merchantOwner.ID}
+	merchant := model.Merchant{Name: "Preview Flow Merchant", UserID: &merchantOwner.ID, VerificationStatus: "verified"}
 	if err := db.Create(&merchant).Error; err != nil {
 		t.Fatalf("failed to create merchant: %v", err)
 	}
@@ -1471,7 +1587,7 @@ func TestMerchantVoucherPreviewThenRedeemByTokenFlow(t *testing.T) {
 		t.Fatalf("failed to create buyer: %v", err)
 	}
 
-	merchant := model.Merchant{Name: "Redeem Token Flow Merchant", UserID: &merchantOwner.ID}
+	merchant := model.Merchant{Name: "Redeem Token Flow Merchant", UserID: &merchantOwner.ID, VerificationStatus: "verified"}
 	if err := db.Create(&merchant).Error; err != nil {
 		t.Fatalf("failed to create merchant: %v", err)
 	}
@@ -1542,8 +1658,17 @@ func TestMerchantVoucherPreviewThenRedeemByTokenFlow(t *testing.T) {
 
 func TestPaymentsCreateAndDetail(t *testing.T) {
 	r, tok := setupAPITest(t)
+	db := database.DB
+	var ownerAuth model.UserAuth
+	if err := db.Where("identifier = ?", "user@example.com").First(&ownerAuth).Error; err != nil {
+		t.Fatalf("failed to load owner auth: %v", err)
+	}
+	order := model.Order{UserID: ownerAuth.UserID, Quantity: 1, TotalPrice: 10, Status: "pending"}
+	if err := db.Create(&order).Error; err != nil {
+		t.Fatalf("failed to create order: %v", err)
+	}
 
-	body := strings.NewReader(`{"amount":10,"currency":"USD","status":"pending"}`)
+	body := strings.NewReader(fmt.Sprintf(`{"order_id":%d,"payment_method":"mock","amount":999999,"currency":"EUR","status":"success"}`, order.ID))
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPost, "/api/v1/payments", body)
 	req.Header.Set("Authorization", "Bearer "+tok)
@@ -1551,6 +1676,13 @@ func TestPaymentsCreateAndDetail(t *testing.T) {
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusCreated {
 		t.Fatalf("expected 201, got %d", w.Code)
+	}
+	var payment model.Payment
+	if err := db.Order("id DESC").First(&payment).Error; err != nil {
+		t.Fatalf("failed to load created payment: %v", err)
+	}
+	if payment.Amount != order.TotalPrice || payment.Currency != "USD" || payment.Status != "pending" {
+		t.Fatalf("expected server-derived pending payment, got %+v", payment)
 	}
 }
 
