@@ -50,6 +50,7 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 		&model.Conversation{},
 		&model.ConversationParticipant{},
 		&model.Message{},
+		&model.MerchantVerification{},
 	); err != nil {
 		t.Fatalf("Failed to migrate test database: %v", err)
 	}
