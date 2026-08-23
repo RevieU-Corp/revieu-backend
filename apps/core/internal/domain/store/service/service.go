@@ -291,6 +291,7 @@ func (s *StoreService) ReviewsPublishedPaginated(ctx context.Context, storeID in
 		Model(&model.Review{}).
 		Preload("User").
 		Preload("User.Profile").
+		Preload("Tags").
 		Where("store_id = ?", storeID)
 
 	if query.Cursor != nil {
