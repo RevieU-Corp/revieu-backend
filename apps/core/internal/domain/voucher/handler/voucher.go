@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/voucher/dto"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/voucher/service"
-	"github.com/gin-gonic/gin"
 )
 
 type VoucherHandler struct {
@@ -18,6 +18,10 @@ type VoucherHandler struct {
 
 type RedeemByTokenRequest struct {
 	ScanToken string `json:"scan_token"`
+}
+
+type RedeemByCodeRequest struct {
+	Code string `json:"code"`
 }
 
 func NewVoucherHandler(svc *service.VoucherService, frontendURL string) *VoucherHandler {
@@ -42,17 +46,28 @@ func NewVoucherHandler(svc *service.VoucherService, frontendURL string) *Voucher
 // @Failure 401 {object} map[string]string
 // @Router /vouchers [post]
 func (h *VoucherHandler) Create(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	var req service.CreateVoucherRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	v, err := h.svc.Create(c.Request.Context(), req)
+	v, err := h.svc.Create(c.Request.Context(), userID, req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		status, message := voucherCreateErrorStatus(err)
+		c.JSON(status, gin.H{"error": message})
 		return
 	}
-	c.JSON(http.StatusCreated, v)
+	resp, err := dto.FromModel(v, h.frontendURL)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to build scan url"})
+		return
+	}
+	c.JSON(http.StatusCreated, resp)
 }
 
 // ListVouchers godoc
@@ -141,13 +156,19 @@ func (h *VoucherHandler) ByCode(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Router /vouchers/{id}/use [patch]
 func (h *VoucherHandler) Use(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
-	if err := h.svc.Use(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := h.svc.Use(c.Request.Context(), userID, id); err != nil {
+		status, message := voucherUseErrorStatus(err)
+		c.JSON(status, gin.H{"error": message})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{})
@@ -164,16 +185,62 @@ func (h *VoucherHandler) Use(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Router /vouchers/{id}/status [patch]
 func (h *VoucherHandler) UpdateStatus(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
-	if err := h.svc.UpdateStatus(c.Request.Context(), id, "used"); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := h.svc.UpdateStatus(c.Request.Context(), userID, id, "used"); err != nil {
+		status, message := voucherUseErrorStatus(err)
+		c.JSON(status, gin.H{"error": message})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{})
+}
+
+func voucherCreateErrorStatus(err error) (int, string) {
+	switch {
+	case errors.Is(err, service.ErrVoucherInvalidInput):
+		return http.StatusBadRequest, "invalid voucher input"
+	case errors.Is(err, service.ErrVoucherNotFound):
+		return http.StatusNotFound, "coupon not found"
+	case errors.Is(err, service.ErrVoucherCouponInactive):
+		return http.StatusBadRequest, "coupon inactive"
+	case errors.Is(err, service.ErrVoucherCouponExpired):
+		return http.StatusBadRequest, "coupon expired"
+	case errors.Is(err, service.ErrVoucherCouponNotStarted):
+		return http.StatusBadRequest, "coupon not started"
+	case errors.Is(err, service.ErrVoucherPaymentRequired):
+		return http.StatusBadRequest, "paid coupons require an order payment"
+	case errors.Is(err, service.ErrVoucherSoldOut):
+		return http.StatusBadRequest, "coupon sold out"
+	case errors.Is(err, service.ErrVoucherPerUserLimit):
+		return http.StatusBadRequest, "coupon per-user limit exceeded"
+	default:
+		return http.StatusInternalServerError, "internal error"
+	}
+}
+
+func voucherUseErrorStatus(err error) (int, string) {
+	switch {
+	case errors.Is(err, service.ErrVoucherInvalidInput), errors.Is(err, service.ErrVoucherInvalidStatus):
+		return http.StatusBadRequest, "invalid voucher request"
+	case errors.Is(err, service.ErrVoucherNotFound):
+		return http.StatusNotFound, "voucher not found"
+	case errors.Is(err, service.ErrVoucherForbidden):
+		return http.StatusForbidden, "forbidden"
+	case errors.Is(err, service.ErrVoucherExpired):
+		return http.StatusBadRequest, "voucher expired"
+	case errors.Is(err, service.ErrVoucherNotRedeemable):
+		return http.StatusConflict, "voucher not redeemable"
+	default:
+		return http.StatusInternalServerError, "internal error"
+	}
 }
 
 // ShareVoucherEmail godoc
@@ -238,6 +305,48 @@ func (h *VoucherHandler) ScanPreview(c *gin.Context) {
 	c.JSON(http.StatusOK, preview)
 }
 
+// MerchantVoucherCodePreview godoc
+// @Summary Preview voucher redemption by code
+// @Description Validates a voucher code for the authenticated merchant without mutating state
+// @Tags voucher
+// @Produce json
+// @Param code path string true "Voucher code"
+// @Success 200 {object} service.RedeemPreview
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /merchant/vouchers/code/{code} [get]
+func (h *VoucherHandler) CodePreview(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	code := strings.TrimSpace(c.Param("code"))
+	if code == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing voucher code"})
+		return
+	}
+
+	preview, err := h.svc.PreviewRedeemByCode(c.Request.Context(), userID, code)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrVoucherForbidden):
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		case errors.Is(err, service.ErrVoucherNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to preview voucher"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, preview)
+}
+
 // RedeemVoucherByToken godoc
 // @Summary Redeem voucher by scan token
 // @Description Redeems a scanned voucher for the authenticated merchant
@@ -271,6 +380,57 @@ func (h *VoucherHandler) RedeemByToken(c *gin.Context) {
 	}
 
 	if err := h.svc.RedeemByMerchantToken(c.Request.Context(), userID, req.ScanToken); err != nil {
+		switch {
+		case errors.Is(err, service.ErrVoucherNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		case errors.Is(err, service.ErrVoucherForbidden):
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		case errors.Is(err, service.ErrVoucherNotRedeemable):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "voucher not redeemable"})
+		case errors.Is(err, service.ErrVoucherExpired):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "voucher expired"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to redeem voucher"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+// RedeemVoucherByCode godoc
+// @Summary Redeem voucher by code
+// @Description Redeems a voucher code for the authenticated merchant
+// @Tags voucher
+// @Accept json
+// @Produce json
+// @Param request body handler.RedeemByCodeRequest true "Redeem by code request"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /merchant/vouchers/redeem-by-code [post]
+func (h *VoucherHandler) RedeemByCode(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req RedeemByCodeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	req.Code = strings.TrimSpace(req.Code)
+	if req.Code == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing voucher code"})
+		return
+	}
+
+	if err := h.svc.RedeemByMerchantCode(c.Request.Context(), userID, req.Code); err != nil {
 		switch {
 		case errors.Is(err, service.ErrVoucherNotFound):
 			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
