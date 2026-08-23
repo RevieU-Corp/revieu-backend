@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -41,6 +42,25 @@ func NewStoreService(db *gorm.DB) *StoreService {
 		db = database.DB
 	}
 	return &StoreService{db: db}
+}
+
+func autoVerifyNewMerchantsEnabled() bool {
+	enabled, err := strconv.ParseBool(os.Getenv("AUTO_VERIFY_NEW_MERCHANTS"))
+	return err == nil && enabled
+}
+
+// verifyMerchantIfEnabled marks a merchant as active/verified when the
+// AUTO_VERIFY_NEW_MERCHANTS demo flag is on. It never runs otherwise, so
+// normal merchant verification review is unaffected in every other
+// environment. See docs/superpowers/specs/2026-08-21-qb-merchant-dish-coupon-design.md.
+func (s *StoreService) verifyMerchantIfEnabled(ctx context.Context, merchantID int64) error {
+	if !autoVerifyNewMerchantsEnabled() {
+		return nil
+	}
+	return s.db.WithContext(ctx).
+		Model(&model.Merchant{}).
+		Where("id = ?", merchantID).
+		Updates(map[string]interface{}{"status": 0, "verification_status": "verified"}).Error
 }
 
 func (s *StoreService) Create(ctx context.Context, userID int64, req dto.CreateStoreRequest) (*model.Store, error) {
@@ -150,7 +170,21 @@ func (s *StoreService) Create(ctx context.Context, userID int64, req dto.CreateS
 		return nil, err
 	}
 
-	return &store, nil
+	if err := s.verifyMerchantIfEnabled(ctx, merchant.ID); err != nil {
+		return nil, err
+	}
+
+	var created model.Store
+	if err := s.db.WithContext(ctx).
+		Preload("Hours").
+		Preload("Categories").
+		First(&created, store.ID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrStoreNotFound
+		}
+		return nil, err
+	}
+	return &created, nil
 }
 
 func (s *StoreService) ListPublished(ctx context.Context) ([]model.Store, error) {
@@ -257,6 +291,7 @@ func (s *StoreService) ReviewsPublishedPaginated(ctx context.Context, storeID in
 		Model(&model.Review{}).
 		Preload("User").
 		Preload("User.Profile").
+		Preload("Tags").
 		Where("store_id = ?", storeID)
 
 	if query.Cursor != nil {
@@ -291,6 +326,7 @@ func (s *StoreService) HoursPublished(ctx context.Context, storeID int64) ([]mod
 func (s *StoreService) ListMine(ctx context.Context, userID int64, limit *int) ([]model.Store, error) {
 	dbQuery := s.db.WithContext(ctx).
 		Model(&model.Store{}).
+		Preload("Hours").
 		Joins("JOIN merchants ON merchants.id = stores.merchant_id").
 		Where("merchants.user_id = ?", userID).
 		Order("stores.id desc")
@@ -300,7 +336,10 @@ func (s *StoreService) ListMine(ctx context.Context, userID int64, limit *int) (
 	}
 
 	var stores []model.Store
-	if err := dbQuery.Find(&stores).Error; err != nil {
+	if err := dbQuery.
+		Preload("Hours").
+		Preload("Categories").
+		Find(&stores).Error; err != nil {
 		return nil, err
 	}
 	return stores, nil
@@ -373,10 +412,16 @@ func (s *StoreService) updateStatusOwned(ctx context.Context, userID, storeID in
 	if store.Status == toStatus {
 		return nil
 	}
-	return s.db.WithContext(ctx).
+	if err := s.db.WithContext(ctx).
 		Model(&model.Store{}).
 		Where("id = ?", storeID).
-		UpdateColumn("status", toStatus).Error
+		UpdateColumn("status", toStatus).Error; err != nil {
+		return err
+	}
+	if toStatus == StoreStatusPublished {
+		return s.verifyMerchantIfEnabled(ctx, merchant.ID)
+	}
+	return nil
 }
 
 func (s *StoreService) Update(ctx context.Context, userID, storeID int64, req dto.UpdateStoreRequest) (*model.Store, error) {
