@@ -15,8 +15,9 @@ import (
 // the route rejects an anonymous caller. Refactors that move a route between
 // domains are free; refactors that change a path or drop an auth check fail.
 type routeContract struct {
-	method string
-	path   string
+	method   string
+	path     string
+	requires bool //nolint:unused // reserved for a future auth-contract assertion; not wired up yet
 }
 
 func contractCfg() *config.Config {

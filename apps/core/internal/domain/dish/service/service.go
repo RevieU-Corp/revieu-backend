@@ -10,19 +10,18 @@ import (
 	"gorm.io/gorm"
 )
 
+var (
+	ErrDishNotFound     = errors.New("dish not found")
+	ErrDishForbidden    = errors.New("dish forbidden")
+	ErrInvalidDishInput = errors.New("invalid dish input")
+)
+
 const (
 	DishStatusActive   = "active"
 	DishStatusDisabled = "disabled"
 )
 
-var (
-	ErrDishNotFound     = errors.New("dish not found")
-	ErrDishForbidden    = errors.New("dish forbidden")
-	ErrInvalidDishInput = errors.New("invalid dish input")
-	ErrMerchantNotFound = errors.New("merchant not found")
-)
-
-type UpsertDishInput struct {
+type CreateDishInput struct {
 	Name          string
 	ImageURL      string
 	Description   string
@@ -49,39 +48,34 @@ func NewDishService(db *gorm.DB) *DishService {
 	return &DishService{db: db}
 }
 
-func (s *DishService) ListMine(ctx context.Context, userID int64) ([]model.Dish, error) {
-	merchantID, err := s.merchantID(ctx, userID)
-	if err != nil {
+func (s *DishService) resolveMerchant(ctx context.Context, userID int64) (*model.Merchant, error) {
+	var merchant model.Merchant
+	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&merchant).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrDishForbidden
+		}
 		return nil, err
 	}
-
-	var dishes []model.Dish
-	if err := s.db.WithContext(ctx).
-		Where("merchant_id = ?", merchantID).
-		Order("id DESC").
-		Find(&dishes).Error; err != nil {
-		return nil, err
-	}
-	return dishes, nil
+	return &merchant, nil
 }
 
-func (s *DishService) Create(ctx context.Context, userID int64, input UpsertDishInput) (*model.Dish, error) {
+func (s *DishService) Create(ctx context.Context, userID int64, input CreateDishInput) (*model.Dish, error) {
 	name := strings.TrimSpace(input.Name)
 	if name == "" || input.OriginalPrice < 0 {
 		return nil, ErrInvalidDishInput
 	}
-	merchantID, err := s.merchantID(ctx, userID)
+	merchant, err := s.resolveMerchant(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
 	dish := model.Dish{
-		MerchantID:    merchantID,
+		MerchantID:    merchant.ID,
 		Name:          name,
-		ImageURL:      strings.TrimSpace(input.ImageURL),
+		ImageURL:      input.ImageURL,
 		Description:   input.Description,
 		OriginalPrice: input.OriginalPrice,
-		Category:      strings.TrimSpace(input.Category),
+		Category:      input.Category,
 		Status:        DishStatusActive,
 	}
 	if err := s.db.WithContext(ctx).Create(&dish).Error; err != nil {
@@ -90,22 +84,55 @@ func (s *DishService) Create(ctx context.Context, userID int64, input UpsertDish
 	return &dish, nil
 }
 
+func (s *DishService) ListMine(ctx context.Context, userID int64) ([]model.Dish, error) {
+	merchant, err := s.resolveMerchant(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	var dishes []model.Dish
+	if err := s.db.WithContext(ctx).
+		Where("merchant_id = ?", merchant.ID).
+		Order("id desc").
+		Find(&dishes).Error; err != nil {
+		return nil, err
+	}
+	return dishes, nil
+}
+
+func (s *DishService) loadOwnedDish(ctx context.Context, userID, dishID int64) (*model.Dish, error) {
+	merchant, err := s.resolveMerchant(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	var dish model.Dish
+	if err := s.db.WithContext(ctx).First(&dish, dishID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrDishNotFound
+		}
+		return nil, err
+	}
+	if dish.MerchantID != merchant.ID {
+		return nil, ErrDishForbidden
+	}
+	return &dish, nil
+}
+
 func (s *DishService) Update(ctx context.Context, userID, dishID int64, input UpdateDishInput) (*model.Dish, error) {
-	dish, err := s.ownedDish(ctx, userID, dishID)
+	dish, err := s.loadOwnedDish(ctx, userID, dishID)
 	if err != nil {
 		return nil, err
 	}
 
 	updates := map[string]interface{}{}
 	if input.Name != nil {
-		name := strings.TrimSpace(*input.Name)
-		if name == "" {
+		trimmed := strings.TrimSpace(*input.Name)
+		if trimmed == "" {
 			return nil, ErrInvalidDishInput
 		}
-		updates["name"] = name
+		updates["name"] = trimmed
 	}
 	if input.ImageURL != nil {
-		updates["image_url"] = strings.TrimSpace(*input.ImageURL)
+		updates["image_url"] = *input.ImageURL
 	}
 	if input.Description != nil {
 		updates["description"] = *input.Description
@@ -117,66 +144,47 @@ func (s *DishService) Update(ctx context.Context, userID, dishID int64, input Up
 		updates["original_price"] = *input.OriginalPrice
 	}
 	if input.Category != nil {
-		updates["category"] = strings.TrimSpace(*input.Category)
+		updates["category"] = *input.Category
 	}
-	if len(updates) > 0 {
-		if err := s.db.WithContext(ctx).Model(&model.Dish{}).Where("id = ?", dish.ID).Updates(updates).Error; err != nil {
-			return nil, err
-		}
+	if len(updates) == 0 {
+		return dish, nil
 	}
-
-	var updated model.Dish
-	if err := s.db.WithContext(ctx).First(&updated, dish.ID).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&model.Dish{}).Where("id = ?", dishID).Updates(updates).Error; err != nil {
 		return nil, err
 	}
-	return &updated, nil
-}
-
-func (s *DishService) Delete(ctx context.Context, userID, dishID int64) error {
-	dish, err := s.ownedDish(ctx, userID, dishID)
-	if err != nil {
-		return err
-	}
-	return s.db.WithContext(ctx).Delete(&model.Dish{}, dish.ID).Error
+	return s.loadOwnedDish(ctx, userID, dishID)
 }
 
 func (s *DishService) SetStatus(ctx context.Context, userID, dishID int64, status string) (*model.Dish, error) {
 	if status != DishStatusActive && status != DishStatusDisabled {
 		return nil, ErrInvalidDishInput
 	}
-	dish, err := s.ownedDish(ctx, userID, dishID)
-	if err != nil {
+	if _, err := s.loadOwnedDish(ctx, userID, dishID); err != nil {
 		return nil, err
 	}
-	if err := s.db.WithContext(ctx).Model(&model.Dish{}).Where("id = ?", dish.ID).Update("status", status).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&model.Dish{}).Where("id = ?", dishID).UpdateColumn("status", status).Error; err != nil {
 		return nil, err
 	}
-	dish.Status = status
-	return dish, nil
+	return s.loadOwnedDish(ctx, userID, dishID)
 }
 
-func (s *DishService) merchantID(ctx context.Context, userID int64) (int64, error) {
-	var merchant model.Merchant
-	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&merchant).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return 0, ErrMerchantNotFound
-		}
-		return 0, err
-	}
-	return merchant.ID, nil
-}
-
-func (s *DishService) ownedDish(ctx context.Context, userID, dishID int64) (*model.Dish, error) {
-	merchantID, err := s.merchantID(ctx, userID)
+func (s *DishService) Delete(ctx context.Context, userID, dishID int64) error {
+	merchant, err := s.resolveMerchant(ctx, userID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	var dish model.Dish
-	if err := s.db.WithContext(ctx).Where("id = ? AND merchant_id = ?", dishID, merchantID).First(&dish).Error; err != nil {
+	if err := s.db.WithContext(ctx).Unscoped().First(&dish, dishID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrDishNotFound
+			return ErrDishNotFound
 		}
-		return nil, err
+		return err
 	}
-	return &dish, nil
+	if dish.MerchantID != merchant.ID {
+		return ErrDishForbidden
+	}
+	if dish.DeletedAt.Valid {
+		return nil
+	}
+	return s.db.WithContext(ctx).Where("id = ?", dishID).Delete(&model.Dish{}).Error
 }
