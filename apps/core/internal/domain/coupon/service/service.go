@@ -25,6 +25,7 @@ const (
 
 var (
 	ErrCouponNotFound          = errors.New("coupon not found")
+	ErrPackageNotFound         = errors.New("package not found")
 	ErrCouponInactive          = errors.New("coupon inactive")
 	ErrCouponExpired           = errors.New("coupon expired")
 	ErrCouponNotStarted        = errors.New("coupon not started")
@@ -95,6 +96,20 @@ type ValidateResult struct {
 	Description string  `json:"description"`
 }
 
+type ListPackagesQuery struct {
+	Limit  int
+	Cursor int64
+}
+
+type PackagePage struct {
+	Data   []model.Package `json:"data"`
+	Cursor *int64          `json:"cursor,omitempty"`
+}
+
+type PackageResponse struct {
+	Data *model.Package `json:"data"`
+}
+
 type CouponService struct {
 	db *gorm.DB
 }
@@ -106,12 +121,77 @@ func NewCouponService(db *gorm.DB) *CouponService {
 	return &CouponService{db: db}
 }
 
+// ListPackages returns active packages with their active, non-deleted coupons.
+// Cursor pagination is ID-based and keeps the public response deterministic.
+func (s *CouponService) ListPackages(ctx context.Context, query ListPackagesQuery) (*PackagePage, error) {
+	limit, err := normalizePackagePageSize(query.Limit)
+	if err != nil {
+		return nil, err
+	}
+	if query.Cursor < 0 {
+		return nil, ErrInvalidCouponInput
+	}
+
+	db := s.db.WithContext(ctx).
+		Where("status = ?", "active").
+		Preload("Coupons", func(couponDB *gorm.DB) *gorm.DB {
+			return couponDB.Where("status = ?", couponStatusActive).Order("id desc")
+		})
+	if query.Cursor > 0 {
+		db = db.Where("id < ?", query.Cursor)
+	}
+
+	rows := make([]model.Package, 0, limit)
+	if err := db.Order("id desc").Limit(limit + 1).Find(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	page := &PackagePage{Data: rows}
+	if len(rows) > limit {
+		rows = rows[:limit]
+		page.Data = rows
+		cursor := rows[len(rows)-1].ID
+		page.Cursor = &cursor
+	}
+	return page, nil
+}
+
+// PackageDetail returns one active package and its active, non-deleted coupons.
+func (s *CouponService) PackageDetail(ctx context.Context, id int64) (*model.Package, error) {
+	if id <= 0 {
+		return nil, ErrPackageNotFound
+	}
+
+	var pkg model.Package
+	err := s.db.WithContext(ctx).
+		Where("id = ? AND status = ?", id, "active").
+		Preload("Coupons", func(couponDB *gorm.DB) *gorm.DB {
+			return couponDB.Where("status = ?", couponStatusActive).Order("id desc")
+		}).
+		First(&pkg).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, ErrPackageNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &pkg, nil
+}
+
+func normalizePackagePageSize(limit int) (int, error) {
+	if limit == 0 {
+		return 20, nil
+	}
+	if limit < 1 || limit > 100 {
+		return 0, ErrInvalidCouponInput
+	}
+	return limit, nil
+}
+
 // ComputeStatus derives the effective, display-facing status for a coupon.
 // draft/disabled are terminal, merchant-controlled states and are never
-// overridden by quantity or date checks. now is passed in explicitly so
-// this stays a pure, deterministically testable function. Exported because
-// the handler package uses it to compute the status shown in API responses
-// without persisting it (see Task 9).
+// overridden by quantity or date checks. now is passed in explicitly so this
+// stays a pure, deterministically testable function.
 func ComputeStatus(coupon model.Coupon, now time.Time) string {
 	if coupon.Status == couponStatusDraft || coupon.Status == couponStatusDisabled {
 		return coupon.Status

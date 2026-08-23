@@ -4062,7 +4062,7 @@ const docTemplate = `{
         },
         "/packages": {
             "get": {
-                "description": "Returns a list of available packages",
+                "description": "Returns a paginated list of active packages with active coupons",
                 "produces": [
                     "application/json"
                 ],
@@ -4070,12 +4070,35 @@ const docTemplate = `{
                     "package"
                 ],
                 "summary": "List packages",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Page size (1-100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID cursor for the next page",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
+                            "$ref": "#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_coupon_service.PackagePage"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -4104,8 +4127,16 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
+                            "$ref": "#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_coupon_service.PackageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "404": {
@@ -6483,6 +6514,28 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_coupon_service.PackagePage": {
+            "type": "object",
+            "properties": {
+                "cursor": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Package"
+                    }
+                }
+            }
+        },
+        "github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_coupon_service.PackageResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Package"
+                }
+            }
+        },
         "github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_media_dto.FileRequest": {
             "type": "object",
             "properties": {
@@ -7127,6 +7180,92 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Coupon": {
+            "type": "object",
+            "properties": {
+                "claimed_count": {
+                    "type": "integer"
+                },
+                "coupon_type": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount_percentage": {
+                    "type": "number"
+                },
+                "dish_ids": {
+                    "type": "string"
+                },
+                "expiry_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "max_per_user": {
+                    "type": "integer"
+                },
+                "merchant_id": {
+                    "type": "integer"
+                },
+                "original_price": {
+                    "type": "number"
+                },
+                "package_id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "redeemed_count": {
+                    "type": "integer"
+                },
+                "sale_price": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "store_id": {
+                    "type": "integer"
+                },
+                "terms": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "total_quantity": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "valid_from": {
+                    "type": "string"
+                },
+                "valid_until": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Merchant": {
             "type": "object",
             "properties": {
@@ -7215,6 +7354,71 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "website_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Package": {
+            "type": "object",
+            "properties": {
+                "coupons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Coupon"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount_percentage": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "merchant": {
+                    "$ref": "#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Merchant"
+                },
+                "merchant_id": {
+                    "type": "integer"
+                },
+                "original_price": {
+                    "type": "number"
+                },
+                "sale_price": {
+                    "type": "number"
+                },
+                "sold_count": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "store_id": {
+                    "type": "integer"
+                },
+                "terms": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "total_quantity": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "valid_from": {
+                    "type": "string"
+                },
+                "valid_until": {
                     "type": "string"
                 }
             }

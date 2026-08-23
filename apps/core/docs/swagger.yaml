@@ -39,6 +39,20 @@ definitions:
           type: string
         type: array
     type: object
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_coupon_service.PackagePage:
+    properties:
+      cursor:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Package'
+        type: array
+    type: object
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_coupon_service.PackageResponse:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Package'
+    type: object
   github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_media_dto.FileRequest:
     properties:
       content_type:
@@ -471,6 +485,63 @@ definitions:
       parent_id:
         type: integer
     type: object
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Coupon:
+    properties:
+      claimed_count:
+        type: integer
+      coupon_type:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      discount_percentage:
+        type: number
+      dish_ids:
+        type: string
+      expiry_date:
+        type: string
+      id:
+        type: integer
+      image_url:
+        type: string
+      max_per_user:
+        type: integer
+      merchant_id:
+        type: integer
+      original_price:
+        type: number
+      package_id:
+        type: integer
+      price:
+        type: number
+      redeemed_count:
+        type: integer
+      sale_price:
+        type: number
+      status:
+        type: string
+      store_id:
+        type: integer
+      terms:
+        type: string
+      title:
+        type: string
+      total_quantity:
+        type: integer
+      type:
+        type: string
+      updated_at:
+        type: string
+      valid_from:
+        type: string
+      valid_until:
+        type: string
+      value:
+        type: string
+    type: object
   github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Merchant:
     properties:
       address:
@@ -530,6 +601,49 @@ definitions:
       verified_at:
         type: string
       website_url:
+        type: string
+    type: object
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Package:
+    properties:
+      coupons:
+        items:
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Coupon'
+        type: array
+      created_at:
+        type: string
+      description:
+        type: string
+      discount_percentage:
+        type: number
+      id:
+        type: integer
+      image_url:
+        type: string
+      merchant:
+        $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Merchant'
+      merchant_id:
+        type: integer
+      original_price:
+        type: number
+      sale_price:
+        type: number
+      sold_count:
+        type: integer
+      status:
+        type: string
+      store_id:
+        type: integer
+      terms:
+        type: string
+      title:
+        type: string
+      total_quantity:
+        type: integer
+      updated_at:
+        type: string
+      valid_from:
+        type: string
+      valid_until:
         type: string
     type: object
   github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Report:
@@ -3552,14 +3666,29 @@ paths:
       - order
   /packages:
     get:
-      description: Returns a list of available packages
+      description: Returns a paginated list of active packages with active coupons
+      parameters:
+      - default: 20
+        description: Page size (1-100)
+        in: query
+        name: limit
+        type: integer
+      - description: ID cursor for the next page
+        in: query
+        name: cursor
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_coupon_service.PackagePage'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
             type: object
       summary: List packages
       tags:
@@ -3579,7 +3708,12 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_coupon_service.PackageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "404":
           description: Not Found
