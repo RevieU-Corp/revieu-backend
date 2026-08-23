@@ -32,14 +32,14 @@ func TestPayHandlerForwardsIdempotencyKey(t *testing.T) {
 		t.Fatalf("create store: %v", err)
 	}
 	coupon := &model.Coupon{
-		MerchantID:    merchant.ID,
-		StoreID:       &store.ID,
-		Title:         "Payment handler coupon",
-		Type:          "discount",
-		Price:         5,
+		MerchantID: merchant.ID,
+		StoreID:    &store.ID,
+		Title:      "Payment handler coupon",
+		Type:       "discount",
+		Price:      5,
 		TotalQuantity: 5,
-		MaxPerUser:    1,
-		Status:        "active",
+		MaxPerUser: 1,
+		Status:     "active",
 	}
 	if err := db.Create(coupon).Error; err != nil {
 		t.Fatalf("create coupon: %v", err)
@@ -81,4 +81,24 @@ func TestPayHandlerForwardsIdempotencyKey(t *testing.T) {
 
 func toString(value int64) string {
 	return fmt.Sprintf("%d", value)
+}
+
+func TestOrderResponseIncludesMerchantScanURL(t *testing.T) {
+	h := NewOrderHandler(nil, "https://merchant.revieu.test")
+	response, err := h.orderResponse(model.Order{}, []model.Voucher{{
+		ID:        42,
+		Code:      "ORDER-VOUCHER",
+		ScanToken: "scan-token-order-response",
+	}})
+	if err != nil {
+		t.Fatalf("order response returned error: %v", err)
+	}
+
+	if len(response.Vouchers) != 1 {
+		t.Fatalf("expected one voucher response, got %d", len(response.Vouchers))
+	}
+	want := "https://merchant.revieu.test/merchant/vouchers/scan?t=scan-token-order-response"
+	if response.Vouchers[0].ScanURL != want {
+		t.Fatalf("unexpected scan_url: got %q want %q", response.Vouchers[0].ScanURL, want)
+	}
 }

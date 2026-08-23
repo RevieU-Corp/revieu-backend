@@ -11,7 +11,7 @@ import (
 // RegisterRoutes registers order routes.
 func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	svc := service.NewOrderServiceForMode(nil, cfg.Server.Mode)
-	h := handler.NewOrderHandler(svc)
+	h := handler.NewOrderHandler(svc, cfg.FrontendURL)
 
 	orders := r.Group("/orders", authorization.JWTAuth(cfg.JWT))
 	{
