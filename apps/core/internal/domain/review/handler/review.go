@@ -34,6 +34,7 @@ func NewReviewHandler(svc *service.ReviewService) *ReviewHandler {
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 422 {object} map[string]string
+// @Security BearerAuth
 // @Router /reviews [post]
 func (h *ReviewHandler) Create(c *gin.Context) {
 	userID := c.GetInt64("user_id")
@@ -94,6 +95,7 @@ func (h *ReviewHandler) Detail(c *gin.Context) {
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
+// @Security BearerAuth
 // @Router /reviews/{id}/like [post]
 func (h *ReviewHandler) Like(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -120,6 +122,7 @@ func (h *ReviewHandler) Like(c *gin.Context) {
 // @Success 201 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
+// @Security BearerAuth
 // @Router /reviews/{id}/comments [post]
 func (h *ReviewHandler) Comment(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
