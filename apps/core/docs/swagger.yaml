@@ -581,6 +581,11 @@ definitions:
       quantity:
         type: integer
     type: object
+  internal_domain_voucher_handler.RedeemByCodeRequest:
+    properties:
+      code:
+        type: string
+    type: object
   internal_domain_voucher_handler.RedeemByTokenRequest:
     properties:
       scan_token:
@@ -2389,6 +2394,102 @@ paths:
       security:
       - BearerAuth: []
       summary: Redeem voucher by merchant owner
+      tags:
+      - voucher
+  /merchant/vouchers/code/{code}:
+    get:
+      description: Validates a voucher code for the authenticated merchant without
+        mutating state
+      parameters:
+      - description: Voucher code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.RedeemPreview'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Preview voucher redemption by code
+      tags:
+      - voucher
+  /merchant/vouchers/redeem-by-code:
+    post:
+      consumes:
+      - application/json
+      description: Redeems a voucher code for the authenticated merchant
+      parameters:
+      - description: Redeem by code request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_voucher_handler.RedeemByCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Redeem voucher by code
       tags:
       - voucher
   /merchant/vouchers/redeem-by-token:
