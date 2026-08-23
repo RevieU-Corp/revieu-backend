@@ -221,6 +221,31 @@ func (h *CouponHandler) ListStoreCoupons(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": coupons})
 }
 
+// GetPublishedCoupon godoc
+// @Summary Get published coupon
+// @Description Returns one active, currently purchasable coupon by ID
+// @Tags coupon
+// @Produce json
+// @Param id path int true "Coupon ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /coupons/{id} [get]
+func (h *CouponHandler) GetPublishedCoupon(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	coupon, err := h.svc.GetPublished(c.Request.Context(), id)
+	if err != nil {
+		status, msg := couponErrorStatus(err)
+		c.JSON(status, gin.H{"error": msg})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": coupon})
+}
+
 // ListMineForStore godoc
 // @Summary List my store coupons
 // @Description Lists all coupons for an owned store, including drafts/disabled/expired
@@ -306,15 +331,15 @@ func (h *CouponHandler) UpdateStoreCoupon(c *gin.Context) {
 		var cleared *time.Time
 		validFrom = &cleared
 	} else if req.ValidFrom != nil {
-		v := req.ValidFrom
-		validFrom = &v
+		value := req.ValidFrom
+		validFrom = &value
 	}
 	if req.ClearValidUntil {
 		var cleared *time.Time
 		validUntil = &cleared
 	} else if req.ValidUntil != nil {
-		v := req.ValidUntil
-		validUntil = &v
+		value := req.ValidUntil
+		validUntil = &value
 	}
 	coupon, err := h.svc.UpdateForStore(c.Request.Context(), userID, storeID, couponID, service.UpdateStoreCouponInput{
 		Title: req.Title, Description: req.Description, CouponType: req.CouponType, ImageURL: req.ImageURL,

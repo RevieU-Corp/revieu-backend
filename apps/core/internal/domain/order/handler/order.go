@@ -121,7 +121,7 @@ func (h *OrderHandler) Detail(c *gin.Context) {
 
 // PayOrder godoc
 // @Summary Pay order
-// @Description Simulates payment success for an order and issues vouchers
+// @Description Completes the configured development payment flow for an order and issues vouchers
 // @Tags order
 // @Produce json
 // @Param id path int true "Order ID"
@@ -199,6 +199,8 @@ func orderErrorStatus(err error) (int, string) {
 		return http.StatusBadRequest, "coupon store mismatch"
 	case errors.Is(err, service.ErrCouponPerUserLimit):
 		return http.StatusBadRequest, "coupon per-user limit exceeded"
+	case errors.Is(err, service.ErrPaymentProviderUnavailable):
+		return http.StatusServiceUnavailable, "payment provider unavailable"
 	default:
 		return http.StatusInternalServerError, "internal error"
 	}

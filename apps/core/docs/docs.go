@@ -837,6 +837,54 @@ const docTemplate = `{
                 }
             }
         },
+        "/coupons/{id}": {
+            "get": {
+                "description": "Returns one active, currently purchasable coupon by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "coupon"
+                ],
+                "summary": "Get published coupon",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Coupon ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/coupons/{id}/payment/initiate": {
             "post": {
                 "description": "Initiates payment flow for a coupon",
@@ -3555,7 +3603,7 @@ const docTemplate = `{
         },
         "/orders/{id}/pay": {
             "post": {
-                "description": "Simulates payment success for an order and issues vouchers",
+                "description": "Completes the configured development payment flow for an order and issues vouchers",
                 "produces": [
                     "application/json"
                 ],
@@ -6090,14 +6138,15 @@ const docTemplate = `{
         },
         "github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_payment_service.CreatePaymentRequest": {
             "type": "object",
+            "required": [
+                "order_id",
+                "payment_method"
+            ],
             "properties": {
-                "amount": {
-                    "type": "number"
+                "order_id": {
+                    "type": "integer"
                 },
-                "currency": {
-                    "type": "string"
-                },
-                "status": {
+                "payment_method": {
                     "type": "string"
                 }
             }
@@ -6548,13 +6597,7 @@ const docTemplate = `{
         "github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.CreateVoucherRequest": {
             "type": "object",
             "properties": {
-                "code": {
-                    "type": "string"
-                },
                 "couponId": {
-                    "type": "string"
-                },
-                "userId": {
                     "type": "string"
                 }
             }
