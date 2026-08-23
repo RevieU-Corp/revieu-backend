@@ -11,6 +11,7 @@ import (
 
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/store/dto"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/visibility"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/database"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -174,7 +175,17 @@ func (s *StoreService) Create(ctx context.Context, userID int64, req dto.CreateS
 		return nil, err
 	}
 
-	return &store, nil
+	var created model.Store
+	if err := s.db.WithContext(ctx).
+		Preload("Hours").
+		Preload("Categories").
+		First(&created, store.ID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrStoreNotFound
+		}
+		return nil, err
+	}
+	return &created, nil
 }
 
 func (s *StoreService) ListPublished(ctx context.Context) ([]model.Store, error) {
@@ -257,20 +268,29 @@ func (s *StoreService) DetailPublished(ctx context.Context, storeID int64) (*mod
 }
 
 func (s *StoreService) ReviewsPublished(ctx context.Context, storeID int64) ([]model.Review, error) {
+	return s.ReviewsPublishedForViewer(ctx, storeID, 0)
+}
+
+func (s *StoreService) ReviewsPublishedForViewer(ctx context.Context, storeID, viewerID int64) ([]model.Review, error) {
 	if _, err := s.DetailPublished(ctx, storeID); err != nil {
 		return nil, err
 	}
+	query := s.db.WithContext(ctx).
+		Model(&model.Review{}).
+		Where("store_id = ? AND status = ?", storeID, 0)
+	query = visibility.ScopePublicContent(query, "reviews.user_id", viewerID)
 	var reviews []model.Review
-	if err := s.db.WithContext(ctx).
-		Where("store_id = ?", storeID).
-		Order("id desc").
-		Find(&reviews).Error; err != nil {
+	if err := query.Order("id desc").Find(&reviews).Error; err != nil {
 		return nil, err
 	}
 	return reviews, nil
 }
 
 func (s *StoreService) ReviewsPublishedPaginated(ctx context.Context, storeID int64, query dto.StoreReviewListQuery) ([]model.Review, *int64, error) {
+	return s.ReviewsPublishedPaginatedForViewer(ctx, storeID, query, 0)
+}
+
+func (s *StoreService) ReviewsPublishedPaginatedForViewer(ctx context.Context, storeID int64, query dto.StoreReviewListQuery, viewerID int64) ([]model.Review, *int64, error) {
 	if _, err := s.DetailPublished(ctx, storeID); err != nil {
 		return nil, nil, err
 	}
@@ -281,7 +301,8 @@ func (s *StoreService) ReviewsPublishedPaginated(ctx context.Context, storeID in
 		Model(&model.Review{}).
 		Preload("User").
 		Preload("User.Profile").
-		Where("store_id = ?", storeID)
+		Where("store_id = ? AND status = ?", storeID, 0)
+	dbQuery = visibility.ScopePublicContent(dbQuery, "reviews.user_id", viewerID)
 
 	if query.Cursor != nil {
 		dbQuery = dbQuery.Where("reviews.id < ?", *query.Cursor)
@@ -324,7 +345,10 @@ func (s *StoreService) ListMine(ctx context.Context, userID int64, limit *int) (
 	}
 
 	var stores []model.Store
-	if err := dbQuery.Find(&stores).Error; err != nil {
+	if err := dbQuery.
+		Preload("Hours").
+		Preload("Categories").
+		Find(&stores).Error; err != nil {
 		return nil, err
 	}
 	return stores, nil
