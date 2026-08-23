@@ -12,9 +12,10 @@ import (
 func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	svc := service.NewReviewService(nil)
 	h := handler.NewReviewHandler(svc)
+	merchantH := handler.NewMerchantReviewHandler(svc)
 
 	// Public: anyone can read review details
-	reviewsPublic := r.Group("/reviews")
+	reviewsPublic := r.Group("/reviews", authorization.OptionalJWTAuth(cfg.JWT))
 	{
 		reviewsPublic.GET("/:id", h.Detail)
 	}
@@ -25,5 +26,14 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 		reviewsAuth.POST("", h.Create)
 		reviewsAuth.POST("/:id/like", h.Like)
 		reviewsAuth.POST("/:id/comments", h.Comment)
+	}
+
+	// Authenticated merchant dashboard review workflow. The merchant is
+	// resolved from the JWT user id; clients cannot choose another merchant.
+	merchantReviews := r.Group("/merchant", authorization.JWTAuth(cfg.JWT))
+	{
+		merchantReviews.GET("/reviews", merchantH.List)
+		merchantReviews.POST("/reviews/:id/reply", merchantH.Reply)
+		merchantReviews.DELETE("/reviews/:id", merchantH.Delete)
 	}
 }

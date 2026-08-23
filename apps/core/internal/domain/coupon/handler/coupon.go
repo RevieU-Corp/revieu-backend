@@ -202,6 +202,7 @@ func (h *CouponHandler) DeleteStoreCoupon(c *gin.Context) {
 // @Tags coupon
 // @Produce json
 // @Param id path int true "Store ID"
+// @Failure 400 {object} map[string]string
 // @Success 200 {object} map[string]interface{}
 // @Failure 404 {object} map[string]string
 // @Router /stores/{id}/coupons [get]
@@ -453,6 +454,7 @@ func (h *CouponHandler) InitiatePayment(c *gin.Context) {
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
+// @Security BearerAuth
 // @Router /coupons/{id}/redeem [post]
 func (h *CouponHandler) Redeem(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
