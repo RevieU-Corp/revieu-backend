@@ -4358,7 +4358,7 @@ const docTemplate = `{
         },
         "/orders/{id}/pay": {
             "post": {
-                "description": "Completes the configured development payment flow for an order and issues vouchers",
+                "description": "Executes an idempotent configured payment flow for an order and issues vouchers",
                 "produces": [
                     "application/json"
                 ],
@@ -4373,6 +4373,12 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client-generated idempotency key",
+                        "name": "Idempotency-Key",
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -4412,6 +4418,24 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {

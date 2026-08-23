@@ -43,6 +43,7 @@ func All() []interface{} {
 		&Order{},
 		&Voucher{},
 		&Payment{},
+		&PaymentAttempt{},
 		// Media
 		&MediaUpload{},
 		// Messaging
