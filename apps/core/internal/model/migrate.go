@@ -10,6 +10,7 @@ func All() []interface{} {
 		&UserAuth{},
 		&UserProfile{},
 		&EmailVerification{},
+		&PasswordResetToken{},
 		&RefreshToken{},
 		// Social
 		&UserFollow{},
@@ -42,8 +43,11 @@ func All() []interface{} {
 		&Order{},
 		&Voucher{},
 		&Payment{},
+		&PaymentAttempt{},
 		// Media
 		&MediaUpload{},
+		// AI provider usage guardrails
+		&AIUsageWindow{},
 		// Messaging
 		&Conversation{},
 		&ConversationParticipant{},
@@ -55,6 +59,8 @@ func All() []interface{} {
 		&MerchantAnalytics{},
 		// Notifications
 		&Notification{},
+		// Operational observability
+		&OperationalAuditLog{},
 		// Reports & Admin
 		&Report{},
 		&AdminAuditLog{},

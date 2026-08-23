@@ -81,20 +81,24 @@ Use SQL migrations managed by Goose:
 
 ```bash
 # install goose (one-time)
-go install github.com/pressly/goose/v3/cmd/goose@latest
+go install github.com/pressly/goose/v3/cmd/goose@v3.27.3
 
 # create a new migration file template (no DB change yet)
 make migrate-create name=add_coupon_scope_fields
 # then edit apps/core/migrations/<new>.sql (-- +goose Up / -- +goose Down)
 
+# validate migration files without changing a database
+make migrate-validate GOOSE="$(go env GOPATH)/bin/goose"
+
 # apply all migrations
-make migrate-up DB_DSN='postgres://postgres:postgres@localhost:5432/revieu?sslmode=disable'
+make migrate-up GOOSE="$(go env GOPATH)/bin/goose" DB_DSN='postgres://postgres:postgres@localhost:5432/revieu?sslmode=disable'
 
 # check status
 make migrate-status DB_DSN='postgres://postgres:postgres@localhost:5432/revieu?sslmode=disable'
 ```
 
 `make migrate-create` only generates the SQL migration file. The database schema changes when `make migrate-up` runs.
+CI also applies the complete migration chain to a clean PostgreSQL service on pull requests and before `dev`/`main` image builds. The real dev/production database still requires the documented, explicit `migrate-up` step.
 
 ### Docker
 
@@ -117,6 +121,14 @@ Cloudflare KV > process environment > code defaults
 The Cloudflare KV adapter itself reads `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_KV_NAMESPACE_ID`, `CLOUDFLARE_API_TOKEN`, optional `CLOUDFLARE_KV_PREFIX`, and optional `CLOUDFLARE_KV_TIMEOUT` from the process environment. Kubernetes should inject these through ConfigMap/Secret; local development should use `export`.
 
 Application variables use names such as `SERVER_PORT`, `DB_HOST`, `DB_PASSWORD`, `JWT_SECRET`, and `GEMINI_API_KEY`.
+
+The AI endpoint is protected by server-side, database-backed guardrails. The defaults are
+5 requests per user per minute, 20 per client-IP per minute, 100 globally per minute,
+50 requests per user per UTC day, and 500 per user per UTC month. Override them through
+`GEMINI_USER_RATE_LIMIT_PER_MINUTE`, `GEMINI_IP_RATE_LIMIT_PER_MINUTE`,
+`GEMINI_GLOBAL_RATE_LIMIT_PER_MINUTE`, `GEMINI_DAILY_QUOTA_PER_USER`, and
+`GEMINI_MONTHLY_QUOTA_PER_USER`. Set an individual value to `0` only when that dimension
+is intentionally disabled in an isolated environment.
 
 ## API Documentation
 

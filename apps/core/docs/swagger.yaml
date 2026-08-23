@@ -39,6 +39,15 @@ definitions:
           type: string
         type: array
     type: object
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_coupon_service.CouponPage:
+    properties:
+      cursor:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Coupon'
+        type: array
+    type: object
   github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_coupon_service.PackagePage:
     properties:
       cursor:
@@ -52,6 +61,28 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_model.Package'
+    type: object
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_feed_dto.FeedItem:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      image:
+        type: string
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_feed_dto.FeedResponse:
+    properties:
+      cursor:
+        type: string
+      data:
+        items:
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_feed_dto.FeedItem'
+        type: array
     type: object
   github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_media_dto.FileRequest:
     properties:
@@ -156,6 +187,38 @@ definitions:
         type: string
     required:
     - text
+    type: object
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_review_dto.MerchantReplyRequest:
+    properties:
+      text:
+        maxLength: 500
+        type: string
+    required:
+    - text
+    type: object
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_review_dto.MerchantReview:
+    properties:
+      customerName:
+        type: string
+      date:
+        type: string
+      hasReply:
+        type: boolean
+      id:
+        type: integer
+      rating:
+        type: number
+      replyText:
+        type: string
+      text:
+        type: string
+    type: object
+  github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_review_dto.MerchantReviewListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_review_dto.MerchantReview'
+        type: array
     type: object
   github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_review_dto.Review:
     properties:
@@ -888,6 +951,17 @@ definitions:
       user_id:
         type: integer
     type: object
+  internal_domain_auth.ResetPasswordRequest:
+    properties:
+      password:
+        minLength: 6
+        type: string
+      token:
+        type: string
+    required:
+    - password
+    - token
+    type: object
   internal_domain_auth.UserInfoResponse:
     properties:
       email: {}
@@ -989,6 +1063,32 @@ definitions:
       quantity:
         type: integer
     type: object
+  internal_domain_dish_handler.UpdateDishRequest:
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      original_price:
+        type: number
+    type: object
+  internal_domain_dish_handler.UpsertDishRequest:
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      original_price:
+        type: number
+    type: object
   internal_domain_voucher_handler.RedeemByCodeRequest:
     properties:
       code:
@@ -1059,6 +1159,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: List merchants for admin
       tags:
       - admin
@@ -1112,6 +1214,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Update merchant status
       tags:
       - admin
@@ -1157,6 +1261,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: List reports
       tags:
       - admin
@@ -1215,6 +1321,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Update report
       tags:
       - admin
@@ -1308,6 +1416,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Polish a draft review with AI
       tags:
       - ai
@@ -1510,6 +1620,36 @@ paths:
       summary: Register a new user
       tags:
       - auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Consumes a single-use password reset token and updates the password
+      parameters:
+      - description: Reset Password Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_auth.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Reset password with a token
+      tags:
+      - auth
   /auth/verify:
     get:
       description: Verify user email using the token sent to their email
@@ -1587,6 +1727,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: List conversations
       tags:
       - conversation
@@ -1619,10 +1761,89 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Create conversation
       tags:
       - conversation
+  /conversations/{id}:
+    delete:
+      description: Removes the authenticated user's membership from a conversation
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a conversation for the current user
+      tags:
+      - conversation
   /conversations/{id}/messages:
+    delete:
+      description: Deletes all messages from a conversation after participant authorization
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Clear conversation messages
+      tags:
+      - conversation
     get:
       description: Returns messages for a conversation
       parameters:
@@ -1671,6 +1892,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Get conversation messages
       tags:
       - conversation
@@ -1716,6 +1939,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Send message
       tags:
       - conversation
@@ -1762,6 +1987,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Update conversation settings
       tags:
       - conversation
@@ -1862,6 +2089,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Redeem coupon
       tags:
       - coupon
@@ -1907,13 +2136,27 @@ paths:
   /feed/home:
     get:
       description: Returns the home feed items
+      parameters:
+      - description: Opaque cursor for the next page
+        in: query
+        name: cursor
+        type: string
+      - description: Page size (1-100, default 20)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_feed_dto.FeedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "500":
           description: Internal Server Error
@@ -1960,6 +2203,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Analyze media upload
       tags:
       - media
@@ -2000,6 +2245,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Create presigned URLs for media upload
       tags:
       - media
@@ -2026,9 +2273,217 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Create media upload
       tags:
       - media
+  /merchant/coupons:
+    get:
+      description: Lists coupons owned by the authenticated active merchant
+      parameters:
+      - description: 'Coupon status: draft, active, or disabled'
+        in: query
+        name: status
+        type: string
+      - description: Filter by owned store ID
+        in: query
+        name: store_id
+        type: integer
+      - description: RFC3339 validity start upper bound
+        in: query
+        name: valid_from_before
+        type: string
+      - description: RFC3339 validity end lower bound
+        in: query
+        name: valid_until_after
+        type: string
+      - default: 20
+        description: Page size (1-100)
+        in: query
+        name: limit
+        type: integer
+      - description: ID cursor for the next page
+        in: query
+        name: cursor
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_coupon_service.CouponPage'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List merchant coupons
+      tags:
+      - coupon
+  /merchant/coupons/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Updates editable fields for an owned coupon; lifecycle changes
+        use activate/deactivate
+      parameters:
+      - description: Coupon ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update coupon request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_coupon_handler.UpdateStoreCouponRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update merchant coupon
+      tags:
+      - coupon
+  /merchant/coupons/{id}/activate:
+    post:
+      description: Publishes an owned coupon for customer purchase
+      parameters:
+      - description: Coupon ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Activate merchant coupon
+      tags:
+      - coupon
+  /merchant/coupons/{id}/deactivate:
+    post:
+      description: Hides an owned coupon from customer purchase
+      parameters:
+      - description: Coupon ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Deactivate merchant coupon
+      tags:
+      - coupon
   /merchant/dishes:
     get:
       produces:
@@ -2071,6 +2526,13 @@ paths:
     post:
       consumes:
       - application/json
+      parameters:
+      - description: Create dish request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_dish_handler.UpsertDishRequest'
       produces:
       - application/json
       responses:
@@ -2117,6 +2579,11 @@ paths:
   /merchant/dishes/{id}:
     delete:
       parameters:
+      - description: Dish ID
+        in: path
+        name: id
+        required: true
+        type: integer
       - description: Dish ID
         in: path
         name: id
@@ -2175,6 +2642,17 @@ paths:
         name: id
         required: true
         type: integer
+      - description: Update dish request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_dish_handler.UpdateDishRequest'
+      - description: Dish ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -2226,6 +2704,11 @@ paths:
         name: id
         required: true
         type: integer
+      - description: Dish ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -2272,6 +2755,11 @@ paths:
   /merchant/dishes/{id}/enable:
     post:
       parameters:
+      - description: Dish ID
+        in: path
+        name: id
+        required: true
+        type: integer
       - description: Dish ID
         in: path
         name: id
@@ -2343,6 +2831,139 @@ paths:
       summary: Delete current merchant (placeholder)
       tags:
       - merchant
+  /merchant/reviews:
+    get:
+      description: Returns active reviews belonging to the authenticated merchant
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_review_dto.MerchantReviewListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List current merchant reviews
+      tags:
+      - merchant-review
+  /merchant/reviews/{id}:
+    delete:
+      description: Archives an active review owned by the authenticated merchant
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Archive a merchant review
+      tags:
+      - merchant-review
+  /merchant/reviews/{id}/reply:
+    post:
+      consumes:
+      - application/json
+      description: Creates or updates the authenticated merchant's reply to a review
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Reply request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_review_dto.MerchantReplyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_review_dto.MerchantReview'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Reply to a merchant review
+      tags:
+      - merchant-review
   /merchant/stores:
     get:
       description: Returns stores owned by the authenticated merchant user
@@ -2983,6 +3604,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Get verification status
       tags:
       - verification
@@ -3016,6 +3639,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Submit merchant verification
       tags:
       - verification
@@ -3354,6 +3979,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Unfollow merchant
       tags:
       - follow
@@ -3386,6 +4013,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Follow merchant
       tags:
       - follow
@@ -3453,6 +4082,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: List notifications
       tags:
       - notification
@@ -3498,6 +4129,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Mark notification as read
       tags:
       - notification
@@ -3518,6 +4151,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Mark all notifications as read
       tags:
       - notification
@@ -3544,6 +4179,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: List orders
       tags:
       - order
@@ -3578,6 +4215,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Create order
       tags:
       - order
@@ -3616,19 +4255,25 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Get order detail
       tags:
       - order
   /orders/{id}/pay:
     post:
-      description: Completes the configured development payment flow for an order
-        and issues vouchers
+      description: Executes an idempotent configured payment flow for an order and
+        issues vouchers
       parameters:
       - description: Order ID
         in: path
         name: id
         required: true
         type: integer
+      - description: Client-generated idempotency key
+        in: header
+        name: Idempotency-Key
+        type: string
       produces:
       - application/json
       responses:
@@ -3661,6 +4306,20 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
       summary: Pay order
       tags:
       - order
@@ -3756,6 +4415,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Create payment
       tags:
       - payment
@@ -3794,6 +4455,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Get payment detail
       tags:
       - payment
@@ -3840,6 +4503,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Create a review
       tags:
       - review
@@ -3912,6 +4577,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Add a review comment
       tags:
       - review
@@ -3945,6 +4612,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Like a review
       tags:
       - review
@@ -4051,6 +4720,12 @@ paths:
           description: OK
           schema:
             additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "404":
           description: Not Found
@@ -4168,6 +4843,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Request account deletion
       tags:
       - user
@@ -4189,6 +4866,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Request account export
       tags:
       - user
@@ -4214,6 +4893,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: List addresses
       tags:
       - user
@@ -4247,6 +4928,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Create address
       tags:
       - user
@@ -4286,6 +4969,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Delete address
       tags:
       - user
@@ -4332,6 +5017,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Update address
       tags:
       - user
@@ -4371,6 +5058,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Set default address
       tags:
       - user
@@ -4410,6 +5099,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: List my favorites
       tags:
       - content
@@ -4445,6 +5136,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: List followers
       tags:
       - user
@@ -4480,6 +5173,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: List following merchants
       tags:
       - user
@@ -4515,6 +5210,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: List following users
       tags:
       - user
@@ -4550,6 +5247,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: List my likes
       tags:
       - content
@@ -4575,6 +5274,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Get notification settings
       tags:
       - user
@@ -4616,6 +5317,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Update notification settings
       tags:
       - user
@@ -4651,6 +5354,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: List my posts
       tags:
       - content
@@ -4676,6 +5381,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Get privacy settings
       tags:
       - user
@@ -4717,6 +5424,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Update privacy settings
       tags:
       - user
@@ -4742,6 +5451,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Get current user profile
       tags:
       - user
@@ -4783,6 +5494,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Update current user profile
       tags:
       - user
@@ -4818,6 +5531,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: List my reviews
       tags:
       - content
@@ -4894,6 +5609,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Unfollow user
       tags:
       - follow
@@ -4926,6 +5643,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Follow user
       tags:
       - follow
@@ -5032,6 +5751,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: List vouchers
       tags:
       - voucher
@@ -5066,10 +5787,57 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Create voucher
       tags:
       - voucher
   /vouchers/{id}:
+    delete:
+      description: Archives an authenticated user's voucher from the rewards list
+        without changing inventory or payment history
+      parameters:
+      - description: Voucher ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Remove voucher from rewards
+      tags:
+      - voucher
     get:
       description: Returns a voucher by ID
       parameters:
@@ -5104,6 +5872,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Get voucher detail
       tags:
       - voucher
@@ -5137,6 +5907,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Update voucher status
       tags:
       - voucher
@@ -5170,6 +5942,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Use voucher
       tags:
       - voucher
@@ -5202,6 +5976,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Get voucher by code
       tags:
       - voucher
@@ -5223,6 +5999,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Share voucher via email
       tags:
       - voucher
@@ -5244,6 +6022,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Share voucher via SMS
       tags:
       - voucher

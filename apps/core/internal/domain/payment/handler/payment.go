@@ -30,6 +30,7 @@ func NewPaymentHandler(svc *service.PaymentService) *PaymentHandler {
 // @Success 201 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
+// @Security BearerAuth
 // @Router /payments [post]
 func (h *PaymentHandler) Create(c *gin.Context) {
 	userID := c.GetInt64("user_id")
@@ -61,6 +62,7 @@ func (h *PaymentHandler) Create(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
+// @Security BearerAuth
 // @Router /payments/{id} [get]
 func (h *PaymentHandler) Detail(c *gin.Context) {
 	userID := c.GetInt64("user_id")

@@ -111,7 +111,7 @@ func (h *StoreHandler) Reviews(c *gin.Context) {
 		return
 	}
 
-	reviews, cursor, err := h.svc.ReviewsPublishedPaginated(c.Request.Context(), id, query)
+	reviews, cursor, err := h.svc.ReviewsPublishedPaginatedForViewer(c.Request.Context(), id, query, c.GetInt64("user_id"))
 	if err != nil {
 		if errors.Is(err, service.ErrStoreNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})

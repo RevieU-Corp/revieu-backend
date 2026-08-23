@@ -22,7 +22,7 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	couponH := couponHandler.NewCouponHandler(couponSvc)
 
 	// Public: store list, detail, reviews, hours, and coupons
-	storesPublic := r.Group("/stores")
+	storesPublic := r.Group("/stores", authorization.OptionalJWTAuth(cfg.JWT))
 	{
 		storesPublic.GET("", storeH.List)
 		storesPublic.GET("/:id", storeH.Detail)
@@ -46,5 +46,15 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 		merchantStoresAuth.POST("/:id/coupons/:couponId/enable", authorization.VerifiedMerchant(), couponH.EnableStoreCoupon)
 		merchantStoresAuth.POST("/:id/coupons/:couponId/disable", authorization.VerifiedMerchant(), couponH.DisableStoreCoupon)
 		merchantStoresAuth.DELETE("/:id/coupons/:couponId", authorization.VerifiedMerchant(), couponH.DeleteStoreCoupon)
+	}
+
+	// Authenticated: merchant-wide coupon lifecycle management. The service
+	// enforces the merchant principal and verified gate for activation.
+	merchantCouponsAuth := r.Group("/merchant/coupons", authorization.JWTAuth(cfg.JWT))
+	{
+		merchantCouponsAuth.GET("", couponH.ListMerchantCoupons)
+		merchantCouponsAuth.PATCH("/:id", couponH.UpdateMerchantCoupon)
+		merchantCouponsAuth.POST("/:id/activate", couponH.ActivateMerchantCoupon)
+		merchantCouponsAuth.POST("/:id/deactivate", couponH.DeactivateMerchantCoupon)
 	}
 }

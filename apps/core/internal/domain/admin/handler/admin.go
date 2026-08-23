@@ -34,6 +34,7 @@ func NewAdminHandler(svc *service.AdminService) *AdminHandler {
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 403 {object} map[string]string
+// @Security BearerAuth
 // @Router /admin/reports [get]
 func (h *AdminHandler) ListReports(c *gin.Context) {
 	if _, ok := requireAdmin(c); !ok {
@@ -71,6 +72,7 @@ func (h *AdminHandler) ListReports(c *gin.Context) {
 // @Failure 403 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 409 {object} map[string]string
+// @Security BearerAuth
 // @Router /admin/reports/{id} [patch]
 func (h *AdminHandler) UpdateReport(c *gin.Context) {
 	adminID, ok := requireAdmin(c)
@@ -119,6 +121,7 @@ func (h *AdminHandler) UpdateReport(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 403 {object} map[string]string
+// @Security BearerAuth
 // @Router /admin/merchants [get]
 func (h *AdminHandler) ListMerchants(c *gin.Context) {
 	if _, ok := requireAdmin(c); !ok {
@@ -155,6 +158,7 @@ func (h *AdminHandler) ListMerchants(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Failure 403 {object} map[string]string
 // @Failure 404 {object} map[string]string
+// @Security BearerAuth
 // @Router /admin/merchants/{id} [patch]
 func (h *AdminHandler) UpdateMerchant(c *gin.Context) {
 	adminID, ok := requireAdmin(c)

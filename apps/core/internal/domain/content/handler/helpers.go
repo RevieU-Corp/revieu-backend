@@ -81,7 +81,3 @@ func tagNames(tags []model.Tag) []string {
 	}
 	return names
 }
-
-func nextCursor[T any](items []T) *int64 {
-	return nil
-}

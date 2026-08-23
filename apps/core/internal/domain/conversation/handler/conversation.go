@@ -30,6 +30,7 @@ func NewConversationHandler(svc *service.ConversationService) *ConversationHandl
 // @Success 200 {object} map[string]interface{}
 // @Failure 401 {object} map[string]string
 // @Failure 400 {object} map[string]string
+// @Security BearerAuth
 // @Router /conversations [get]
 func (h *ConversationHandler) List(c *gin.Context) {
 	userID := c.GetInt64("user_id")
@@ -84,6 +85,7 @@ func parseConversationListQuery(c *gin.Context) (service.ConversationListQuery, 
 // @Success 201 {object} map[string]interface{}
 // @Failure 401 {object} map[string]string
 // @Failure 400 {object} map[string]string
+// @Security BearerAuth
 // @Router /conversations [post]
 func (h *ConversationHandler) Create(c *gin.Context) {
 	userID := c.GetInt64("user_id")
@@ -114,6 +116,77 @@ func (h *ConversationHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"data": conversation})
 }
 
+// DeleteConversation godoc
+// @Summary Delete a conversation for the current user
+// @Description Removes the authenticated user's membership from a conversation
+// @Tags conversation
+// @Produce json
+// @Param id path int true "Conversation ID"
+// @Success 200 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /conversations/{id} [delete]
+func (h *ConversationHandler) Delete(c *gin.Context) {
+	userID, id, ok := h.parseConversationPrincipal(c)
+	if !ok {
+		return
+	}
+	if err := h.svc.Delete(c.Request.Context(), userID, id); err != nil {
+		h.writeConversationError(c, err, "failed to delete conversation")
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+// ClearMessages godoc
+// @Summary Clear conversation messages
+// @Description Deletes all messages from a conversation after participant authorization
+// @Tags conversation
+// @Produce json
+// @Param id path int true "Conversation ID"
+// @Success 200 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /conversations/{id}/messages [delete]
+func (h *ConversationHandler) ClearMessages(c *gin.Context) {
+	userID, id, ok := h.parseConversationPrincipal(c)
+	if !ok {
+		return
+	}
+	if err := h.svc.ClearMessages(c.Request.Context(), userID, id); err != nil {
+		h.writeConversationError(c, err, "failed to clear messages")
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+func (h *ConversationHandler) parseConversationPrincipal(c *gin.Context) (int64, int64, bool) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return 0, 0, false
+	}
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return 0, 0, false
+	}
+	return userID, id, true
+}
+
+func (h *ConversationHandler) writeConversationError(c *gin.Context, err error, fallback string) {
+	switch {
+	case errors.Is(err, service.ErrConversationForbidden):
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+	case errors.Is(err, service.ErrConversationNotFound):
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+	default:
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fallback})
+	}
+}
+
 // ConversationMessages godoc
 // @Summary Get conversation messages
 // @Description Returns messages for a conversation
@@ -127,6 +200,7 @@ func (h *ConversationHandler) Create(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 403 {object} map[string]string
 // @Failure 404 {object} map[string]string
+// @Security BearerAuth
 // @Router /conversations/{id}/messages [get]
 func (h *ConversationHandler) Messages(c *gin.Context) {
 	userID := c.GetInt64("user_id")
@@ -197,6 +271,7 @@ func parseConversationMessageListQuery(c *gin.Context) (service.ConversationMess
 // @Failure 400 {object} map[string]string
 // @Failure 403 {object} map[string]string
 // @Failure 404 {object} map[string]string
+// @Security BearerAuth
 // @Router /conversations/{id}/messages [post]
 func (h *ConversationHandler) SendMessage(c *gin.Context) {
 	userID := c.GetInt64("user_id")
@@ -246,6 +321,7 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 403 {object} map[string]string
 // @Failure 404 {object} map[string]string
+// @Security BearerAuth
 // @Router /conversations/{id}/settings [patch]
 func (h *ConversationHandler) UpdateSettings(c *gin.Context) {
 	userID := c.GetInt64("user_id")

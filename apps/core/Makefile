@@ -1,4 +1,4 @@
-.PHONY: help build run test clean docker-build docker-run migrate-up migrate-down migrate-status migrate-create
+.PHONY: help build run test clean docker-build docker-run migrate-validate migrate-up migrate-down migrate-status migrate-create
 
 # Variables
 APP_NAME=core
@@ -79,3 +79,7 @@ migrate-status: ## Show SQL migration status
 migrate-create: ## Create a new SQL migration file (usage: make migrate-create name=add_feature)
 	@if [ -z "$(name)" ]; then echo "Usage: make migrate-create name=add_feature"; exit 1; fi
 	@$(GOOSE) -dir $(MIGRATIONS_DIR) create $(name) sql
+
+migrate-validate: ## Validate SQL migration files without changing a database
+	@echo "Validating migration files..."
+	@$(GOOSE) -dir $(MIGRATIONS_DIR) validate

@@ -25,6 +25,8 @@ func setupVoucherTestDB(t *testing.T) *gorm.DB {
 		&model.Store{},
 		&model.Coupon{},
 		&model.Voucher{},
+		&model.Notification{},
+		&model.OperationalAuditLog{},
 	); err != nil {
 		t.Fatalf("failed to migrate test db: %v", err)
 	}
@@ -146,6 +148,52 @@ func TestVoucherUseRequiresOwnerAndEnforcesLifecycle(t *testing.T) {
 	}
 }
 
+func TestVoucherServiceDeleteArchivesOnlyTheOwningUsersVoucher(t *testing.T) {
+	db := setupVoucherTestDB(t)
+	svc := NewVoucherService(db)
+
+	for _, userID := range []int64{2101, 2102} {
+		if err := db.Create(&model.User{ID: userID, Role: "user", Status: 0}).Error; err != nil {
+			t.Fatalf("failed to create user %d: %v", userID, err)
+		}
+	}
+
+	owned := model.Voucher{Code: "DELETE-OWNED", ScanToken: "DELETE-TOKEN-OWNED", UserID: 2101, Status: "active"}
+	other := model.Voucher{Code: "DELETE-OTHER", ScanToken: "DELETE-TOKEN-OTHER", UserID: 2102, Status: "active"}
+	if err := db.Create(&owned).Error; err != nil {
+		t.Fatalf("failed to create owned voucher: %v", err)
+	}
+	if err := db.Create(&other).Error; err != nil {
+		t.Fatalf("failed to create other user's voucher: %v", err)
+	}
+
+	if err := svc.Delete(context.Background(), 2101, owned.ID); err != nil {
+		t.Fatalf("delete owned voucher returned error: %v", err)
+	}
+
+	var archived model.Voucher
+	if err := db.First(&archived, owned.ID).Error; err != nil {
+		t.Fatalf("failed to reload archived voucher: %v", err)
+	}
+	if archived.Status != "archived" {
+		t.Fatalf("expected archived status, got %q", archived.Status)
+	}
+
+	list, err := svc.List(context.Background(), 2101)
+	if err != nil {
+		t.Fatalf("list after delete returned error: %v", err)
+	}
+	if len(list) != 0 {
+		t.Fatalf("expected archived voucher to be hidden from list, got %d items", len(list))
+	}
+	if err := svc.Delete(context.Background(), 2102, owned.ID); err != ErrVoucherForbidden {
+		t.Fatalf("expected cross-user delete to be forbidden, got %v", err)
+	}
+	if err := svc.Delete(context.Background(), 2101, owned.ID); err != ErrVoucherNotFound {
+		t.Fatalf("expected repeated delete to be not found, got %v", err)
+	}
+}
+
 func TestVoucherServiceRedeemByMerchantAllowsSoftDeletedCoupon(t *testing.T) {
 	db := setupVoucherTestDB(t)
 	svc := NewVoucherService(db)
@@ -216,6 +264,15 @@ func TestVoucherServiceRedeemByMerchantAllowsSoftDeletedCoupon(t *testing.T) {
 	}
 	if refreshedCoupon.RedeemedCount != 1 {
 		t.Fatalf("expected redeemed_count=1, got %d", refreshedCoupon.RedeemedCount)
+	}
+	var notificationCount int64
+	if err := db.Model(&model.Notification{}).
+		Where("type = ? AND (user_id = ? OR user_id = ?)", model.NotificationTypeVoucherRedeemed, customerUserID, merchantUserID).
+		Count(&notificationCount).Error; err != nil {
+		t.Fatalf("failed to count redemption notifications: %v", err)
+	}
+	if notificationCount != 2 {
+		t.Fatalf("expected customer and merchant notifications, got %d", notificationCount)
 	}
 }
 
@@ -567,6 +624,11 @@ func TestRedeemByTokenMarksVoucherUsed(t *testing.T) {
 	}
 	if refreshedCoupon.RedeemedCount != 1 {
 		t.Fatalf("expected redeemed_count=1, got %d", refreshedCoupon.RedeemedCount)
+	}
+
+	var audit model.OperationalAuditLog
+	if err := db.Where("action = ? AND target_id = ? AND result = ?", "voucher.redeem_by_token", voucher.ID, "success").First(&audit).Error; err != nil {
+		t.Fatalf("expected successful redemption audit: %v", err)
 	}
 }
 

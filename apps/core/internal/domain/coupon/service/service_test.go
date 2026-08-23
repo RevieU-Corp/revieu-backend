@@ -26,7 +26,7 @@ func setupCouponTestDB(t *testing.T) *gorm.DB {
 		&model.Store{},
 		&model.Dish{},
 		&model.Coupon{},
-		&model.Dish{},
+		&model.OperationalAuditLog{},
 	); err != nil {
 		t.Fatalf("failed to migrate test db: %v", err)
 	}
@@ -68,7 +68,7 @@ func TestCouponServiceMerchantCRUDAndStatus(t *testing.T) {
 		t.Fatalf("unexpected created coupon: %+v", coupon)
 	}
 
-	listed, err := svc.ListForMerchant(context.Background(), ownerID, store.ID)
+	listed, err := svc.ListForStore(context.Background(), ownerID, store.ID)
 	if err != nil || len(listed) != 1 || listed[0].ID != coupon.ID {
 		t.Fatalf("unexpected merchant coupon list: len=%d err=%v", len(listed), err)
 	}
@@ -80,6 +80,11 @@ func TestCouponServiceMerchantCRUDAndStatus(t *testing.T) {
 	active, err := svc.SetEnabled(context.Background(), ownerID, store.ID, coupon.ID, true)
 	if err != nil || active.Status != couponStatusActive {
 		t.Fatalf("enable coupon returned %+v, err=%v", active, err)
+	}
+
+	var audit model.OperationalAuditLog
+	if err := db.Where("action = ? AND target_id = ? AND result = ?", "coupon.activate", coupon.ID, "success").First(&audit).Error; err != nil {
+		t.Fatalf("expected successful coupon activation audit: %v", err)
 	}
 }
 
@@ -345,7 +350,7 @@ func TestCouponServiceListForMerchantIncludesAllStatuses(t *testing.T) {
 		}
 	}
 
-	coupons, err := svc.ListForMerchant(context.Background(), ownerID, store.ID)
+	coupons, err := svc.ListForStore(context.Background(), ownerID, store.ID)
 	if err != nil {
 		t.Fatalf("list returned error: %v", err)
 	}
@@ -375,7 +380,7 @@ func TestCouponServiceListForMerchantForbiddenForNonOwner(t *testing.T) {
 		t.Fatalf("failed to create store: %v", err)
 	}
 
-	_, err := svc.ListForMerchant(context.Background(), otherID, store.ID)
+	_, err := svc.ListForStore(context.Background(), otherID, store.ID)
 	if !errors.Is(err, ErrStoreForbidden) {
 		t.Fatalf("expected ErrStoreForbidden, got %v", err)
 	}
