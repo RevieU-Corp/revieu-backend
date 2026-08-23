@@ -424,16 +424,20 @@ func (s *ConversationService) UpdateSettings(ctx context.Context, userID, conver
 		return nil, err
 	}
 
-	if input.IsMuted != nil {
-		membership.IsMuted = *input.IsMuted
-		if err := s.db.WithContext(ctx).Model(&membership).Update("is_muted", membership.IsMuted).Error; err != nil {
-			return nil, err
-		}
+	if input.IsMuted == nil {
+		return nil, ErrConversationInvalidInput
+	}
+	membership.IsMuted = *input.IsMuted
+	if err := s.db.WithContext(ctx).Model(&membership).Update("is_muted", membership.IsMuted).Error; err != nil {
+		return nil, err
 	}
 
 	var conversation model.Conversation
 	if err := s.db.WithContext(ctx).
 		Preload("Participants.User.Profile").
+		Preload("Messages", func(db *gorm.DB) *gorm.DB {
+			return db.Order("created_at desc, id desc").Limit(1)
+		}).
 		First(&conversation, conversationID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrConversationNotFound
