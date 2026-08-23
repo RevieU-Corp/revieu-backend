@@ -58,7 +58,7 @@ func TestCouponServiceMerchantCRUDAndStatus(t *testing.T) {
 	sale := 7.0
 	coupon, err := svc.CreateForStore(context.Background(), ownerID, store.ID, CreateStoreCouponInput{
 		Title: "Owner Coupon", Type: "percentage", CouponType: "normal", Price: sale,
-		OriginalPrice: &original, SalePrice: &sale, DishIDs: []int64{dish.ID},
+		OriginalPrice: original, SalePrice: sale, DishIDs: []int64{dish.ID},
 		TotalQuantity: 10, MaxPerUser: 1, Status: couponStatusDraft,
 	})
 	if err != nil {
