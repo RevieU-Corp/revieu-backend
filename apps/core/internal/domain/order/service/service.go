@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	notificationservice "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/notification/service"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/database"
 	"gorm.io/gorm"
@@ -184,6 +185,9 @@ func (s *OrderService) Pay(ctx context.Context, userID, orderID int64) (*PayResu
 			if err := tx.Where("order_id = ?", order.ID).Order("id ASC").Find(&existing).Error; err != nil {
 				return err
 			}
+			if err := createOrderPaidNotification(ctx, tx, order); err != nil {
+				return err
+			}
 			result = &PayResult{Order: order, Vouchers: existing}
 			return nil
 		}
@@ -279,6 +283,9 @@ func (s *OrderService) Pay(ctx context.Context, userID, orderID int64) (*PayResu
 			}
 			vouchers = append(vouchers, voucher)
 		}
+		if err := createOrderPaidNotification(ctx, tx, order); err != nil {
+			return err
+		}
 
 		result = &PayResult{Order: order, Vouchers: vouchers}
 		return nil
@@ -286,6 +293,21 @@ func (s *OrderService) Pay(ctx context.Context, userID, orderID int64) (*PayResu
 		return nil, err
 	}
 	return result, nil
+}
+
+func createOrderPaidNotification(ctx context.Context, tx *gorm.DB, order model.Order) error {
+	_, _, err := notificationservice.CreateEventTx(ctx, tx, notificationservice.EventInput{
+		RecipientID: order.UserID,
+		Type:        model.NotificationTypeOrderPaid,
+		Title:       "Payment successful",
+		Content:     fmt.Sprintf("Your order #%d has been paid and your voucher is ready.", order.ID),
+		Data: map[string]interface{}{
+			"order_id": order.ID,
+			"status":   order.Status,
+		},
+		DedupKey: fmt.Sprintf("order_paid:%d", order.ID),
+	})
+	return err
 }
 
 func (s *OrderService) loadPurchasableCoupon(ctx context.Context, couponID int64) (*model.Coupon, *model.Store, error) {
