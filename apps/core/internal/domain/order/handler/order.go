@@ -5,19 +5,26 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/order/service"
 	"github.com/gin-gonic/gin"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/order/service"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/voucher/dto"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
 )
 
 type OrderHandler struct {
-	svc *service.OrderService
+	svc         *service.OrderService
+	frontendURL string
 }
 
-func NewOrderHandler(svc *service.OrderService) *OrderHandler {
+func NewOrderHandler(svc *service.OrderService, frontendURLs ...string) *OrderHandler {
 	if svc == nil {
 		svc = service.NewOrderService(nil)
 	}
-	return &OrderHandler{svc: svc}
+	frontendURL := ""
+	if len(frontendURLs) > 0 {
+		frontendURL = frontendURLs[0]
+	}
+	return &OrderHandler{svc: svc, frontendURL: frontendURL}
 }
 
 // CreateOrder godoc
@@ -104,12 +111,17 @@ func (h *OrderHandler) Detail(c *gin.Context) {
 		c.JSON(status, gin.H{"error": msg})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": detail})
+	response, err := h.orderResponse(detail.Order, detail.Vouchers)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to build voucher scan urls"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": response})
 }
 
 // PayOrder godoc
 // @Summary Pay order
-// @Description Simulates payment success for an order and issues vouchers
+// @Description Completes the configured development payment flow for an order and issues vouchers
 // @Tags order
 // @Produce json
 // @Param id path int true "Order ID"
@@ -136,7 +148,29 @@ func (h *OrderHandler) Pay(c *gin.Context) {
 		c.JSON(status, gin.H{"error": msg})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": result})
+	response, err := h.orderResponse(result.Order, result.Vouchers)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to build voucher scan urls"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": response})
+}
+
+type orderResponse struct {
+	Order    model.Order           `json:"order"`
+	Vouchers []dto.VoucherResponse `json:"vouchers"`
+}
+
+func (h *OrderHandler) orderResponse(order model.Order, vouchers []model.Voucher) (*orderResponse, error) {
+	responses := make([]dto.VoucherResponse, 0, len(vouchers))
+	for _, voucher := range vouchers {
+		response, err := dto.FromModel(voucher, h.frontendURL)
+		if err != nil {
+			return nil, err
+		}
+		responses = append(responses, response)
+	}
+	return &orderResponse{Order: order, Vouchers: responses}, nil
 }
 
 func orderErrorStatus(err error) (int, string) {
@@ -165,6 +199,8 @@ func orderErrorStatus(err error) (int, string) {
 		return http.StatusBadRequest, "coupon store mismatch"
 	case errors.Is(err, service.ErrCouponPerUserLimit):
 		return http.StatusBadRequest, "coupon per-user limit exceeded"
+	case errors.Is(err, service.ErrPaymentProviderUnavailable):
+		return http.StatusServiceUnavailable, "payment provider unavailable"
 	default:
 		return http.StatusInternalServerError, "internal error"
 	}
