@@ -56,6 +56,8 @@ func All() []interface{} {
 		&MerchantAnalytics{},
 		// Notifications
 		&Notification{},
+		// Operational observability
+		&OperationalAuditLog{},
 		// Reports & Admin
 		&Report{},
 		&AdminAuditLog{},

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/observability"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/database"
 	"gorm.io/gorm"
 )
@@ -280,6 +281,14 @@ func (s *CouponService) UpdateForMerchant(ctx context.Context, userID, couponID 
 
 // SetStatusForMerchant applies explicit activate/deactivate lifecycle actions.
 func (s *CouponService) SetStatusForMerchant(ctx context.Context, userID, couponID int64, status string) (*model.Coupon, error) {
+	started := time.Now()
+	coupon, err := s.setStatusForMerchant(ctx, userID, couponID, status)
+	duration := time.Since(started)
+	s.recordStatusOutcome(ctx, userID, couponID, status, "merchant", err, duration)
+	return coupon, err
+}
+
+func (s *CouponService) setStatusForMerchant(ctx context.Context, userID, couponID int64, status string) (*model.Coupon, error) {
 	status = strings.ToLower(strings.TrimSpace(status))
 	if status != couponStatusActive && status != couponStatusDisabled {
 		return nil, ErrInvalidCouponInput
@@ -452,6 +461,97 @@ func (s *CouponService) CreateForStore(ctx context.Context, userID, storeID int6
 	return &coupon, nil
 }
 
+// ListForStore returns every live coupon owned by the merchant, including
+// drafts and disabled coupons that the merchant must be able to edit.
+
+func normalizeCouponStatus(status string) string {
+	switch strings.TrimSpace(status) {
+	case "", couponStatusActive:
+		return couponStatusActive
+	case couponStatusDraft, couponStatusDisabled:
+		return strings.TrimSpace(status)
+	default:
+		return ""
+	}
+}
+
+func (s *CouponService) ensureOwnedStore(ctx context.Context, userID, storeID int64) (int64, error) {
+	var merchant model.Merchant
+	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&merchant).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, ErrStoreForbidden
+		}
+		return 0, err
+	}
+	var store model.Store
+	if err := s.db.WithContext(ctx).First(&store, storeID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, ErrStoreNotFound
+		}
+		return 0, err
+	}
+	if store.MerchantID != merchant.ID {
+		return 0, ErrStoreForbidden
+	}
+	return merchant.ID, nil
+}
+
+func (s *CouponService) SetStatusForStore(ctx context.Context, userID, storeID, couponID int64, status string) (*model.Coupon, error) {
+	started := time.Now()
+	coupon, err := s.setStatusForStore(ctx, userID, storeID, couponID, status)
+	duration := time.Since(started)
+	s.recordStatusOutcome(ctx, userID, couponID, status, "store", err, duration)
+	return coupon, err
+}
+
+func (s *CouponService) setStatusForStore(ctx context.Context, userID, storeID, couponID int64, status string) (*model.Coupon, error) {
+	status = normalizeCouponStatus(status)
+	if status != couponStatusActive && status != couponStatusDisabled {
+		return nil, ErrInvalidCouponInput
+	}
+	merchantID, err := s.ensureOwnedStore(ctx, userID, storeID)
+	if err != nil {
+		return nil, err
+	}
+	var coupon model.Coupon
+	if err := s.db.WithContext(ctx).Where("id = ? AND merchant_id = ? AND store_id = ?", couponID, merchantID, storeID).First(&coupon).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrCouponStoreMismatch
+		}
+		return nil, err
+	}
+	if err := s.db.WithContext(ctx).Model(&model.Coupon{}).Where("id = ?", coupon.ID).Update("status", status).Error; err != nil {
+		return nil, err
+	}
+	coupon.Status = status
+	return &coupon, nil
+}
+
+func (s *CouponService) recordStatusOutcome(ctx context.Context, userID, couponID int64, status, scope string, err error, duration time.Duration) {
+	status = normalizeCouponStatus(status)
+	action := "coupon.lifecycle"
+	if status == couponStatusActive {
+		action = "coupon.activate"
+	} else if status == couponStatusDisabled {
+		action = "coupon.deactivate"
+	}
+	audit := observability.AuditInput{
+		ActorID:    userID,
+		ActorRole:  "merchant",
+		Action:     action,
+		TargetType: "coupon",
+		TargetID:   couponID,
+		Result:     observability.ResultSuccess,
+		Details:    `{"scope":"` + scope + `","status":"` + status + `"}`,
+		Duration:   duration,
+	}
+	if err != nil {
+		audit.Result = observability.ResultFailure
+		audit.ErrorClass = observability.ClassifyError(err)
+	}
+	_ = observability.WriteAudit(ctx, s.db, audit)
+	observability.RecordTransaction(ctx, action, err == nil, err, duration)
+}
 func (s *CouponService) DeleteForStore(ctx context.Context, userID, storeID, couponID int64) error {
 	var merchant model.Merchant
 	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&merchant).Error; err != nil {

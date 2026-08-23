@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	notificationservice "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/notification/service"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/observability"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/database"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -334,11 +335,13 @@ func (s *VoucherService) RedeemByMerchantCode(ctx context.Context, merchantUserI
 		return err
 	}
 
-	return s.RedeemByMerchant(ctx, merchantUserID, voucher.ID)
+	return s.redeemByMerchant(ctx, merchantUserID, voucher.ID, "voucher.redeem_by_code")
 }
 
 func (s *VoucherService) RedeemByMerchantToken(ctx context.Context, merchantUserID int64, scanToken string) error {
-	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	started := time.Now()
+	var voucherID int64
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var merchant model.Merchant
 		if err := tx.Where("user_id = ?", merchantUserID).First(&merchant).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -356,6 +359,7 @@ func (s *VoucherService) RedeemByMerchantToken(ctx context.Context, merchantUser
 			}
 			return err
 		}
+		voucherID = voucher.ID
 
 		var coupon model.Coupon
 		if err := tx.Unscoped().First(&coupon, voucher.CouponID).Error; err != nil {
@@ -396,10 +400,18 @@ func (s *VoucherService) RedeemByMerchantToken(ctx context.Context, merchantUser
 		}
 		return createVoucherRedeemedNotifications(ctx, tx, voucher, coupon, merchantUserID)
 	})
+	duration := time.Since(started)
+	s.recordRedemptionOutcome(ctx, merchantUserID, voucherID, "voucher.redeem_by_token", err, duration)
+	return err
 }
 
 func (s *VoucherService) RedeemByMerchant(ctx context.Context, userID, voucherID int64) error {
-	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	return s.redeemByMerchant(ctx, userID, voucherID, "voucher.redeem")
+}
+
+func (s *VoucherService) redeemByMerchant(ctx context.Context, userID, voucherID int64, action string) error {
+	started := time.Now()
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var merchant model.Merchant
 		if err := tx.Where("user_id = ?", userID).First(&merchant).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -455,6 +467,28 @@ func (s *VoucherService) RedeemByMerchant(ctx context.Context, userID, voucherID
 		}
 		return createVoucherRedeemedNotifications(ctx, tx, voucher, coupon, userID)
 	})
+	duration := time.Since(started)
+	s.recordRedemptionOutcome(ctx, userID, voucherID, action, err, duration)
+	return err
+}
+
+func (s *VoucherService) recordRedemptionOutcome(ctx context.Context, userID, voucherID int64, action string, err error, duration time.Duration) {
+	audit := observability.AuditInput{
+		ActorID:    userID,
+		ActorRole:  "merchant",
+		Action:     action,
+		TargetType: "voucher",
+		TargetID:   voucherID,
+		Result:     observability.ResultSuccess,
+		Details:    `{"status":"used"}`,
+		Duration:   duration,
+	}
+	if err != nil {
+		audit.Result = observability.ResultFailure
+		audit.ErrorClass = observability.ClassifyError(err)
+	}
+	_ = observability.WriteAudit(ctx, s.db, audit)
+	observability.RecordTransaction(ctx, action, err == nil, err, duration)
 }
 
 func createVoucherRedeemedNotifications(ctx context.Context, tx *gorm.DB, voucher model.Voucher, coupon model.Coupon, merchantUserID int64) error {
