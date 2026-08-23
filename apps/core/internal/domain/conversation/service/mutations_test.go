@@ -42,7 +42,7 @@ func TestConversationMutationsPersistAndRemainScopedToParticipant(t *testing.T) 
 		t.Fatalf("create message: %v", err)
 	}
 
-	updated, err := svc.UpdateSettings(context.Background(), owner.ID, conversation.ID, UpdateConversationSettingsInput{IsPinned: boolPtr(true)})
+	updated, err := svc.UpdateSettings(context.Background(), owner.ID, conversation.ID, UpdateConversationSettingsInput{IsMuted: boolPtr(false), IsPinned: boolPtr(true)})
 	if err != nil {
 		t.Fatalf("pin conversation: %v", err)
 	}

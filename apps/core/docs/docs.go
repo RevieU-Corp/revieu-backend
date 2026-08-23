@@ -26,6 +26,11 @@ const docTemplate = `{
     "paths": {
         "/admin/merchants": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns a paginated list of merchants for admin management",
                 "produces": [
                     "application/json"
@@ -100,6 +105,11 @@ const docTemplate = `{
         },
         "/admin/merchants/{id}": {
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Updates a merchant status or verification status and records an admin audit log",
                 "consumes": [
                     "application/json"
@@ -178,6 +188,11 @@ const docTemplate = `{
         },
         "/admin/reports": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns a paginated list of user reports for admin review",
                 "produces": [
                     "application/json"
@@ -246,6 +261,11 @@ const docTemplate = `{
         },
         "/admin/reports/{id}": {
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Resolves or dismisses a report and records an admin audit log",
                 "consumes": [
                     "application/json"
@@ -333,6 +353,11 @@ const docTemplate = `{
         },
         "/ai/reviews/suggestions": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Sends a user-written draft review (text and optional images) to Gemini and returns three polished candidates. The response contains text only; images are processed for context but never returned.",
                 "consumes": [
                     "multipart/form-data"
@@ -889,6 +914,11 @@ const docTemplate = `{
         },
         "/conversations": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns conversations for the authenticated user",
                 "produces": [
                     "application/json"
@@ -940,6 +970,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Creates a new conversation",
                 "consumes": [
                     "application/json"
@@ -1048,6 +1083,11 @@ const docTemplate = `{
         },
         "/conversations/{id}/messages": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns messages for a conversation",
                 "produces": [
                     "application/json"
@@ -1124,6 +1164,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Sends a message in a conversation",
                 "consumes": [
                     "application/json"
@@ -1250,6 +1295,11 @@ const docTemplate = `{
         },
         "/conversations/{id}/settings": {
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Updates settings for a conversation (e.g. mute)",
                 "consumes": [
                     "application/json"
@@ -1420,6 +1470,11 @@ const docTemplate = `{
         },
         "/coupons/{id}/redeem": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Redeems a coupon for the authenticated user",
                 "produces": [
                     "application/json"
@@ -1581,6 +1636,11 @@ const docTemplate = `{
         },
         "/media/presigned-urls": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Generates presigned URLs for uploading files directly to R2 storage",
                 "consumes": [
                     "application/json"
@@ -1642,6 +1702,11 @@ const docTemplate = `{
         },
         "/media/uploads": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Creates a media upload and returns upload URLs",
                 "produces": [
                     "application/json"
@@ -1681,6 +1746,11 @@ const docTemplate = `{
         },
         "/media/{id}/analysis": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Triggers analysis for a media upload",
                 "produces": [
                     "application/json"
@@ -2130,6 +2200,17 @@ const docTemplate = `{
                     "dish"
                 ],
                 "summary": "Create dish",
+                "parameters": [
+                    {
+                        "description": "Create dish request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_dish_handler.UpsertDishRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "201": {
                         "description": "Created",
@@ -2201,6 +2282,13 @@ const docTemplate = `{
                 ],
                 "summary": "Delete dish",
                 "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Dish ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Dish ID",
@@ -2289,6 +2377,22 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Update dish request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_dish_handler.UpdateDishRequest"
+                        }
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Dish ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -2368,6 +2472,13 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Dish ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -2441,6 +2552,13 @@ const docTemplate = `{
                 ],
                 "summary": "Enable dish",
                 "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Dish ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Dish ID",
@@ -3702,6 +3820,11 @@ const docTemplate = `{
         },
         "/merchant/verification": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns the verification status for the authenticated merchant",
                 "produces": [
                     "application/json"
@@ -3739,6 +3862,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Submits verification documents for the authenticated merchant",
                 "consumes": [
                     "application/json"
@@ -4250,6 +4378,11 @@ const docTemplate = `{
         },
         "/merchants/{id}/follow": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Follow a merchant",
                 "produces": [
                     "application/json"
@@ -4298,6 +4431,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Unfollow a merchant",
                 "produces": [
                     "application/json"
@@ -4405,6 +4543,11 @@ const docTemplate = `{
         },
         "/notifications": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns notifications for the authenticated user",
                 "produces": [
                     "application/json"
@@ -4458,6 +4601,11 @@ const docTemplate = `{
         },
         "/notifications/read-all": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Marks all notifications as read for the authenticated user",
                 "produces": [
                     "application/json"
@@ -4488,6 +4636,11 @@ const docTemplate = `{
         },
         "/notifications/{id}/read": {
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Marks a single notification as read",
                 "produces": [
                     "application/json"
@@ -4556,6 +4709,11 @@ const docTemplate = `{
         },
         "/orders": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns orders for the authenticated user",
                 "produces": [
                     "application/json"
@@ -4593,6 +4751,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Creates a new order for the authenticated user",
                 "consumes": [
                     "application/json"
@@ -4646,6 +4809,11 @@ const docTemplate = `{
         },
         "/orders/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns an order by ID",
                 "produces": [
                     "application/json"
@@ -4703,6 +4871,11 @@ const docTemplate = `{
         },
         "/orders/{id}/pay": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Executes an idempotent configured payment flow for an order and issues vouchers",
                 "produces": [
                     "application/json"
@@ -4884,6 +5057,11 @@ const docTemplate = `{
         },
         "/payments": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Creates a payment record",
                 "consumes": [
                     "application/json"
@@ -4937,6 +5115,11 @@ const docTemplate = `{
         },
         "/payments/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns a payment by ID",
                 "produces": [
                     "application/json"
@@ -4994,6 +5177,11 @@ const docTemplate = `{
         },
         "/reviews": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Creates a new review for the authenticated user",
                 "consumes": [
                     "application/json"
@@ -5111,6 +5299,11 @@ const docTemplate = `{
         },
         "/reviews/{id}/comments": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Adds a comment to a review",
                 "consumes": [
                     "application/json"
@@ -5173,6 +5366,11 @@ const docTemplate = `{
         },
         "/reviews/{id}/like": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Likes a review for the authenticated user",
                 "produces": [
                     "application/json"
@@ -5379,6 +5577,15 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -5501,6 +5708,11 @@ const docTemplate = `{
         },
         "/user/account": {
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Schedules account deletion (cooling period). Due deletions are executed asynchronously by a background worker.",
                 "consumes": [
                     "application/json"
@@ -5558,6 +5770,11 @@ const docTemplate = `{
         },
         "/user/account/export": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Queues a user data export",
                 "produces": [
                     "application/json"
@@ -5590,6 +5807,11 @@ const docTemplate = `{
         },
         "/user/addresses": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns the authenticated user's saved addresses",
                 "produces": [
                     "application/json"
@@ -5626,6 +5848,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Adds a new address for the authenticated user",
                 "consumes": [
                     "application/json"
@@ -5678,6 +5905,11 @@ const docTemplate = `{
         },
         "/user/addresses/{id}": {
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Deletes an address",
                 "produces": [
                     "application/json"
@@ -5735,6 +5967,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Updates an existing address",
                 "consumes": [
                     "application/json"
@@ -5806,6 +6043,11 @@ const docTemplate = `{
         },
         "/user/addresses/{id}/default": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Sets an address as default",
                 "produces": [
                     "application/json"
@@ -5865,6 +6107,11 @@ const docTemplate = `{
         },
         "/user/favorites": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns favorites for the authenticated user",
                 "produces": [
                     "application/json"
@@ -5924,6 +6171,11 @@ const docTemplate = `{
         },
         "/user/followers": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns followers of the authenticated user",
                 "produces": [
                     "application/json"
@@ -5977,6 +6229,11 @@ const docTemplate = `{
         },
         "/user/following/merchants": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns merchants the authenticated user follows",
                 "produces": [
                     "application/json"
@@ -6030,6 +6287,11 @@ const docTemplate = `{
         },
         "/user/following/users": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns users the authenticated user follows",
                 "produces": [
                     "application/json"
@@ -6083,6 +6345,11 @@ const docTemplate = `{
         },
         "/user/likes": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns likes for the authenticated user",
                 "produces": [
                     "application/json"
@@ -6136,6 +6403,11 @@ const docTemplate = `{
         },
         "/user/notifications": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns the authenticated user's notification settings",
                 "produces": [
                     "application/json"
@@ -6172,6 +6444,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Updates the authenticated user's notification settings",
                 "consumes": [
                     "application/json"
@@ -6236,6 +6513,11 @@ const docTemplate = `{
         },
         "/user/posts": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns posts created by the authenticated user",
                 "produces": [
                     "application/json"
@@ -6289,6 +6571,11 @@ const docTemplate = `{
         },
         "/user/privacy": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns the authenticated user's privacy settings",
                 "produces": [
                     "application/json"
@@ -6325,6 +6612,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Updates the authenticated user's privacy settings",
                 "consumes": [
                     "application/json"
@@ -6389,6 +6681,11 @@ const docTemplate = `{
         },
         "/user/profile": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns the authenticated user's profile",
                 "produces": [
                     "application/json"
@@ -6425,6 +6722,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Updates nickname, avatar, intro, or location",
                 "consumes": [
                     "application/json"
@@ -6489,6 +6791,11 @@ const docTemplate = `{
         },
         "/user/reviews": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns reviews created by the authenticated user",
                 "produces": [
                     "application/json"
@@ -6598,6 +6905,11 @@ const docTemplate = `{
         },
         "/users/{id}/follow": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Follow a user",
                 "produces": [
                     "application/json"
@@ -6646,6 +6958,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Unfollow a user",
                 "produces": [
                     "application/json"
@@ -6825,6 +7142,11 @@ const docTemplate = `{
         },
         "/vouchers": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns vouchers for the authenticated user",
                 "produces": [
                     "application/json"
@@ -6862,6 +7184,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Creates a voucher for the authenticated user",
                 "consumes": [
                     "application/json"
@@ -6915,6 +7242,11 @@ const docTemplate = `{
         },
         "/vouchers/code/{code}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns a voucher by code",
                 "produces": [
                     "application/json"
@@ -6963,6 +7295,11 @@ const docTemplate = `{
         },
         "/vouchers/share/email": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Sends voucher share email",
                 "produces": [
                     "application/json"
@@ -6995,6 +7332,11 @@ const docTemplate = `{
         },
         "/vouchers/share/sms": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Sends voucher share SMS",
                 "produces": [
                     "application/json"
@@ -7027,6 +7369,11 @@ const docTemplate = `{
         },
         "/vouchers/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns a voucher by ID",
                 "produces": [
                     "application/json"
@@ -7150,6 +7497,11 @@ const docTemplate = `{
         },
         "/vouchers/{id}/status": {
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Updates voucher status to used",
                 "produces": [
                     "application/json"
@@ -7200,6 +7552,11 @@ const docTemplate = `{
         },
         "/vouchers/{id}/use": {
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Marks a voucher as used",
                 "produces": [
                     "application/json"
@@ -8845,6 +9202,46 @@ const docTemplate = `{
             "properties": {
                 "quantity": {
                     "type": "integer"
+                }
+            }
+        },
+        "internal_domain_dish_handler.UpdateDishRequest": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "original_price": {
+                    "type": "number"
+                }
+            }
+        },
+        "internal_domain_dish_handler.UpsertDishRequest": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "original_price": {
+                    "type": "number"
                 }
             }
         },

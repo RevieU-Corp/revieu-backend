@@ -852,7 +852,7 @@ func (s *CouponService) SetEnabled(ctx context.Context, userID, storeID, couponI
 	if enabled {
 		status = couponStatusActive
 	}
-	return s.UpdateForStore(ctx, userID, storeID, couponID, UpdateStoreCouponInput{Status: &status})
+	return s.SetStatusForStore(ctx, userID, storeID, couponID, status)
 }
 
 func (s *CouponService) ListPublishedByStore(ctx context.Context, storeID int64) ([]model.Coupon, error) {

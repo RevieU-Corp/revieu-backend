@@ -32,14 +32,14 @@ func TestPayHandlerForwardsIdempotencyKey(t *testing.T) {
 		t.Fatalf("create store: %v", err)
 	}
 	coupon := &model.Coupon{
-		MerchantID: merchant.ID,
-		StoreID:    &store.ID,
-		Title:      "Payment handler coupon",
-		Type:       "discount",
-		Price:      5,
+		MerchantID:    merchant.ID,
+		StoreID:       &store.ID,
+		Title:         "Payment handler coupon",
+		Type:          "discount",
+		Price:         5,
 		TotalQuantity: 5,
-		MaxPerUser: 1,
-		Status:     "active",
+		MaxPerUser:    1,
+		Status:        "active",
 	}
 	if err := db.Create(coupon).Error; err != nil {
 		t.Fatalf("create coupon: %v", err)
@@ -50,7 +50,7 @@ func TestPayHandlerForwardsIdempotencyKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create order: %v", err)
 	}
-	h := NewOrderHandler(svc)
+	h := NewOrderHandler(svc, "https://merchant.revieu.test")
 
 	call := func() *httptest.ResponseRecorder {
 		recorder := httptest.NewRecorder()

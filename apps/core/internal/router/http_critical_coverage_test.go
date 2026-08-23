@@ -218,15 +218,20 @@ func TestConversationHTTPRejectsMalformedID(t *testing.T) {
 }
 
 func TestMerchantVerificationHTTPValidatesAndPersistsStatus(t *testing.T) {
-	r, tok := setupAPITest(t)
+	r, _ := setupAPITest(t)
 	db := database.DB
+	merchantUser := model.User{Role: "merchant", Status: 0}
+	if err := db.Create(&merchantUser).Error; err != nil {
+		t.Fatalf("failed to create merchant user: %v", err)
+	}
+	merchantToken := issueAPITestToken(t, merchantUser, "merchant@example.com")
 
-	w := requestWithToken(r, http.MethodPost, "/api/v1/merchant/verification", tok, []byte(`{"document_type":"business_license"}`))
+	w := requestWithToken(r, http.MethodPost, "/api/v1/merchant/verification", merchantToken, []byte(`{"document_type":"business_license"}`))
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected incomplete verification 400, got %d (body=%s)", w.Code, w.Body.String())
 	}
 
-	w = requestWithToken(r, http.MethodPost, "/api/v1/merchant/verification", tok, []byte(`{"document_type":"business_license","document_url":"https://example.com/license.pdf","business_license":"LIC-HTTP-001"}`))
+	w = requestWithToken(r, http.MethodPost, "/api/v1/merchant/verification", merchantToken, []byte(`{"document_type":"business_license","document_url":"https://example.com/license.pdf","business_license":"LIC-HTTP-001"}`))
 	if w.Code != http.StatusCreated {
 		t.Fatalf("expected verification submit 201, got %d (body=%s)", w.Code, w.Body.String())
 	}
@@ -244,7 +249,7 @@ func TestMerchantVerificationHTTPValidatesAndPersistsStatus(t *testing.T) {
 		t.Fatalf("unexpected verification response: %+v", submitResponse.Data)
 	}
 
-	w = requestWithToken(r, http.MethodGet, "/api/v1/merchant/verification", tok, nil)
+	w = requestWithToken(r, http.MethodGet, "/api/v1/merchant/verification", merchantToken, nil)
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected verification status 200, got %d (body=%s)", w.Code, w.Body.String())
 	}
