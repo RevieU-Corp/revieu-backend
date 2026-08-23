@@ -657,33 +657,6 @@ func normalizeCouponPageSize(limit int) (int, error) {
 	return limit, nil
 }
 
-func resolveCouponPrices(price float64, original, sale, discount *float64) (float64, float64, float64, error) {
-	if price < 0 {
-		return 0, 0, 0, ErrInvalidCouponInput
-	}
-	salePrice := price
-	if sale != nil {
-		salePrice = *sale
-	}
-	originalPrice := float64(0)
-	if original != nil {
-		originalPrice = *original
-	}
-	if originalPrice < 0 || salePrice < 0 || (original != nil && salePrice > originalPrice && originalPrice > 0) {
-		return 0, 0, 0, ErrInvalidCouponInput
-	}
-	discountPercentage := float64(0)
-	if discount != nil {
-		discountPercentage = *discount
-	} else if originalPrice > 0 {
-		discountPercentage = ((originalPrice - salePrice) / originalPrice) * 100
-	}
-	if discountPercentage < 0 || discountPercentage > 100 {
-		return 0, 0, 0, ErrInvalidCouponInput
-	}
-	return originalPrice, salePrice, discountPercentage, nil
-}
-
 func (s *CouponService) loadOwnedCoupon(ctx context.Context, userID, storeID, couponID int64) (*model.Merchant, *model.Coupon, error) {
 	var merchant model.Merchant
 	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&merchant).Error; err != nil {
