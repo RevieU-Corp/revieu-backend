@@ -160,14 +160,28 @@ func (s *VerificationService) ensureMerchantTx(db *gorm.DB, userID int64) (*mode
 		}
 		return nil, err
 	}
-	if user.Status != 0 || strings.ToLower(strings.TrimSpace(user.Role)) != "merchant" {
+	if user.Status != 0 {
 		return nil, ErrVerificationForbidden
 	}
+
+	// A real, already-onboarded merchant is the source of truth here, not
+	// users.role: auth.hydrateMerchantRole fixes "merchant" only on the
+	// in-memory JWT principal at login time and deliberately never rewrites
+	// the persisted role column, so an existing merchant's row can still say
+	// role="user" forever. Check for an owned Merchant record first and let
+	// it through regardless of role.
 	var merchant model.Merchant
 	if err := db.Where("user_id = ?", userID).First(&merchant).Error; err == nil {
 		return &merchant, nil
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
+	}
+
+	// No merchant record yet — only auto-provision one for a principal whose
+	// role is explicitly "merchant"; everyone else must already own a
+	// merchant record to reach this point.
+	if strings.ToLower(strings.TrimSpace(user.Role)) != "merchant" {
+		return nil, ErrVerificationForbidden
 	}
 
 	merchant = model.Merchant{
