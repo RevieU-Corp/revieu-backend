@@ -68,7 +68,7 @@ func TestCouponServiceMerchantCRUDAndStatus(t *testing.T) {
 		t.Fatalf("unexpected created coupon: %+v", coupon)
 	}
 
-	listed, err := svc.ListForStore(context.Background(), ownerID, store.ID)
+	listed, err := svc.ListForMerchant(context.Background(), ownerID, store.ID)
 	if err != nil || len(listed) != 1 || listed[0].ID != coupon.ID {
 		t.Fatalf("unexpected merchant coupon list: len=%d err=%v", len(listed), err)
 	}
