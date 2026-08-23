@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/token"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/database"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/email"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/logger"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -159,6 +159,9 @@ func (s *service) Login(ctx context.Context, email, password, ipAddress string) 
 	if user.Status == 1 {
 		return LoginTokens{}, errors.New("your account has been suspended")
 	}
+	if err := s.hydrateMerchantRole(ctx, &user); err != nil {
+		return LoginTokens{}, err
+	}
 
 	now := time.Now().UTC()
 	auth.LastLoginAt = &now
@@ -217,17 +220,55 @@ func (s *service) RefreshAccessToken(ctx context.Context, refreshToken string) (
 		}
 		return LoginTokens{}, err
 	}
-
+	if err := s.hydrateMerchantRole(ctx, &user); err != nil {
+		return LoginTokens{}, err
+	}
 	var tokens LoginTokens
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&model.RefreshToken{}).
+		var stored model.RefreshToken
+		if err := tx.Where("token_hash = ? AND revoked_at IS NULL", tokenHash).First(&stored).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return errors.New("invalid refresh token")
+			}
+			return err
+		}
+		if !now.Before(stored.ExpiresAt) {
+			return errors.New("invalid refresh token")
+		}
+
+		var user model.User
+		if err := tx.First(&user, stored.UserID).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return errors.New("invalid refresh token")
+			}
+			return err
+		}
+		if user.Status != 0 {
+			return errors.New("invalid refresh token")
+		}
+
+		var auth model.UserAuth
+		if err := tx.Where("user_id = ? AND identity_type = ?", stored.UserID, "email").First(&auth).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return errors.New("invalid refresh token")
+			}
+			return err
+		}
+
+		result := tx.Model(&model.RefreshToken{}).
 			Where("id = ? AND revoked_at IS NULL", stored.ID).
 			Updates(map[string]interface{}{
 				"revoked_at":   now,
 				"last_used_at": now,
 				"updated_at":   now,
-			}).Error; err != nil {
-			return err
+			})
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected != 1 {
+			// A concurrent request may have rotated the same token between
+			// the lookup and the update. Do not issue a second token pair.
+			return errors.New("invalid refresh token")
 		}
 
 		issued, err := s.issueTokensInTx(tx, &user, &auth)
@@ -251,6 +292,12 @@ func (s *service) LoginOrRegisterOAuthUser(ctx context.Context, email, name, pro
 	if err == nil {
 		if err := s.db.First(&user, auth.UserID).Error; err != nil {
 			return "", err
+		}
+		if err := s.hydrateMerchantRole(ctx, &user); err != nil {
+			return "", err
+		}
+		if user.Status != 0 {
+			return "", errors.New("user is inactive")
 		}
 
 		now := time.Now().UTC()
@@ -308,6 +355,9 @@ func (s *service) LoginOrRegisterOAuthUser(ctx context.Context, email, name, pro
 	if err != nil {
 		return "", err
 	}
+	if err := s.hydrateMerchantRole(ctx, &user); err != nil {
+		return "", err
+	}
 
 	token, err := s.tokenService.GenerateToken(&user, &auth)
 	if err != nil {
@@ -321,6 +371,33 @@ func (s *service) LoginOrRegisterOAuthUser(ctx context.Context, email, name, pro
 	)
 
 	return token, nil
+}
+
+// hydrateMerchantRole keeps the JWT principal aligned with merchant
+// ownership. Older accounts can legitimately have users.role="user" even
+// after a Merchant row has been created for them; relying only on the stored
+// role makes merchant login and any role-gated merchant endpoint reject a
+// valid owner. The source-of-truth relationship is read at authentication
+// time without rewriting the user's persisted role.
+func (s *service) hydrateMerchantRole(ctx context.Context, user *model.User) error {
+	if user == nil || user.Role != "user" {
+		return nil
+	}
+
+	var merchant model.Merchant
+	err := s.db.WithContext(ctx).
+		Select("id").
+		Where("user_id = ?", user.ID).
+		First(&merchant).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	user.Role = "merchant"
+	return nil
 }
 
 func (s *service) VerifyEmail(ctx context.Context, token string) error {
