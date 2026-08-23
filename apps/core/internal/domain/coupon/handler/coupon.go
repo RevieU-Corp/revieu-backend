@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/coupon/service"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
 )
 
 type CouponHandler struct {
@@ -21,20 +22,69 @@ type InitiatePaymentRequest struct {
 }
 
 type CreateStoreCouponRequest struct {
-	Title         string     `json:"title" binding:"required"`
-	Description   string     `json:"description"`
-	Type          string     `json:"type" binding:"required"`
-	Price         float64    `json:"price"`
-	TotalQuantity int        `json:"total_quantity" binding:"required"`
-	MaxPerUser    int        `json:"max_per_user" binding:"required"`
-	ValidFrom     *time.Time `json:"valid_from"`
-	ValidUntil    *time.Time `json:"valid_until"`
-	Terms         string     `json:"terms"`
-	Status        string     `json:"status"`
+	Title              string     `json:"title" binding:"required"`
+	Description        string     `json:"description"`
+	Type               string     `json:"type" binding:"required"`
+	CouponType         string     `json:"coupon_type"`
+	Price              float64    `json:"price"`
+	OriginalPrice      float64    `json:"original_price"`
+	SalePrice          float64    `json:"sale_price"`
+	DiscountPercentage float64    `json:"discount_percentage"`
+	ImageURL           string     `json:"image_url"`
+	DishIDs            []int64    `json:"dish_ids"`
+	TotalQuantity      int        `json:"total_quantity" binding:"required"`
+	MaxPerUser         int        `json:"max_per_user" binding:"required"`
+	ValidFrom          *time.Time `json:"valid_from"`
+	ValidUntil         *time.Time `json:"valid_until"`
+	Terms              string     `json:"terms"`
+	Status             string     `json:"status"`
+}
+
+// UpdateStoreCouponRequest is the request payload for editing an existing
+// store-scoped coupon. Every field is optional — only provided fields change.
+type UpdateStoreCouponRequest struct {
+	Title              *string    `json:"title"`
+	Description        *string    `json:"description"`
+	CouponType         *string    `json:"coupon_type"`
+	ImageURL           *string    `json:"image_url"`
+	Price              *float64   `json:"price"`
+	OriginalPrice      *float64   `json:"original_price"`
+	SalePrice          *float64   `json:"sale_price"`
+	DiscountPercentage *float64   `json:"discount_percentage"`
+	DishIDs            *[]int64   `json:"dish_ids"`
+	TotalQuantity      *int       `json:"total_quantity"`
+	MaxPerUser         *int       `json:"max_per_user"`
+	ValidFrom          *time.Time `json:"valid_from"`
+	ValidUntil         *time.Time `json:"valid_until"`
+	ClearValidFrom     bool       `json:"clear_valid_from"`
+	ClearValidUntil    bool       `json:"clear_valid_until"`
+	Terms              *string    `json:"terms"`
+	Status             *string    `json:"status"`
 }
 
 type ValidateCouponRequest struct {
 	Quantity int `json:"quantity"`
+}
+
+// couponResponse overrides model.Coupon's JSON "status" with the derived,
+// display-facing status (see service.ComputeStatus) without persisting it.
+// Go's json encoding prefers a shallower field over one promoted from an
+// embedded struct, so this Status field wins over Coupon.Status at encode time.
+type couponResponse struct {
+	model.Coupon
+	Status string `json:"status"`
+}
+
+func withComputedStatus(coupon model.Coupon) couponResponse {
+	return couponResponse{Coupon: coupon, Status: service.ComputeStatus(coupon, time.Now())}
+}
+
+func withComputedStatuses(coupons []model.Coupon) []couponResponse {
+	out := make([]couponResponse, len(coupons))
+	for i, coupon := range coupons {
+		out[i] = withComputedStatus(coupon)
+	}
+	return out
 }
 
 func NewCouponHandler(svc *service.CouponService) *CouponHandler {
@@ -79,23 +129,29 @@ func (h *CouponHandler) CreateStoreCoupon(c *gin.Context) {
 	}
 
 	coupon, err := h.svc.CreateForStore(c.Request.Context(), userID, storeID, service.CreateStoreCouponInput{
-		Title:         req.Title,
-		Description:   req.Description,
-		Type:          req.Type,
-		Price:         req.Price,
-		TotalQuantity: req.TotalQuantity,
-		MaxPerUser:    req.MaxPerUser,
-		ValidFrom:     req.ValidFrom,
-		ValidUntil:    req.ValidUntil,
-		Terms:         req.Terms,
-		Status:        req.Status,
+		Title:              req.Title,
+		Description:        req.Description,
+		Type:               req.Type,
+		CouponType:         req.CouponType,
+		Price:              req.Price,
+		OriginalPrice:      req.OriginalPrice,
+		SalePrice:          req.SalePrice,
+		DiscountPercentage: req.DiscountPercentage,
+		ImageURL:           req.ImageURL,
+		DishIDs:            req.DishIDs,
+		TotalQuantity:      req.TotalQuantity,
+		MaxPerUser:         req.MaxPerUser,
+		ValidFrom:          req.ValidFrom,
+		ValidUntil:         req.ValidUntil,
+		Terms:              req.Terms,
+		Status:             req.Status,
 	})
 	if err != nil {
 		status, msg := couponErrorStatus(err)
 		c.JSON(status, gin.H{"error": msg})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"data": coupon})
+	c.JSON(http.StatusCreated, gin.H{"data": withComputedStatus(*coupon)})
 }
 
 // DeleteStoreCoupon godoc
@@ -189,6 +245,166 @@ func (h *CouponHandler) GetPublishedCoupon(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": coupon})
 }
+
+// ListMineForStore godoc
+// @Summary List my store coupons
+// @Description Lists all coupons for an owned store, including drafts/disabled/expired
+// @Tags coupon
+// @Produce json
+// @Param id path int true "Store ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /merchant/stores/{id}/coupons [get]
+func (h *CouponHandler) ListMineForStore(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	storeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid store id"})
+		return
+	}
+	coupons, err := h.svc.ListForMerchant(c.Request.Context(), userID, storeID)
+	if err != nil {
+		status, msg := couponErrorStatus(err)
+		c.JSON(status, gin.H{"error": msg})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": withComputedStatuses(coupons)})
+}
+
+func parseStoreAndCouponID(c *gin.Context) (int64, int64, bool) {
+	storeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid store id"})
+		return 0, 0, false
+	}
+	couponID, err := strconv.ParseInt(c.Param("couponId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid coupon id"})
+		return 0, 0, false
+	}
+	return storeID, couponID, true
+}
+
+// UpdateStoreCoupon godoc
+// @Summary Update store coupon
+// @Tags coupon
+// @Accept json
+// @Produce json
+// @Param id path int true "Store ID"
+// @Param couponId path int true "Coupon ID"
+// @Param request body UpdateStoreCouponRequest true "Update store coupon request"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /merchant/stores/{id}/coupons/{couponId} [patch]
+func (h *CouponHandler) UpdateStoreCoupon(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	storeID, couponID, ok := parseStoreAndCouponID(c)
+	if !ok {
+		return
+	}
+	var req UpdateStoreCouponRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if (req.ClearValidFrom && req.ValidFrom != nil) || (req.ClearValidUntil && req.ValidUntil != nil) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "clear and set time fields cannot be combined"})
+		return
+	}
+	var validFrom, validUntil **time.Time
+	if req.ClearValidFrom {
+		var cleared *time.Time
+		validFrom = &cleared
+	} else if req.ValidFrom != nil {
+		value := req.ValidFrom
+		validFrom = &value
+	}
+	if req.ClearValidUntil {
+		var cleared *time.Time
+		validUntil = &cleared
+	} else if req.ValidUntil != nil {
+		value := req.ValidUntil
+		validUntil = &value
+	}
+	coupon, err := h.svc.UpdateForStore(c.Request.Context(), userID, storeID, couponID, service.UpdateStoreCouponInput{
+		Title: req.Title, Description: req.Description, CouponType: req.CouponType, ImageURL: req.ImageURL,
+		Price: req.Price, OriginalPrice: req.OriginalPrice, SalePrice: req.SalePrice, DiscountPercentage: req.DiscountPercentage,
+		DishIDs: req.DishIDs, TotalQuantity: req.TotalQuantity, MaxPerUser: req.MaxPerUser,
+		ValidFrom: validFrom, ValidUntil: validUntil, Terms: req.Terms, Status: req.Status,
+	})
+	if err != nil {
+		status, msg := couponErrorStatus(err)
+		c.JSON(status, gin.H{"error": msg})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": withComputedStatus(*coupon)})
+}
+
+func (h *CouponHandler) setStoreCouponEnabled(c *gin.Context, enabled bool) {
+	userID := c.GetInt64("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	storeID, couponID, ok := parseStoreAndCouponID(c)
+	if !ok {
+		return
+	}
+	coupon, err := h.svc.SetEnabled(c.Request.Context(), userID, storeID, couponID, enabled)
+	if err != nil {
+		status, msg := couponErrorStatus(err)
+		c.JSON(status, gin.H{"error": msg})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": withComputedStatus(*coupon)})
+}
+
+// EnableStoreCoupon godoc
+// @Summary Enable store coupon
+// @Tags coupon
+// @Produce json
+// @Param id path int true "Store ID"
+// @Param couponId path int true "Coupon ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /merchant/stores/{id}/coupons/{couponId}/enable [post]
+func (h *CouponHandler) EnableStoreCoupon(c *gin.Context) { h.setStoreCouponEnabled(c, true) }
+
+// DisableStoreCoupon godoc
+// @Summary Disable store coupon
+// @Tags coupon
+// @Produce json
+// @Param id path int true "Store ID"
+// @Param couponId path int true "Coupon ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /merchant/stores/{id}/coupons/{couponId}/disable [post]
+func (h *CouponHandler) DisableStoreCoupon(c *gin.Context) { h.setStoreCouponEnabled(c, false) }
 
 // ValidateCoupon godoc
 // @Summary Validate coupon
