@@ -10,6 +10,7 @@ import (
 	notificationservice "github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/notification/service"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/review/dto"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/model"
+	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/visibility"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/pkg/database"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -49,6 +50,21 @@ func (s *ReviewService) Detail(ctx context.Context, id int64) (*model.Review, er
 		return nil, gorm.ErrRecordNotFound
 	}
 	return &review, nil
+}
+
+func (s *ReviewService) DetailForViewer(ctx context.Context, id, viewerID int64) (*model.Review, error) {
+	review, err := s.Detail(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	allowed, err := visibility.CanViewUserContent(ctx, s.db, review.UserID, viewerID)
+	if err != nil {
+		return nil, err
+	}
+	if !allowed {
+		return nil, visibility.ErrPrivateContent
+	}
+	return review, nil
 }
 
 func (s *ReviewService) Create(ctx context.Context, userID int64, req dto.Review) (model.Review, error) {
