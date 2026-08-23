@@ -71,12 +71,13 @@ definitions:
     type: object
   github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_payment_service.CreatePaymentRequest:
     properties:
-      amount:
-        type: number
-      currency:
+      order_id:
+        type: integer
+      payment_method:
         type: string
-      status:
-        type: string
+    required:
+    - order_id
+    - payment_method
     type: object
   github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_profile_service.PublicProfileResponse:
     properties:
@@ -128,9 +129,19 @@ definitions:
         type: integer
       location:
         type: string
+      locationVerified:
+        type: boolean
       merchantId:
         type: string
       rating:
+        type: number
+      ratingEnv:
+        type: number
+      ratingFood:
+        type: number
+      ratingService:
+        type: number
+      ratingValue:
         type: number
       storeId:
         type: string
@@ -381,11 +392,7 @@ definitions:
     type: object
   github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.CreateVoucherRequest:
     properties:
-      code:
-        type: string
       couponId:
-        type: string
-      userId:
         type: string
     type: object
   github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.RedeemPreview:
@@ -490,11 +497,25 @@ definitions:
     type: object
   internal_domain_coupon_handler.CreateStoreCouponRequest:
     properties:
+      coupon_type:
+        type: string
       description:
+        type: string
+      discount_percentage:
+        type: number
+      dish_ids:
+        items:
+          type: integer
+        type: array
+      image_url:
         type: string
       max_per_user:
         type: integer
+      original_price:
+        type: number
       price:
+        type: number
+      sale_price:
         type: number
       status:
         type: string
@@ -523,10 +544,54 @@ definitions:
     required:
     - userId
     type: object
+  internal_domain_coupon_handler.UpdateStoreCouponRequest:
+    properties:
+      clear_valid_from:
+        type: boolean
+      clear_valid_until:
+        type: boolean
+      coupon_type:
+        type: string
+      description:
+        type: string
+      discount_percentage:
+        type: number
+      dish_ids:
+        items:
+          type: integer
+        type: array
+      image_url:
+        type: string
+      max_per_user:
+        type: integer
+      original_price:
+        type: number
+      price:
+        type: number
+      sale_price:
+        type: number
+      status:
+        type: string
+      terms:
+        type: string
+      title:
+        type: string
+      total_quantity:
+        type: integer
+      valid_from:
+        type: string
+      valid_until:
+        type: string
+    type: object
   internal_domain_coupon_handler.ValidateCouponRequest:
     properties:
       quantity:
         type: integer
+    type: object
+  internal_domain_voucher_handler.RedeemByCodeRequest:
+    properties:
+      code:
+        type: string
     type: object
   internal_domain_voucher_handler.RedeemByTokenRequest:
     properties:
@@ -837,6 +902,15 @@ paths:
       summary: Redirect to Google OAuth
       tags:
       - auth
+  /auth/logout:
+    post:
+      description: Clears the HttpOnly OAuth access-token cookie
+      responses:
+        "204":
+          description: No Content
+      summary: Clear the current browser session
+      tags:
+      - auth
   /auth/me:
     get:
       description: Get the current authenticated user's information (protected route)
@@ -953,7 +1027,7 @@ paths:
       - auth
   /categories:
     get:
-      description: Returns a list of all categories
+      description: Returns all categories as a parent-to-child hierarchy
       produces:
       - application/json
       responses:
@@ -962,12 +1036,27 @@ paths:
           schema:
             additionalProperties: true
             type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: List categories
       tags:
       - category
   /conversations:
     get:
       description: Returns conversations for the authenticated user
+      parameters:
+      - description: Cursor (conversation id) for the next page
+        in: query
+        name: cursor
+        type: integer
+      - description: Page size (max 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -975,6 +1064,12 @@ paths:
           description: OK
           schema:
             additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "401":
           description: Unauthorized
@@ -992,10 +1087,21 @@ paths:
       produces:
       - application/json
       responses:
+        "200":
+          description: Existing direct conversation
+          schema:
+            additionalProperties: true
+            type: object
         "201":
           description: Created
           schema:
             additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "401":
           description: Unauthorized
@@ -1015,6 +1121,14 @@ paths:
         name: id
         required: true
         type: integer
+      - description: Cursor (message id) for older messages
+        in: query
+        name: cursor
+        type: integer
+      - description: Page size (max 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -1023,8 +1137,26 @@ paths:
           schema:
             additionalProperties: true
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "401":
           description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
           schema:
             additionalProperties:
               type: string
@@ -1050,8 +1182,26 @@ paths:
           schema:
             additionalProperties: true
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "401":
           description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
           schema:
             additionalProperties:
               type: string
@@ -1078,8 +1228,26 @@ paths:
           schema:
             additionalProperties: true
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "401":
           description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
           schema:
             additionalProperties:
               type: string
@@ -1087,6 +1255,38 @@ paths:
       summary: Update conversation settings
       tags:
       - conversation
+  /coupons/{id}:
+    get:
+      description: Returns one active, currently purchasable coupon by ID
+      parameters:
+      - description: Coupon ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get published coupon
+      tags:
+      - coupon
   /coupons/{id}/payment/initiate:
     post:
       consumes:
@@ -1319,6 +1519,297 @@ paths:
       summary: Create media upload
       tags:
       - media
+  /merchant/dishes:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List my dishes
+      tags:
+      - dish
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create dish
+      tags:
+      - dish
+  /merchant/dishes/{id}:
+    delete:
+      parameters:
+      - description: Dish ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete dish
+      tags:
+      - dish
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Dish ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update dish
+      tags:
+      - dish
+  /merchant/dishes/{id}/disable:
+    post:
+      parameters:
+      - description: Dish ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Disable dish
+      tags:
+      - dish
+  /merchant/dishes/{id}/enable:
+    post:
+      parameters:
+      - description: Dish ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Enable dish
+      tags:
+      - dish
   /merchant/me:
     delete:
       description: Placeholder endpoint for future merchant deletion flow
@@ -1587,6 +2078,45 @@ paths:
       tags:
       - store
   /merchant/stores/{id}/coupons:
+    get:
+      description: Lists all coupons for an owned store, including drafts/disabled/expired
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List my store coupons
+      tags:
+      - coupon
     post:
       consumes:
       - application/json
@@ -1696,6 +2226,175 @@ paths:
       security:
       - BearerAuth: []
       summary: Delete store coupon
+      tags:
+      - coupon
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Coupon ID
+        in: path
+        name: couponId
+        required: true
+        type: integer
+      - description: Update store coupon request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_coupon_handler.UpdateStoreCouponRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update store coupon
+      tags:
+      - coupon
+  /merchant/stores/{id}/coupons/{couponId}/disable:
+    post:
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Coupon ID
+        in: path
+        name: couponId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Disable store coupon
+      tags:
+      - coupon
+  /merchant/stores/{id}/coupons/{couponId}/enable:
+    post:
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Coupon ID
+        in: path
+        name: couponId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Enable store coupon
       tags:
       - coupon
   /merchant/stores/{id}/deactivate:
@@ -1855,6 +2554,102 @@ paths:
       security:
       - BearerAuth: []
       summary: Redeem voucher by merchant owner
+      tags:
+      - voucher
+  /merchant/vouchers/code/{code}:
+    get:
+      description: Validates a voucher code for the authenticated merchant without
+        mutating state
+      parameters:
+      - description: Voucher code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_revieu-corp_revieu-core-api-go_apps_core_internal_domain_voucher_service.RedeemPreview'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Preview voucher redemption by code
+      tags:
+      - voucher
+  /merchant/vouchers/redeem-by-code:
+    post:
+      consumes:
+      - application/json
+      description: Redeems a voucher code for the authenticated merchant
+      parameters:
+      - description: Redeem by code request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_voucher_handler.RedeemByCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Redeem voucher by code
       tags:
       - voucher
   /merchant/vouchers/redeem-by-token:
@@ -2119,6 +2914,15 @@ paths:
   /notifications:
     get:
       description: Returns notifications for the authenticated user
+      parameters:
+      - description: Cursor (notification id) for the next page
+        in: query
+        name: cursor
+        type: integer
+      - description: Page size (max 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -2126,6 +2930,12 @@ paths:
           description: OK
           schema:
             additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "401":
           description: Unauthorized
@@ -2154,8 +2964,26 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "401":
           description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
           schema:
             additionalProperties:
               type: string
@@ -2172,8 +3000,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
         "401":
           description: Unauthorized
@@ -2284,7 +3111,8 @@ paths:
       - order
   /orders/{id}/pay:
     post:
-      description: Simulates payment success for an order and issues vouchers
+      description: Completes the configured development payment flow for an order
+        and issues vouchers
       parameters:
       - description: Order ID
         in: path
