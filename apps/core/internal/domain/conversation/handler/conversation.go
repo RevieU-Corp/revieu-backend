@@ -25,22 +25,53 @@ func NewConversationHandler(svc *service.ConversationService) *ConversationHandl
 // @Description Returns conversations for the authenticated user
 // @Tags conversation
 // @Produce json
+// @Param cursor query int false "Cursor (conversation id) for the next page"
+// @Param limit query int false "Page size (max 100)"
 // @Success 200 {object} map[string]interface{}
 // @Failure 401 {object} map[string]string
+// @Failure 400 {object} map[string]string
 // @Router /conversations [get]
 func (h *ConversationHandler) List(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	if userID == 0 {
+	if userID <= 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	conversations, err := h.svc.List(c.Request.Context(), userID)
+	query, err := parseConversationListQuery(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	conversations, cursor, err := h.svc.List(c.Request.Context(), userID, query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list conversations"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": conversations})
+	c.JSON(http.StatusOK, gin.H{"data": conversations, "cursor": cursor})
+}
+
+func parseConversationListQuery(c *gin.Context) (service.ConversationListQuery, error) {
+	query := service.ConversationListQuery{Limit: service.DefaultConversationListLimit}
+	if rawLimit := c.Query("limit"); rawLimit != "" {
+		limit, err := strconv.Atoi(rawLimit)
+		if err != nil || limit <= 0 {
+			return query, errors.New("limit must be a positive integer")
+		}
+		if limit > service.MaxConversationListLimit {
+			limit = service.MaxConversationListLimit
+		}
+		query.Limit = limit
+	}
+	if rawCursor := c.Query("cursor"); rawCursor != "" {
+		cursor, err := strconv.ParseInt(rawCursor, 10, 64)
+		if err != nil || cursor <= 0 {
+			return query, errors.New("cursor must be a positive integer")
+		}
+		query.Cursor = &cursor
+	}
+	return query, nil
 }
 
 // CreateConversation godoc
@@ -49,12 +80,14 @@ func (h *ConversationHandler) List(c *gin.Context) {
 // @Tags conversation
 // @Accept json
 // @Produce json
+// @Success 200 {object} map[string]interface{} "Existing direct conversation"
 // @Success 201 {object} map[string]interface{}
 // @Failure 401 {object} map[string]string
+// @Failure 400 {object} map[string]string
 // @Router /conversations [post]
 func (h *ConversationHandler) Create(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	if userID == 0 {
+	if userID <= 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -67,6 +100,10 @@ func (h *ConversationHandler) Create(c *gin.Context) {
 
 	conversation, err := h.svc.Create(c.Request.Context(), userID, req)
 	if err != nil {
+		if errors.Is(err, service.ErrConversationAlreadyExists) {
+			c.JSON(http.StatusOK, gin.H{"data": conversation})
+			return
+		}
 		if errors.Is(err, service.ErrConversationInvalidInput) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid conversation input"})
 			return
