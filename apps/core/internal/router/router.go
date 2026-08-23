@@ -3,6 +3,7 @@ package router
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/config"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/admin"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/ai"
@@ -24,7 +25,6 @@ import (
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/users"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/verification"
 	"github.com/revieu-corp/revieu-core-api-go/apps/core/internal/domain/voucher"
-	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )

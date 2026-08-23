@@ -24,6 +24,7 @@ func setupCouponTestDB(t *testing.T) *gorm.DB {
 		&model.User{},
 		&model.Merchant{},
 		&model.Store{},
+		&model.Dish{},
 		&model.Coupon{},
 		&model.Dish{},
 	); err != nil {
@@ -31,6 +32,55 @@ func setupCouponTestDB(t *testing.T) *gorm.DB {
 	}
 
 	return db
+}
+
+func TestCouponServiceMerchantCRUDAndStatus(t *testing.T) {
+	db := setupCouponTestDB(t)
+	svc := NewCouponService(db)
+
+	ownerID := int64(831)
+	if err := db.Create(&model.User{ID: ownerID, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create owner user: %v", err)
+	}
+	merchant := model.Merchant{Name: "Coupon Owner", UserID: &ownerID}
+	if err := db.Create(&merchant).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+	store := model.Store{MerchantID: merchant.ID, Name: "Coupon Store", Status: storeStatusPublished}
+	if err := db.Create(&store).Error; err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	dish := model.Dish{MerchantID: merchant.ID, Name: "House Dish", Status: "active"}
+	if err := db.Create(&dish).Error; err != nil {
+		t.Fatalf("failed to create dish: %v", err)
+	}
+	original := 10.0
+	sale := 7.0
+	coupon, err := svc.CreateForStore(context.Background(), ownerID, store.ID, CreateStoreCouponInput{
+		Title: "Owner Coupon", Type: "percentage", CouponType: "normal", Price: sale,
+		OriginalPrice: original, SalePrice: sale, DishIDs: []int64{dish.ID},
+		TotalQuantity: 10, MaxPerUser: 1, Status: couponStatusDraft,
+	})
+	if err != nil {
+		t.Fatalf("create coupon returned error: %v", err)
+	}
+	if coupon.Status != couponStatusDraft || coupon.OriginalPrice != original || coupon.SalePrice != sale {
+		t.Fatalf("unexpected created coupon: %+v", coupon)
+	}
+
+	listed, err := svc.ListForMerchant(context.Background(), ownerID, store.ID)
+	if err != nil || len(listed) != 1 || listed[0].ID != coupon.ID {
+		t.Fatalf("unexpected merchant coupon list: len=%d err=%v", len(listed), err)
+	}
+	newTitle := "Updated Coupon"
+	updated, err := svc.UpdateForStore(context.Background(), ownerID, store.ID, coupon.ID, UpdateStoreCouponInput{Title: &newTitle})
+	if err != nil || updated.Title != newTitle {
+		t.Fatalf("update coupon returned %+v, err=%v", updated, err)
+	}
+	active, err := svc.SetEnabled(context.Background(), ownerID, store.ID, coupon.ID, true)
+	if err != nil || active.Status != couponStatusActive {
+		t.Fatalf("enable coupon returned %+v, err=%v", active, err)
+	}
 }
 
 func TestCouponServiceDeleteForStoreOwnerSoftDeleteAndIdempotent(t *testing.T) {
