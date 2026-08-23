@@ -17,15 +17,16 @@ import (
 
 var (
 	ErrTooManyFiles       = errors.New("too many files, maximum 10 allowed")
-	ErrInvalidContentType = errors.New("invalid content type, only image/jpeg, image/png, image/gif, image/webp allowed")
+	ErrInvalidContentType = errors.New("invalid content type, only image/jpeg, image/png, image/gif, image/webp, application/pdf allowed")
 	ErrUnauthorized       = errors.New("authenticated user is required")
 )
 
 var allowedContentTypes = map[string]string{
-	"image/jpeg": ".jpg",
-	"image/png":  ".png",
-	"image/gif":  ".gif",
-	"image/webp": ".webp",
+	"image/jpeg":      ".jpg",
+	"image/png":       ".png",
+	"image/gif":       ".gif",
+	"image/webp":      ".webp",
+	"application/pdf": ".pdf",
 }
 
 type MediaService struct {
