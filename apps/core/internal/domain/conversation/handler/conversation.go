@@ -80,12 +80,14 @@ func parseConversationListQuery(c *gin.Context) (service.ConversationListQuery, 
 // @Tags conversation
 // @Accept json
 // @Produce json
+// @Success 200 {object} map[string]interface{} "Existing direct conversation"
 // @Success 201 {object} map[string]interface{}
 // @Failure 401 {object} map[string]string
+// @Failure 400 {object} map[string]string
 // @Router /conversations [post]
 func (h *ConversationHandler) Create(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	if userID == 0 {
+	if userID <= 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -98,6 +100,10 @@ func (h *ConversationHandler) Create(c *gin.Context) {
 
 	conversation, err := h.svc.Create(c.Request.Context(), userID, req)
 	if err != nil {
+		if errors.Is(err, service.ErrConversationAlreadyExists) {
+			c.JSON(http.StatusOK, gin.H{"data": conversation})
+			return
+		}
 		if errors.Is(err, service.ErrConversationInvalidInput) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid conversation input"})
 			return
