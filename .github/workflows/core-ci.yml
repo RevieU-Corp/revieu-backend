@@ -201,7 +201,7 @@ jobs:
       - name: Update infra workload image
         uses: mikefarah/yq@c14f446382944492701b16c1ddb48bb9dbe683e3
         env:
-          IMAGE_REF: ${{ github.ref_name == 'main' && 'latest' || 'dev' }}@${{ steps.image.outputs.digest }}
+          IMAGE_REF: ghcr.io/revieu-corp/revieu-core-api-go:${{ github.ref_name == 'main' && 'latest' || 'dev' }}@${{ steps.image.outputs.digest }}
           WORKLOAD_FILE: ${{ github.ref_name == 'main' && 'workloads/revieu-prod/core-api.yaml' || 'workloads/revieu-dev/core-api.yaml' }}
         with:
           cmd: >-
