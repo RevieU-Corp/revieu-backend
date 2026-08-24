@@ -259,6 +259,49 @@ func TestVerificationHandlerStatusReturnsUnverifiedWhenNoSubmissionExists(t *tes
 	}
 }
 
+// TestVerificationHandlerAllowsExistingMerchantRegardlessOfPersistedRole
+// covers the real production shape: auth.hydrateMerchantRole (see the auth
+// domain) fixes the "merchant" role only on the in-memory JWT principal at
+// login time and deliberately never rewrites users.role in the database, so
+// a real, already-onboarded merchant can have users.role still "user" while
+// genuinely owning a Merchant record. Gating on the persisted role column
+// (as ensureMerchantTx used to) locked every such account out of both
+// endpoints with 403 the moment they tried to view or submit verification.
+func TestVerificationHandlerAllowsExistingMerchantRegardlessOfPersistedRole(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	db := setupVerificationTestDB(t)
+	if err := db.Create(&model.User{ID: 708, Role: "user", Status: 0}).Error; err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+	userID := int64(708)
+	if err := db.Create(&model.Merchant{ID: 9108, UserID: &userID, Name: "Existing Merchant", VerificationStatus: "verified"}).Error; err != nil {
+		t.Fatalf("failed to create merchant: %v", err)
+	}
+
+	h := NewVerificationHandler(service.NewVerificationService(db))
+
+	statusRecorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(statusRecorder)
+	c.Request = httptest.NewRequest(http.MethodGet, "/merchant/verification", nil)
+	c.Set("user_id", userID)
+	h.Status(c)
+	if statusRecorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200 for an existing merchant with role=user, got %d: %s", statusRecorder.Code, statusRecorder.Body.String())
+	}
+
+	payload := `{"document_type":"business_license","document_url":"https://example.com/license.pdf","business_license":"LIC-708"}`
+	submitRecorder := httptest.NewRecorder()
+	c, _ = gin.CreateTestContext(submitRecorder)
+	c.Request = httptest.NewRequest(http.MethodPost, "/merchant/verification", bytes.NewBufferString(payload))
+	c.Request.Header.Set("Content-Type", "application/json")
+	c.Set("user_id", userID)
+	h.Submit(c)
+	if submitRecorder.Code != http.StatusCreated {
+		t.Fatalf("expected status 201 submitting verification for an existing merchant with role=user, got %d: %s", submitRecorder.Code, submitRecorder.Body.String())
+	}
+}
+
 func TestVerificationHandlerStatusRejectsUnknownUser(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
